@@ -133,6 +133,10 @@
   <ItemGroup>
     <ClCompile Include="DOSrat 2.0.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Classi.h" />
+    <ClInclude Include="Funzioni.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

