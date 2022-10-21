@@ -19,3 +19,17 @@ void StampaTitolo(short Returns = 0)
 
     tc.SetColor(tc.Default);
 }
+
+void StampaPrefix(short Returns = 0)
+{
+    TextColor tc;
+
+    for (int i = 0; i < Returns; i++)
+        cout << endl;
+
+    tc.SetColor(tc.Yellow);
+
+    cout << "DOSrat 2.0";
+    tc.SetColor(tc.Default);
+    cout << "> ";
+}
