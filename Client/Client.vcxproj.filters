@@ -15,19 +15,16 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="DOSrat 2.0.cpp">
+    <ClCompile Include="Client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Funzioni.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Classi.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientClass.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Funzioni.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

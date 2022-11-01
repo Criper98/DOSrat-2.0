@@ -1,12 +1,22 @@
 #include <iostream>
+#include <EssNet.h>
+#include <Essentials.h>
 #include <EssCurl.h>
 
-string Version = "2.0.0";
+using namespace std;
 
-#include "Funzioni.h"
+#define MAX_CLIENTS 1000
+
+#include "ClientClass.h"
+
+string Version = "2.0.0";
+CLIENT Clients[MAX_CLIENTS];
+
 #include "Classi.h"
 
-using namespace std;
+COMUNICAZIONI COM;
+
+#include "Funzioni.h"
 
 int main()
 {
@@ -15,7 +25,10 @@ int main()
     DirUtils du;
     Settaggi settaggi;
     ConsoleUtils cu;
-    
+    WindowUtils wu;
+    GeneralUtils gu;
+    TcpIP Server;
+
     VectString MenuPrincipale;
 
     bool CicloMenu = true;
@@ -26,9 +39,27 @@ int main()
     MenuPrincipale.push_back("Comandi Comuni");
     MenuPrincipale.push_back("Impostazioni");
 
-    settaggi.GetSettings();
+    if (!settaggi.GetSettings())
+    {
+        tc.SetColor(tc.Red);
+        cout << "Errore nel caricamento delle impostazioni." << endl;
+        _getch();
+        return 0;
+    }
 
-    cu.SetConsoleWindowSize({ settaggi.DimensioniFinestra.X, settaggi.DimensioniFinestra.Y });
+    wu.SetWindowSize({ settaggi.DimensioniFinestra.X, settaggi.DimensioniFinestra.Y });
+
+    Server.Port = settaggi.Porta;
+    if (Server.StartServer() != 0)
+    {
+        tc.SetColor(tc.Red);
+        cout << "Errore nell'avvio del server." << endl;
+        Server.Stop();
+        _getch();
+        return 0;
+    }
+    thread Tconn(AccettaConnessioni, ref(Server));
+    Tconn.detach();
 
     while (CicloMenu)
     {
@@ -43,22 +74,22 @@ int main()
                 CicloMenu = false;
             break;
 
-                // Connetti Sessione
+            // Connetti Sessione
             case 1:
                 return 0;
             break;
 
-                // Crea Client
+            // Crea Client
             case 2:
                 return 0;
             break;
 
-                // Comandi Comuni
+            // Comandi Comuni
             case 3:
                 return 0;
             break;
 
-                // Impostazioni
+            // Impostazioni
             case 4:
                 while (CicloMenu)
                 {
@@ -96,8 +127,8 @@ int main()
                             StampaPrefix(1); cout << "Ridimensiona le finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
 
-                            settaggi.DimensioniFinestra.X = cu.GetConsoleWindowSize().X;
-                            settaggi.DimensioniFinestra.Y = cu.GetConsoleWindowSize().Y;
+                            settaggi.DimensioniFinestra.X = wu.GetWindowSize().X;
+                            settaggi.DimensioniFinestra.Y = wu.GetWindowSize().Y;
                         break;
                     }
 
