@@ -26,8 +26,11 @@
     <ClInclude Include="Classi.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientClass.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Comunicazioni.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

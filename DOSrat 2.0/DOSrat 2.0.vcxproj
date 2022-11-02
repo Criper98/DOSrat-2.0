@@ -147,7 +147,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Classi.h" />
-    <ClInclude Include="ClientClass.h" />
+    <ClInclude Include="Client.h" />
+    <ClInclude Include="Comunicazioni.h" />
     <ClInclude Include="Funzioni.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

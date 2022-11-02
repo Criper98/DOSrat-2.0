@@ -1,64 +1,5 @@
 #pragma once
 
-class COMUNICAZIONI
-{
-	private:
-		static void TerminaConnessione(SOCKET Sock)
-		{
-			TcpIP::SetTimeout(0, Sock);
-			closesocket(Sock);
-		}
-
-	public:
-		static void Inizializzazione(int Index)
-		{
-			char Pass[10]; // DOSrat2.0
-			vector<char> Buff;
-			char Size[5] = { 0 };
-			IPinfo GeoIP;
-			EasyMSGB msgb;
-
-			TcpIP::SetTimeout(10000, Clients[Index].sock);
-
-			if (recv(Clients[Index].sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
-			{
-				TerminaConnessione(Clients[Index].sock);
-				return;
-			}
-			if ((string)Pass != "DOSrat2.0")
-			{
-				TerminaConnessione(Clients[Index].sock);
-				return;
-			}
-			if (send(Clients[Index].sock, "DOSrat2.0", 10, 0) == SOCKET_ERROR)
-			{
-				TerminaConnessione(Clients[Index].sock);
-				return;
-			}
-
-			TcpIP::SetTimeout(0, Clients[Index].sock);
-			
-			recv(Clients[Index].sock, Size, sizeof(Size), 0);
-			Buff.resize(atoi(Size));
-			recv(Clients[Index].sock, &Buff[0], atoi(Size), 0);
-			
-			json data = json::parse(string(Buff.begin(), Buff.end()));
-			
-			Clients[Index].IsConnected = true;
-			Clients[Index].info.InstallPath = data["InstallPath"];
-			Clients[Index].info.OS = data["OS"];
-			Clients[Index].info.PCname = data["PCname"];
-			Clients[Index].info.UAC = data["UAC"];
-			Clients[Index].info.UserName = data["UserName"];
-			Clients[Index].info.Versione = data["Versione"];
-			
-			Clients[Index].info.IP = TcpIP::GetIP(Clients[Index].sock);
-			Clients[Index].info.Nazione = (IPlocation::GetInfoFromIP(Clients[Index].info.IP, GeoIP) == 0) ? GeoIP.CountryCode : "";
-			
-			msgb.Ok("Connessione Accettata!\n" + Clients[Index].info.Nazione + "\n" + Clients[Index].info.IP);
-		}
-};
-
 // Classe per la gestione dei settaggi
 class Settaggi
 {
@@ -148,5 +89,60 @@ class Settaggi
 			MenuImpostazioni[4].Escape = true;
 
 			return cli.MenuSettings(MenuImpostazioni);
+		}
+};
+
+class ClientUtils
+{
+	public:
+		int ClientCount = 0;
+		enum TitleType { Menu };
+
+	private:
+		Settaggi *settings;
+		TitleType CurrentTitleType;
+
+	public:
+
+		ClientUtils(Settaggi& settaggi)
+		{
+			settings = &settaggi;
+		}
+
+		void AggiornaCount()
+		{
+			ClientCount = 0;
+
+			for (int i = 0; i < MAX_CLIENTS; i++)
+				if (Clients[i].IsConnected)
+					ClientCount++;
+		}
+
+		void AggiornaTitolo(TitleType tipo)
+		{
+			ConsoleUtils cu;
+			string Sep = " - ";
+			string Start = "DOSrat 2.0 By Criper98";
+			string Clients = "Clients[" + to_string(ClientCount) + "/" + to_string(MAX_CLIENTS) + "]";
+			string StatusAscolto = "In Ascolto...";
+			string Porta = "Port[" + to_string(settings->Porta) + "]";
+
+			switch (tipo)
+			{
+				case Menu:
+					cu.ConsoleTitle(Start + Sep + Porta + " " + Clients + Sep + StatusAscolto);
+				break;
+
+				default:
+					cu.ConsoleTitle(Start + Sep + Clients);
+				break;
+			}
+
+			CurrentTitleType = tipo;
+		}
+
+		void AggiornaTitolo()
+		{
+			AggiornaTitolo(CurrentTitleType);
 		}
 };

@@ -7,15 +7,16 @@ using namespace std;
 
 #define MAX_CLIENTS 1000
 
-#include "ClientClass.h"
+#include "Client.h"
 
 string Version = "2.0.0";
 CLIENT Clients[MAX_CLIENTS];
 
 #include "Classi.h"
 
-COMUNICAZIONI COM;
+ClientUtils* Clu;
 
+#include "Comunicazioni.h"
 #include "Funzioni.h"
 
 int main()
@@ -28,6 +29,7 @@ int main()
     WindowUtils wu;
     GeneralUtils gu;
     TcpIP Server;
+    Clu = new ClientUtils(settaggi);
 
     VectString MenuPrincipale;
 
@@ -47,6 +49,7 @@ int main()
         return 0;
     }
 
+    Clu->AggiornaTitolo(Clu->Menu);
     wu.SetWindowSize({ settaggi.DimensioniFinestra.X, settaggi.DimensioniFinestra.Y });
 
     Server.Port = settaggi.Porta;
