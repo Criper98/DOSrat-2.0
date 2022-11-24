@@ -37,17 +37,17 @@ void StampaPrefix(short Returns = 0)
 void AccettaConnessioni(TcpIP& Server)
 {
     int c = 0;
-
+    
     while (true)
     {
         for (int i = 0; i < MAX_CLIENTS; i++)
             if (!Clients[i].IsConnected)
+            {
                 c = i;
+                i = MAX_CLIENTS;
+            }
 
-        if (Server.Connect(&Clients[c].sock))
-        {
-            COMUNICAZIONI::Inizializzazione(c);
-        }
-
+        if (Server.WaitConn(Clients[c].sock))
+            COMUNICAZIONI::Inizializzazione(c, Clients[c].sock);
     }
 }

