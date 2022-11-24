@@ -100,7 +100,7 @@ class ClientUtils
 
 	private:
 		Settaggi *settings;
-		TitleType CurrentTitleType;
+		TitleType CurrentTitleType = Menu;
 
 	public:
 

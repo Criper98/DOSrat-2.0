@@ -49,6 +49,7 @@ int main()
     HeaderTabella.push_back("UAC");
     HeaderTabella.push_back("Nome PC");
     HeaderTabella.push_back("UserName");
+    HeaderTabella.push_back("OS");
     HeaderTabella.push_back("Stato");
 
     if (!settaggi.GetSettings())
@@ -96,6 +97,7 @@ int main()
                 StampaTitolo(1);
                 cli.SubTitle("Lista Clients", 60, tc.Green);
 
+                BodyTabella.clear();
                 for (int i = 0; i < MAX_CLIENTS; i++)
                 {
                     if (Clients[i].IsConnected)
@@ -106,12 +108,30 @@ int main()
                         BodyTabella.push_back( (Clients[i].info.UAC) ? "Admin" : "User" );
                         BodyTabella.push_back(Clients[i].info.PCname);
                         BodyTabella.push_back(Clients[i].info.UserName);
+                        BodyTabella.push_back(Clients[i].info.OS);
                         BodyTabella.push_back(Clients[i].info.Nazione);
                     }
                 }
 
-                cli.Table(HeaderTabella, BodyTabella);
-                system("pause");
+                if (BodyTabella.size() > 0)
+                {
+                    int IDclient = -1;
+
+                    cli.Table(HeaderTabella, BodyTabella);
+                    cout << "\nScegli l'ID del Client.";
+                    StampaPrefix(1);
+                    cin >> IDclient;
+
+                    if(Clients[IDclient].IsConnected)
+                        Sessione(IDclient, Clients[IDclient].sock);
+                    else
+                        cout << "ID non valido.";
+                }
+                else
+                {
+                    StampaPrefix(); cout << "Non hai Clients connessi." << endl;
+                    Sleep(2000);
+                }
 
                 break;
 
@@ -144,7 +164,8 @@ int main()
 
                         // Porta
                         case 1:
-                            StampaPrefix(1); cout << "Inserisci la porta: ";
+                            cout << "\nInserisci la porta.";
+                            StampaPrefix(1);
                             cin >> settaggi.Porta;
                             break;
 
@@ -160,7 +181,7 @@ int main()
 
                         // Dimensione della finestra
                         case 4:
-                            StampaPrefix(1); cout << "Ridimensiona le finestra a piacimento e premi invio per salvare." << endl;
+                            cout << "\nRidimensiona le finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
 
                             settaggi.DimensioniFinestra.X = wu.GetWindowSize().X;

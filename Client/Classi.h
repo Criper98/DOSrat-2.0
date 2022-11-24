@@ -40,7 +40,7 @@ class COMUNICAZIONI
 			json data;
 
 			data["InstallPath"] = du.GetFullFilePath();
-			data["OS"] = "Win10";
+			data["OS"] = GetOS();
 			data["PCname"] = gu.GetPCName();
 			data["UAC"] = gu.CheckUAC();
 			data["UserName"] = gu.GetCurrentUser();

@@ -2,14 +2,14 @@
 
 class COMUNICAZIONI
 {
-	private:
+private:
 	static void TerminaConnessione(SOCKET Sock)
 	{
 		TcpIP::SetTimeout(0, Sock);
 		closesocket(Sock);
 	}
 
-	public:
+public:
 	static void Inizializzazione(int Index, SOCKET Sock)
 	{
 		char Pass[10]; // DOSrat2.0
