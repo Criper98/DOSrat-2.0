@@ -52,5 +52,16 @@ public:
 		Clu->AggiornaTitolo();
 	}
 
+	static json GetInfo(SOCKET Sock)
+	{
+		string Buff;
 
+		TcpIP::SendString(Sock, "getinfo");
+
+		Buff = TcpIP::RecvString(Sock);
+
+		json j = json::parse(Buff);
+
+		return j;
+	}
 };

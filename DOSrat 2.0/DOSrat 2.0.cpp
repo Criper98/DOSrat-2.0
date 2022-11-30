@@ -116,16 +116,28 @@ int main()
                 if (BodyTabella.size() > 0)
                 {
                     int IDclient = -1;
+                    bool Controllo = false;
 
                     cli.Table(HeaderTabella, BodyTabella);
                     cout << "\nScegli l'ID del Client.";
                     StampaPrefix(1);
                     cin >> IDclient;
 
-                    if(Clients[IDclient].IsConnected)
-                        Sessione(IDclient, Clients[IDclient].sock);
+                    if (IDclient < MAX_CLIENTS && IDclient >= 0)
+                    {
+                        if (Clients[IDclient].IsConnected)
+                            Sessione(IDclient, Clients[IDclient].sock);
+                        else
+                            Controllo = true;
+                    }
                     else
+                        Controllo = true;
+
+                    if(Controllo)
+                    {
                         cout << "ID non valido.";
+                        Sleep(2000);
+                    }
                 }
                 else
                 {
