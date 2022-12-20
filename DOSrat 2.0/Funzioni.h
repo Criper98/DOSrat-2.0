@@ -58,20 +58,23 @@ void GetInfo(SOCKET Sock)
     CLInterface cli;
     VectString Header;
     VectString Body;
+    IPinfo ipi;
 
     Header.push_back("INFO");
     Header.push_back("VALORE");
 
     j = COMUNICAZIONI::GetInfo(Sock);
+    ipi.IPaddress = TcpIP::GetIP(Sock);
+    IPlocation::GetInfoFromIP(ipi.IPaddress, ipi);
 
     Body.push_back("IP Wan");
-    Body.push_back(j["IPW"]);
+    Body.push_back(ipi.IPaddress);
 
     Body.push_back("IP Lan");
     Body.push_back(j["IPL"]);
 
     Body.push_back("Nazione");
-    Body.push_back(j["NAZ"]);
+    Body.push_back(ipi.Country);
 
     Body.push_back("OS");
     Body.push_back(j["OS"]);
@@ -115,12 +118,12 @@ void Sessione(int ID, SOCKET Sock)
 
     string cmd;
 
+    system("cls");
+    StampaTitolo(1);
+    cli.SubTitle("Sessione Comandi", 60, tc.Green);
+
     for (bool Controllo = true; Controllo;)
     {
-        system("cls");
-        StampaTitolo(1);
-        cli.SubTitle("Sessione Comandi", 60, tc.Green);
-
         StampaPrefix();
         getline(cin, cmd);
         cmd = ToLowerCase(cmd);

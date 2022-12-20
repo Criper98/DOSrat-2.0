@@ -7,8 +7,8 @@ using json = nlohmann::json;
 
 string Version = "2.0.0";
 
-#include "Funzioni.h"
 #include "Classi.h"
+#include "Funzioni.h"
 
 using namespace std;
 
@@ -31,7 +31,16 @@ int main()
     {
         while (!Client.Connect()) {}
         cout << "Connesso" << endl;
-        i = !COMUNICAZIONI::Inizializzazione(Client.Sock);
+        if (COMUNICAZIONI::Inizializzazione(Client.Sock))
+        {
+            switch (Sessione(Client))
+            {
+                case 0:
+                    closesocket(Client.Sock);
+                    break;
+            }
+
+        }
     }
 
     system("pause");

@@ -27,7 +27,7 @@ int main()
     Settaggi settaggi;
     ConsoleUtils cu;
     WindowUtils wu;
-    GeneralUtils gu;
+    //SystemUtils su;
     TcpIP Server;
     Clu = new ClientUtils(settaggi);
 
@@ -122,6 +122,7 @@ int main()
                     cout << "\nScegli l'ID del Client.";
                     StampaPrefix(1);
                     cin >> IDclient;
+                    cin.ignore();
 
                     if (IDclient < MAX_CLIENTS && IDclient >= 0)
                     {
@@ -179,6 +180,7 @@ int main()
                             cout << "\nInserisci la porta.";
                             StampaPrefix(1);
                             cin >> settaggi.Porta;
+                            cin.ignore();
                             break;
 
                         // Aggiornamenti
