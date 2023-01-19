@@ -25,7 +25,7 @@ class Settaggi
 		// Costruttore
 		Settaggi()
 		{
-			sf.SetFileName(du.GetFilePath() + "settings.ini");
+			sf.SetFileName(du.GetModuleFilePath() + "settings.ini");
 			MenuImpostazioni.resize(5);
 		}
 
@@ -94,55 +94,57 @@ class Settaggi
 
 class ClientUtils
 {
-	public:
-		int ClientCount = 0;
-		enum TitleType { Menu };
+public:
+	int ClientCount = 0;
+	enum TitleType { Menu };
 
-	private:
-		Settaggi *settings;
-		TitleType CurrentTitleType = Menu;
+private:
+	Settaggi* settings;
+	TitleType CurrentTitleType = Menu;
 
-	public:
+	void AggiornaCount()
+	{
+		ClientCount = 0;
 
-		ClientUtils(Settaggi& settaggi)
+		for (int i = 0; i < MAX_CLIENTS; i++)
+			if (Clients[i].IsConnected)
+				ClientCount++;
+	}
+
+public:
+
+	ClientUtils(Settaggi& settaggi)
+	{
+		settings = &settaggi;
+	}
+
+	void AggiornaTitolo(TitleType tipo)
+	{
+		AggiornaCount();
+
+		ConsoleUtils cu;
+		string Sep = " - ";
+		string Start = "DOSrat 2.0 By Criper98";
+		string Clients = "Clients[" + to_string(ClientCount) + "/" + to_string(MAX_CLIENTS) + "]";
+		string StatusAscolto = "In Ascolto...";
+		string Porta = "Port[" + to_string(settings->Porta) + "]";
+
+		switch (tipo)
 		{
-			settings = &settaggi;
-		}
-
-		void AggiornaCount()
-		{
-			ClientCount = 0;
-
-			for (int i = 0; i < MAX_CLIENTS; i++)
-				if (Clients[i].IsConnected)
-					ClientCount++;
-		}
-
-		void AggiornaTitolo(TitleType tipo)
-		{
-			ConsoleUtils cu;
-			string Sep = " - ";
-			string Start = "DOSrat 2.0 By Criper98";
-			string Clients = "Clients[" + to_string(ClientCount) + "/" + to_string(MAX_CLIENTS) + "]";
-			string StatusAscolto = "In Ascolto...";
-			string Porta = "Port[" + to_string(settings->Porta) + "]";
-
-			switch (tipo)
-			{
-				case Menu:
-					cu.ConsoleTitle(Start + Sep + Porta + " " + Clients + Sep + StatusAscolto);
+			case Menu:
+				cu.ConsoleTitle(Start + Sep + Porta + " " + Clients + Sep + StatusAscolto);
 				break;
 
-				default:
-					cu.ConsoleTitle(Start + Sep + Clients);
+			default:
+				cu.ConsoleTitle(Start + Sep + Clients);
 				break;
-			}
-
-			CurrentTitleType = tipo;
 		}
 
-		void AggiornaTitolo()
-		{
-			AggiornaTitolo(CurrentTitleType);
-		}
+		CurrentTitleType = tipo;
+	}
+
+	void AggiornaTitolo()
+	{
+		AggiornaTitolo(CurrentTitleType);
+	}
 };

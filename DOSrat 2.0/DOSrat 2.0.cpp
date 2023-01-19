@@ -74,7 +74,9 @@ int main()
     }
 
     thread Tconn(AccettaConnessioni, ref(Server));
+    thread Vconn(VerificaConnessioni);
     Tconn.detach();
+    Vconn.detach();
 
     while (CicloMenu)
     {
@@ -105,11 +107,11 @@ int main()
                         BodyTabella.push_back(to_string(i));
                         BodyTabella.push_back(Clients[i].info.IP);
                         BodyTabella.push_back(Clients[i].info.Versione);
-                        BodyTabella.push_back( (Clients[i].info.UAC) ? "Admin" : "User" );
+                        BodyTabella.push_back(Clients[i].info.UAC);
                         BodyTabella.push_back(Clients[i].info.PCname);
                         BodyTabella.push_back(Clients[i].info.UserName);
                         BodyTabella.push_back(Clients[i].info.OS);
-                        BodyTabella.push_back(Clients[i].info.Nazione);
+                        BodyTabella.push_back(Clients[i].info.Location.CountryCode);
                     }
                 }
 
@@ -142,7 +144,7 @@ int main()
                 }
                 else
                 {
-                    StampaPrefix(); cout << "Non hai Clients connessi." << endl;
+                    cout << "Non hai Clients connessi." << endl;
                     Sleep(2000);
                 }
 

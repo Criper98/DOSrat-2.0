@@ -15,6 +15,9 @@ using namespace std;
 int main()
 {
     TcpIP Client;
+    SystemUtils su;
+
+    su.GetCPUload(); // Altrimenti con il GetInfo la prima volta da sempre il 6%
 
     Client.Host = "127.0.0.1";
     Client.Port = 5555;
@@ -38,9 +41,18 @@ int main()
                 case 0:
                     closesocket(Client.Sock);
                     break;
+
+                case 1:
+                    closesocket(Client.Sock);
+                    Client.Stop();
+                    return 0;
+                    break;
             }
+            cout << "Disconnesso" << endl;
 
         }
+        Client.Stop();
+        Client.StartClient();
     }
 
     system("pause");

