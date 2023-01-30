@@ -19,7 +19,7 @@ int main()
 
     su.GetCPUload(); // Altrimenti con il GetInfo la prima volta da sempre il 6%
 
-    Client.Host = "127.0.0.1";
+    Client.Host = "192.168.1.150";
     Client.Port = 5555;
 
     if (Client.StartClient() != 0)

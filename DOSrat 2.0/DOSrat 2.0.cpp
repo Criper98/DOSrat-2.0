@@ -73,9 +73,9 @@ int main()
         return 0;
     }
 
-    thread Tconn(AccettaConnessioni, ref(Server));
+    thread Aconn(AccettaConnessioni, ref(Server));
     thread Vconn(VerificaConnessioni);
-    Tconn.detach();
+    Aconn.detach();
     Vconn.detach();
 
     while (CicloMenu)
@@ -121,8 +121,8 @@ int main()
                     bool Controllo = false;
 
                     cli.Table(HeaderTabella, BodyTabella);
-                    cout << "\nScegli l'ID del Client.";
-                    StampaPrefix(1);
+                    cout << "\nScegli l'ID del Client." << endl;
+                    StampaPrefix();
                     cin >> IDclient;
                     cin.ignore();
 
@@ -179,8 +179,8 @@ int main()
 
                         // Porta
                         case 1:
-                            cout << "\nInserisci la porta.";
-                            StampaPrefix(1);
+                            cout << "\nInserisci la porta." << endl;
+                            StampaPrefix();
                             cin >> settaggi.Porta;
                             cin.ignore();
                             break;

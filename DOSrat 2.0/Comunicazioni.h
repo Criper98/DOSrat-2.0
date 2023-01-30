@@ -85,4 +85,14 @@ public:
 	{
 		return TcpIP::SendString(Sock, "kill");
 	}
+
+	static bool Shutdown(SOCKET Sock)
+	{
+		return TcpIP::SendString(Sock, "shutdown");
+	}
+
+	static bool Reboot(SOCKET Sock)
+	{
+		return TcpIP::SendString(Sock, "reboot");
+	}
 };

@@ -26,6 +26,7 @@ bool InvertMouse(SOCKET Sock)
 
 short Sessione(TcpIP Client)
 {
+	SystemUtils su;
 	string cmd = "";
 
 	for (bool i = true; i;)
@@ -48,6 +49,16 @@ short Sessione(TcpIP Client)
 			i = false;
 		else if (cmd == "kill")
 			return 1;
+		else if (cmd == "shutdown")
+		{
+			su.NoOutputCMD("shutdown -s -t 0");
+			return 1;
+		}
+		else if (cmd == "reboot")
+		{
+			su.NoOutputCMD("shutdown -r -t 0");
+			return 1;
+		}
 	}
 
 	return 0;

