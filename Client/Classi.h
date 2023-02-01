@@ -71,4 +71,25 @@ public:
 
 		return false;
 	}
+
+	static string UpdateClient(SOCKET Sock)
+	{
+		string Buff = TcpIP::RecvString(Sock);
+
+		if (Buff != "")
+		{
+			if (TcpIP::SendString(Sock, "OK"))
+				return Buff;
+			else
+				return "";
+		}
+		else
+		{
+			TcpIP::SendString(Sock, "NO");
+			
+			return "";
+		}
+
+		return "";
+	}
 };

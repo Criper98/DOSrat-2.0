@@ -6,7 +6,6 @@ class Settaggi
 	private:
 		DirUtils du;
 		SettingsFile sf;
-		VectSettings MenuImpostazioni;
 
 		// Struttura contenente i colori della console
 		struct COLORI
@@ -19,6 +18,7 @@ class Settaggi
 	public:
 		int Porta = 5555;
 		bool VerificaAggiornamenti = true;
+		bool AutoAggiornamento = true;
 		COLORI Colori;
 		COORD DimensioniFinestra{800, 600};
 		
@@ -26,7 +26,7 @@ class Settaggi
 		Settaggi()
 		{
 			sf.SetFileName(du.GetModuleFilePath() + "settings.ini");
-			MenuImpostazioni.resize(5);
+			//MenuImpostazioni.resize(5);
 		}
 
 		// Popola i settaggi ottenendoli dal relativo file
@@ -38,6 +38,7 @@ class Settaggi
 
 			Porta = stoi(sf.GetSetting("Port"));
 			VerificaAggiornamenti = (sf.GetSetting("CheckUpdate") == "true");
+			AutoAggiornamento = (sf.GetSetting("AutoUpdate") == "true");
 			Colori.Conferma = (short)stoi(sf.GetSetting("ColorOk"));
 			Colori.Negativo = (short)stoi(sf.GetSetting("ColorError"));
 			Colori.Avviso = (short)stoi(sf.GetSetting("ColorWarning"));
@@ -55,6 +56,7 @@ class Settaggi
 
 			sf.SetSetting("Port", to_string(Porta));
 			sf.SetSetting("CheckUpdate", (VerificaAggiornamenti) ? "true" : "false");
+			sf.SetSetting("AutoUpdate", (AutoAggiornamento) ? "true" : "false");
 			sf.SetSetting("ColorOk", to_string(Colori.Conferma));
 			sf.SetSetting("ColorError", to_string(Colori.Negativo));
 			sf.SetSetting("ColorWarning", to_string(Colori.Avviso));
@@ -68,25 +70,36 @@ class Settaggi
 		int ShowSettings()
 		{
 			CLInterface cli;
+			VectSettings MenuImpostazioni;
 
+			MenuImpostazioni.push_back(SettingsMenu());
 			MenuImpostazioni[0].Escape = true;
 			MenuImpostazioni[0].Name = "Salva ed Esci";
 
+			MenuImpostazioni.push_back(SettingsMenu());
 			MenuImpostazioni[1].Name = "Porta";
 			MenuImpostazioni[1].Value = to_string(Porta);
 			MenuImpostazioni[1].Escape = true;
 
+			MenuImpostazioni.push_back(SettingsMenu());
 			MenuImpostazioni[2].Name = "Verifica Aggiornamenti";
 			MenuImpostazioni[2].CheckValue = "true";
 			MenuImpostazioni[2].Value = (VerificaAggiornamenti) ? "true" : "false";
 
-			MenuImpostazioni[3].Name = "Imposta Colori";
-			MenuImpostazioni[3].Escape = true;
+			MenuImpostazioni.push_back(SettingsMenu());
+			MenuImpostazioni[3].Name = "Aggiornamenti Automatici";
+			MenuImpostazioni[3].CheckValue = "true";
+			MenuImpostazioni[3].Value = (AutoAggiornamento) ? "true" : "false";
 
-			MenuImpostazioni[4].Name = "Dimensioni Finestra";
-			MenuImpostazioni[4].Value = to_string(DimensioniFinestra.X);
-			MenuImpostazioni[4].SecValue = to_string(DimensioniFinestra.Y);
+			MenuImpostazioni.push_back(SettingsMenu());
+			MenuImpostazioni[4].Name = "Imposta Colori";
 			MenuImpostazioni[4].Escape = true;
+
+			MenuImpostazioni.push_back(SettingsMenu());
+			MenuImpostazioni[5].Name = "Dimensioni Finestra";
+			MenuImpostazioni[5].Value = to_string(DimensioniFinestra.X);
+			MenuImpostazioni[5].SecValue = to_string(DimensioniFinestra.Y);
+			MenuImpostazioni[5].Escape = true;
 
 			return cli.MenuSettings(MenuImpostazioni);
 		}

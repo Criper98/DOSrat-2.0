@@ -95,4 +95,15 @@ public:
 	{
 		return TcpIP::SendString(Sock, "reboot");
 	}
+
+	static bool UpdateClient(SOCKET Sock, string FileContent)
+	{
+		if (!TcpIP::SendString(Sock, "updateclient"))
+			return false;
+
+		if (!TcpIP::SendString(Sock, FileContent))
+			return false;
+
+		return (TcpIP::RecvString(Sock) == "OK");
+	}
 };

