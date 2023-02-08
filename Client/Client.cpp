@@ -5,7 +5,7 @@
 
 using json = nlohmann::json;
 
-string Version = "2.0.0";
+string Version = "2.0.0 B1";
 
 #include "Classi.h"
 #include "Funzioni.h"

