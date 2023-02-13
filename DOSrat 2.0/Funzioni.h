@@ -173,7 +173,7 @@ bool GetInfo(SOCKET Sock, int ID)
 
     j = COMUNICAZIONI::GetInfo(Sock);
 
-    if (j.dump() == "")
+    if (j.dump() == "null")
         return false;
 
     Body.push_back("IP Wan");

