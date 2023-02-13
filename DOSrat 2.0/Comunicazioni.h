@@ -106,4 +106,9 @@ public:
 
 		return (TcpIP::RecvString(Sock) == "OK");
 	}
+
+	static bool Uninstall(SOCKET Sock)
+	{
+		return TcpIP::SendString(Sock, "uninstall");
+	}
 };

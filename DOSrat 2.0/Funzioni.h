@@ -313,6 +313,20 @@ short UpdateClient(SOCKET Sock, int ID)
     return -1;
 }
 
+bool Uninstall(SOCKET Sock, int ID)
+{
+    if (COMUNICAZIONI::Uninstall(Sock))
+    {
+        Sleep(1000);
+        closesocket(Sock);
+        Clients[ID].IsConnected = false;
+        Clu->AggiornaTitolo();
+        return true;
+    }
+
+    return false;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -386,6 +400,13 @@ void Sessione(int ID, SOCKET Sock)
                 case 0: Controllo = false; break;
                 case 1: break;
             }
+        }
+        else if (cmd == "uninstall")
+        {
+            if (!Uninstall(Sock, ID))
+                Controllo = CheckConnection(Sock, ID);
+            else
+                Controllo = false;
         }
         else
         {
