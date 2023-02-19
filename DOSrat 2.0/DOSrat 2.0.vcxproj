@@ -158,6 +158,15 @@
     <ClInclude Include="Client.h" />
     <ClInclude Include="Comunicazioni.h" />
     <ClInclude Include="Funzioni.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DOSrat 2.0.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\Immagini\icona.ico" />
+    <Image Include="..\Immagini\icona.png" />
+    <Image Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

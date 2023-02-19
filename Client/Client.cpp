@@ -22,9 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Settaggi sett;
     EasyMSGB msgb;
 
-    /*if (!du.CheckFile(du.GetModuleFilePath() + "DOSratDebug"))
-        cu.HideConsole();*/
-
+    AllocConsole();
     ShowWindow(GetConsoleWindow(), SW_HIDE);
 
     if (du.CheckFile(du.GetModuleFilePath() + "SetBuild"))

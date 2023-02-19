@@ -42,8 +42,6 @@ int main()
     bool CicloMenu = true;
     int OldPort = 0;
 
-    en.AsciiToHex("Prova");
-
     cli.LoadingPercentage = 0;
     cli.LoadingText = "Caricamento Menu Principale...";
     cli.FullBarWithText(25);

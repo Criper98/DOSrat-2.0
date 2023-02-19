@@ -34,7 +34,11 @@ public:
 		}
 
 		TcpIP::SetTimeout(0, Sock);
-		TcpIP::RecvString(Sock, Buff);
+		if (!TcpIP::RecvString(Sock, Buff))
+		{
+			TerminaConnessione(Sock);
+			return;
+		}
 
 		json data = json::parse(Buff);
 
@@ -97,14 +101,21 @@ public:
 		return TcpIP::SendString(Sock, "reboot");
 	}
 
-	static bool UpdateClient(SOCKET Sock, string FileContent)
+	static bool UpdateClient(SOCKET Sock, string FileContent, bool Hidden, bool System)
 	{
 		string Buff;
+		json j;
 
 		if (!TcpIP::SendString(Sock, "updateclient"))
 			return false;
 
 		if (!TcpIP::SendString(Sock, FileContent))
+			return false;
+
+		j["Attrib"]["Hidden"] = Hidden;
+		j["Attrib"]["System"] = System;
+
+		if (!TcpIP::SendString(Sock, j.dump()))
 			return false;
 
 		TcpIP::RecvString(Sock, Buff);
