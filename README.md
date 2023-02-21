@@ -1,4 +1,6 @@
-Icon & Logo art by [Drunkeran](https://www.instagram.com/drunkeran.e.co/)
+<p align="center"><img src="https://raw.githubusercontent.com/Criper98/DOSrat-2.0/main/Immagini/Logo.jpg" width="650"></br>
+Icon & Logo art by <a href="https://www.instagram.com/drunkeran.e.co/">Drunkeran</a>
+</p>
 
 # DOSrat 2.0
 
