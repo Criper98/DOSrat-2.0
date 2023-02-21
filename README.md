@@ -1,3 +1,5 @@
+Icon & Logo art by [Drunkeran](https://www.instagram.com/drunkeran.e.co/)
+
 # DOSrat 2.0
 
 [![Version](https://img.shields.io/github/v/tag/Criper98/DOSrat-2.0?color=brightgreen&label=Version&style=flat-square)]()
