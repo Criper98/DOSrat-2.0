@@ -12,6 +12,7 @@ using namespace std;
 string Version = "2.0.0-b.1";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
+int VersioneCompatibile = 0;
 
 #include "Classi.h"
 
@@ -148,7 +149,15 @@ int main()
         {
             // Esci
             case 0:
-                // funzione per gestire la chiusura della connessione con i client attivi
+                ServerLoopController = false;
+
+                for (int i = 0; i < MAX_CLIENTS; i++)
+                    if (Clients[i].IsConnected)
+                    {
+                        closesocket(Clients[i].sock);
+                        Clients[i].IsConnected = false;
+                    }
+
                 Server.Stop();
                 CicloMenu = false;
                 break;

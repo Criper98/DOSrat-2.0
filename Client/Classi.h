@@ -53,6 +53,7 @@ public:
 		data["UAC"] = (su.CheckUAC()) ? "Admin" : "User";
 		data["UserName"] = su.GetCurrentUser();
 		data["Versione"] = Version;
+		data["VersioneCompatibile"] = VersioneCompatibile;
 
 		TcpIP::SendString(Sock, data.dump());
 

