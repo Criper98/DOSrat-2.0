@@ -64,6 +64,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         while (!Client.Connect()) {}
         
+        //msgb.Ok("Connesso!");
+
         if (COMUNICAZIONI::Inizializzazione(Client.Sock))
         {
             switch (Sessione(Client))

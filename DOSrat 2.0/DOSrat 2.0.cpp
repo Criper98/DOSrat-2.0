@@ -263,8 +263,12 @@ int main()
                             cout << "\nInserisci il nome del file .exe" << endl;
                             StampaPrefix();
                             getline(cin, SettaggiC.ExeName);
+
                             if (SettaggiC.ExeName.size() > 4)
                             {
+                                if (ToLowerCase(SettaggiC.ExeName) == "drunkard")
+                                    DrunkeranEgg();
+
                                 if (ToLowerCase(SettaggiC.ExeName.substr(SettaggiC.ExeName.size() - 4, 4)) != ".exe")
                                     SettaggiC.ExeName += ".exe";
                             }
