@@ -11,6 +11,8 @@ The purpose of this project is to test my knowledge, and share it with you, it w
 
 In practice DOSrat 2.0 is a remote administration tool (RAT), successor of the first [DOSrat](https://github.com/Criper98/DOSrat) project, it has several improvements in TCP/IP communication, a better command line interface, a totally different client build system which makes it more light and fast, and many more features beyond those already existing in its predecessor.
 
+<p align="center"><img src="https://raw.githubusercontent.com/Criper98/DOSrat-2.0/main/Immagini/GIF.gif" width="750"></p>
+
 ## BETA
 
 Currently the software is in BETA, the versions will still be published in the Release section but will have the wording "-b.X".<br/>
