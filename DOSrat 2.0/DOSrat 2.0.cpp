@@ -130,7 +130,6 @@ int main()
 		cout << "Premi un tasto per continuare offline..." << endl;
         Server.Stop();
         _getch();
-        return 0;
     }
 	else
 	{
