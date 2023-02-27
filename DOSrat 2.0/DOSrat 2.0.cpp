@@ -41,8 +41,11 @@ int main()
     VectString Percorsi;
 
     bool CicloMenu = true;
+	bool ServerOn = false;
     int OldPort = 0;
-
+	
+	Clu->AggiornaTitolo(Clu->Loading);
+	
     cli.LoadingPercentage = 0;
     cli.LoadingText = "Caricamento Menu Principale...";
     cli.FullBarWithText(25);
@@ -109,7 +112,6 @@ int main()
     cli.LoadingPercentage = 50;
     cli.LoadingText = "Impostazione Finestra...";
 
-    Clu->AggiornaTitolo(Clu->Menu);
     wu.SetWindowSize({ SettaggiS.DimensioniFinestra.X, SettaggiS.DimensioniFinestra.Y });
 
     cli.LoadingPercentage = 60;
@@ -119,30 +121,43 @@ int main()
     if (Server.StartServer() != 0)
     {
         cli.StopBar();
+		ServerOn = false;
 
         tc.SetColor(tc.Red);
         cout << "Errore nell'avvio del server." << endl;
+		cout << "Molto probabilmente e' dovuto alla porta." << endl;
+		tc.SetColor(tc.Default);
+		cout << "Premi un tasto per continuare offline..." << endl;
         Server.Stop();
         _getch();
         return 0;
     }
+	else
+	{
+		ServerOn = true;
 
-    cli.LoadingPercentage = 90;
-    cli.LoadingText = "Avvio Servizi...";
+		cli.LoadingPercentage = 90;
+		cli.LoadingText = "Avvio Servizi...";
 
-    thread Aconn(AccettaConnessioni, ref(Server));
-    thread Vconn(VerificaConnessioni);
-    Aconn.detach();
-    Vconn.detach();
+		thread Aconn(AccettaConnessioni, ref(Server));
+		thread Vconn(VerificaConnessioni);
+		Aconn.detach();
+		Vconn.detach();
 
-    cli.LoadingPercentage = 100;
-    cli.LoadingText = "Completato";
-    cli.StopBar();
+		cli.LoadingPercentage = 100;
+		cli.LoadingText = "Completato";
+		cli.StopBar();
+	}
 
     while (CicloMenu)
     {
-        system("cls");
-        StampaTitolo(1);
+		if (ServerOn)
+			Clu->AggiornaTitolo(Clu->Menu);
+		else
+			Clu->AggiornaTitolo(Clu->Off);
+		
+		system("cls");
+		StampaTitolo(1);
         cli.SubTitle("Menu Principale", 60, tc.Green);
 
         switch (cli.MenuSingleSelQuadre(MenuPrincipale))
@@ -164,6 +179,16 @@ int main()
 
             // Connetti Sessione
             case 1:
+				if (!ServerOn)
+				{
+					tc.SetColor(tc.Red);
+					cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
+					tc.SetColor(tc.Default);
+					
+					Sleep(3000);
+					break;
+				}
+				
                 system("cls");
                 StampaTitolo(1);
                 cli.SubTitle("Lista Clients", 60, tc.Green);
@@ -366,6 +391,16 @@ int main()
 
             // Comandi Comuni
             case 3:
+				if (!ServerOn)
+				{
+					tc.SetColor(tc.Red);
+					cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
+					tc.SetColor(tc.Default);
+					
+					Sleep(3000);
+					break;
+				}
+			
                 // TODO
                 break;
 
@@ -397,19 +432,30 @@ int main()
 
                             if (OldPort != SettaggiS.Porta)
                             {
-                                cout << "Riavvio del Server in corso..." << endl;
-                                if (!RestartServer(Server, SettaggiS.Porta))
+                                cout << "Riavvio del Server in corso";
+								cli.DotsBar();
+								
+								ServerOn = RestartServer(Server, SettaggiS.Porta);
+								cli.StopBar(); cout << endl;
+								
+                                if (ServerOn)
                                 {
-                                    tc.SetColor(tc.Red);
-                                    cout << "Riavvio del server fallito.\nPremi un tasto per chiudere DOSrat 2.0 ..." << endl;
-                                    tc.SetColor(tc.Default);
-                                    _getch();
-                                    return 0;
+									Clu->AggiornaTitolo(Clu->Menu);
+									
+									tc.SetColor(tc.Lime);
+									cout << "Riavvio completato." << endl;
+									tc.SetColor(tc.Default);
+									Sleep(1500);
                                 }
-                                tc.SetColor(tc.Lime);
-                                cout << "Riavvio completato." << endl;
-                                tc.SetColor(tc.Default);
-                                Sleep(1500);
+								else
+								{
+									Clu->AggiornaTitolo(Clu->Off);
+									
+                                    tc.SetColor(tc.Red);
+                                    cout << "Riavvio del server fallito..." << endl;
+                                    tc.SetColor(tc.Default);
+                                    Sleep(2000);
+								}
                             }
 
                             break;

