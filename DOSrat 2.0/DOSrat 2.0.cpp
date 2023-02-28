@@ -41,10 +41,10 @@ int main()
     VectString Percorsi;
 
     bool CicloMenu = true;
-	bool ServerOn = false;
+    bool ServerOn = false;
     int OldPort = 0;
 	
-	Clu->AggiornaTitolo(Clu->Loading);
+    Clu->AggiornaTitolo(Clu->Loading);
 	
     cli.LoadingPercentage = 0;
     cli.LoadingText = "Caricamento Menu Principale...";
@@ -121,42 +121,41 @@ int main()
     if (Server.StartServer() != 0)
     {
         cli.StopBar();
-		ServerOn = false;
+        ServerOn = false;
 
         tc.SetColor(tc.Red);
-        cout << "Errore nell'avvio del server." << endl;
-		cout << "Molto probabilmente e' dovuto alla porta." << endl;
-		tc.SetColor(tc.Default);
-		cout << "Premi un tasto per continuare offline..." << endl;
+        cout << "Errore nell'avvio del server.\nMolto probabilmente e' dovuto alla porta." << endl;
+        tc.SetColor(tc.Default);
+        cout << "Premi un tasto per continuare offline..." << endl;
         Server.Stop();
         _getch();
     }
-	else
-	{
-		ServerOn = true;
+    else
+    {
+        ServerOn = true;
 
-		cli.LoadingPercentage = 90;
-		cli.LoadingText = "Avvio Servizi...";
+        cli.LoadingPercentage = 90;
+        cli.LoadingText = "Avvio Servizi...";
 
-		thread Aconn(AccettaConnessioni, ref(Server));
-		thread Vconn(VerificaConnessioni);
-		Aconn.detach();
-		Vconn.detach();
+        thread Aconn(AccettaConnessioni, ref(Server));
+        thread Vconn(VerificaConnessioni);
+        Aconn.detach();
+        Vconn.detach();
 
-		cli.LoadingPercentage = 100;
-		cli.LoadingText = "Completato";
-		cli.StopBar();
-	}
+        cli.LoadingPercentage = 100;
+        cli.LoadingText = "Completato";
+        cli.StopBar();
+    }
 
     while (CicloMenu)
     {
-		if (ServerOn)
-			Clu->AggiornaTitolo(Clu->Menu);
-		else
-			Clu->AggiornaTitolo(Clu->Off);
+        if (ServerOn)
+            Clu->AggiornaTitolo(Clu->Menu);
+        else
+            Clu->AggiornaTitolo(Clu->Off);
 		
-		system("cls");
-		StampaTitolo(1);
+        system("cls");
+        StampaTitolo(1);
         cli.SubTitle("Menu Principale", 60, tc.Green);
 
         switch (cli.MenuSingleSelQuadre(MenuPrincipale))
@@ -178,15 +177,15 @@ int main()
 
             // Connetti Sessione
             case 1:
-				if (!ServerOn)
-				{
-					tc.SetColor(tc.Red);
-					cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
-					tc.SetColor(tc.Default);
+                if (!ServerOn)
+                {
+                    tc.SetColor(tc.Red);
+                    cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
+                    tc.SetColor(tc.Default);
 					
-					Sleep(3000);
-					break;
-				}
+                    Sleep(3000);
+                    break;
+                }
 				
                 system("cls");
                 StampaTitolo(1);
@@ -390,15 +389,15 @@ int main()
 
             // Comandi Comuni
             case 3:
-				if (!ServerOn)
-				{
-					tc.SetColor(tc.Red);
-					cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
-					tc.SetColor(tc.Default);
+                if (!ServerOn)
+                {
+                    tc.SetColor(tc.Red);
+                    cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
+                    tc.SetColor(tc.Default);
 					
-					Sleep(3000);
-					break;
-				}
+                    Sleep(3000);
+                    break;
+                }
 			
                 // TODO
                 break;
@@ -432,29 +431,29 @@ int main()
                             if (OldPort != SettaggiS.Porta)
                             {
                                 cout << "Riavvio del Server in corso";
-								cli.DotsBar();
-								
-								ServerOn = RestartServer(Server, SettaggiS.Porta);
-								cli.StopBar(); cout << endl;
+                                cli.DotsBar();
+
+                                ServerOn = RestartServer(Server, SettaggiS.Porta);
+                                cli.StopBar(); cout << endl;
 								
                                 if (ServerOn)
                                 {
-									Clu->AggiornaTitolo(Clu->Menu);
-									
-									tc.SetColor(tc.Lime);
-									cout << "Riavvio completato." << endl;
-									tc.SetColor(tc.Default);
-									Sleep(1500);
+                                    Clu->AggiornaTitolo(Clu->Menu);
+
+                                    tc.SetColor(tc.Lime);
+                                    cout << "Riavvio completato." << endl;
+                                    tc.SetColor(tc.Default);
+                                    Sleep(1500);
                                 }
-								else
-								{
-									Clu->AggiornaTitolo(Clu->Off);
-									
+                                else
+                                {
+                                    Clu->AggiornaTitolo(Clu->Off);
+
                                     tc.SetColor(tc.Red);
                                     cout << "Riavvio del server fallito..." << endl;
                                     tc.SetColor(tc.Default);
                                     Sleep(2000);
-								}
+                                }
                             }
 
                             break;
@@ -476,7 +475,7 @@ int main()
 
                         // Dimensione della finestra
                         case 5:
-                            cout << "\nRidimensiona le finestra a piacimento e premi invio per salvare." << endl;
+                            cout << "\nRidimensiona la finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
 
                             SettaggiS.DimensioniFinestra.X = wu.GetWindowSize().X;

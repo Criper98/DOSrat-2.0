@@ -11,8 +11,8 @@ void StampaTitolo(short Returns = 0)
     cout << " | |   | | |   | \\____ \\ / ___|____ (_   _)   / ____/ | |/ /| |" << endl;
     cout << " | |__/ /| |___| |____) ) |   / ___ | | |_   | (_____ |   /_| |" << endl;
     cout << " |_____/  \\_____(______/|_|   \\_____|  \\__)  |_______|_)_____/ " << endl << endl;
-    cout << "| Versione [" << Version << "]" << endl;
-    cout << "| DOSrat 2.0 by Criper98" << endl;
+    cout << "| v" << Version << endl;
+    cout << "| Created by Criper98" << endl;
 
     for (int i = 0; i < Returns; i++)
         cout << endl;
@@ -25,12 +25,11 @@ void StampaPrefix(string NomeClient = "")
     TextColor tc;
 
     tc.SetColor(tc.Yellow);
-
     cout << "DOSrat 2.0";
+    tc.SetColor(tc.Default);
 
     if (NomeClient != "")
     {
-        tc.SetColor(tc.Default);
         cout << " [";
         tc.SetColor(tc.Purple);
         cout << NomeClient;
@@ -38,7 +37,6 @@ void StampaPrefix(string NomeClient = "")
         cout << "]";
     }
 
-    tc.SetColor(tc.Default);
     cout << "> ";
 }
 
@@ -385,7 +383,7 @@ bool GetInfo(SOCKET Sock, int ID)
     Body.push_back("Data Installazione");
     Body.push_back(j["INSTDATE"]);
 
-    cout << "Informazioni ricevute:" << endl;
+    cout << endl;
     cli.Table(Header, Body);
     cout << endl;
 
@@ -529,24 +527,24 @@ bool ReverseShell(SOCKET Sock)
     CLInterface cli;
     TextColor tc;
 
-	string Res = "";
-	string Cmd = "";
-	string Path = "";
+    string Res = "";
+    string Cmd = "";
+    string Path = "";
 	
     cout << endl;
 
     if (COMUNICAZIONI::ReverseShell(Sock, "reverseshell") == "OK")
     {
-		while (true)
-		{
-			Path = COMUNICAZIONI::ReverseShell(Sock, "Get cd");
-			
-			if (Path == "")
-				return false;
-			
-			cout << Path << ">";
-			getline(cin, Cmd);
-			
+        while (true)
+        {
+            Path = COMUNICAZIONI::ReverseShell(Sock, "Get cd");
+
+            if (Path == "")
+                return false;
+
+            cout << Path << ">";
+            getline(cin, Cmd);
+
             if (ToLowerCase(Cmd).substr(0, 3) == "ftp")
                 cout << "Non supportato.\n" << endl;
             else if (ToLowerCase(Cmd).substr(0, 4) == "ping" && (ToLowerCase(Cmd).find("-t") != string::npos || ToLowerCase(Cmd).find("/t") != string::npos))
@@ -571,7 +569,7 @@ bool ReverseShell(SOCKET Sock)
 
                 cout << Res;
             }
-		}
+        }
     }
 
     return false;
@@ -698,7 +696,7 @@ void Sessione(int ID, SOCKET Sock)
             else
                 Controllo = false;
         }
-		else if (cmd == "reverseshell" || cmd == "revshell")
+        else if (cmd == "reverseshell" || cmd == "revshell")
         {
             if (!ReverseShell(Sock))
                 Controllo = CheckConnection(Sock, ID);
