@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 // Classe per la gestione dei settaggi del Server
 class SettaggiServer
@@ -348,5 +348,191 @@ public:
 	void AggiornaTitolo()
 	{
 		AggiornaTitolo(CurrentTitleType);
+	}
+};
+
+class CliFileExplorer
+{
+private:
+	ConsoleUtils cu;
+	TextColor tc;
+	VectString FileExpLayout;
+	VectString FileExpHelp;
+	VectString FileExpInfo;
+	int HelpSize = 0;
+	int MinXsize = 0;
+	int FileNameSize = 0;
+	int FileNameRows = 0;
+	short ConsoleSizeX = cu.GetConsoleSize().X;
+	short ConsoleSizeY = cu.GetConsoleSize().Y - 1;
+	COORD HelpCutPos;
+	COORD HelpCopyPos;
+	COORD FilePos;
+	COORD InfoPos;
+	COORD FinalPos;
+
+	struct FileExplorerStruct
+	{
+		bool Type; // true file; false dir;
+		string Name;
+		string Path;
+		long long int FileSize = 0;
+		string LastEdit;
+	};
+
+public:
+	vector<FileExplorerStruct> Files;
+
+	CliFileExplorer()
+	{
+		FileExpLayout.push_back("File Explorer");
+		FileExpLayout.push_back("Help");
+		FileExpLayout.push_back("File Info");
+
+		FileExpHelp.push_back("UP/DOWN: Navigate");
+		FileExpHelp.push_back("ENTER: Run/Navigate");
+		FileExpHelp.push_back("BACKSPACE: Up Folder");
+		FileExpHelp.push_back("DEL: Delete File/Folder");
+		FileExpHelp.push_back("R: Rename File/Folder");
+		FileExpHelp.push_back("U: Upload");
+		FileExpHelp.push_back("D: Download");
+		FileExpHelp.push_back("X: Cut");
+		FileExpHelp.push_back("C: Copy");
+		FileExpHelp.push_back("V: Paste");
+		FileExpHelp.push_back("Z: Zip/Unzip");
+		FileExpHelp.push_back("F5: Refresh");
+		FileExpHelp.push_back("ESC: Exit");
+
+		FileExpInfo.push_back("Name: ");
+		FileExpInfo.push_back("Path: ");
+		FileExpInfo.push_back("Size: <size> byte");
+		FileExpInfo.push_back("Last Edit: ");
+	}
+
+	bool PrintLayout()
+	{
+		for (int i = 0; i < FileExpHelp.size(); i++)
+			if (HelpSize < FileExpHelp[i].size())
+				HelpSize = FileExpHelp[i].size();
+
+		MinXsize = 5 + FileExpLayout[0].size() + HelpSize;
+
+		if (ConsoleSizeY < FileExpHelp.size() + 4 + FileExpInfo.size() || ConsoleSizeX < MinXsize)
+			return false; // oppure forza le dimensioni necessarie
+
+		system("cls");
+
+		FileNameSize = ConsoleSizeX - (4 + HelpSize);
+		FileNameRows = ConsoleSizeY - (4 + FileExpInfo.size());
+
+
+		// ┌─File Explorer───────────────┐┌─Help──────────────────┐
+		tc.SetColor(tc.Blue);
+		cout << char(218) << char(196);
+		tc.SetColor(tc.Default);
+		cout << FileExpLayout[0];
+		tc.SetColor(tc.Blue);
+		for (int i = 0; i < FileNameSize - 1 - FileExpLayout[0].size(); i++)
+			cout << char(196);
+		cout << char(191) << char(218) << char(196);
+		tc.SetColor(tc.Default);
+		cout << FileExpLayout[1];
+		tc.SetColor(tc.Blue);
+		for (int i = 0; i < HelpSize - FileExpLayout[1].size() - 1; i++)
+			cout << char(196);
+		cout << char(191) << endl;
+
+		FilePos = { (short)(ConsoleSizeX + 1), ConsoleSizeY };
+
+
+		// │../                          ││↕: Up/Down             │
+		for (int i = 0; i < FileNameRows; i++)
+		{
+			cout << char(179);
+			for (int j = 0; j < FileNameSize; j++)
+				cout << " ";
+			if (i == 7)
+				HelpCutPos = { (short)(ConsoleSizeX + 2), ConsoleSizeY };
+			if (i == 8)
+				HelpCopyPos = { (short)(ConsoleSizeX + 2), ConsoleSizeY };
+			cout << char(179) << char(179);
+			if (i < FileExpHelp.size())
+			{
+				tc.SetColor(tc.Default);
+				cout << FileExpHelp[i];
+				tc.SetColor(tc.Blue);
+				for (int j = 0; j < HelpSize - FileExpHelp[i].size(); j++)
+					cout << " ";
+			}
+			else
+				for (int j = 0; j < HelpSize; j++)
+					cout << " ";
+			cout << char(179) << endl;
+		}
+
+
+		// └─────────────────────────────┘└───────────────────────┘
+		cout << char(192);
+		for (int i = 0; i < FileNameSize; i++)
+			cout << char(196);
+		cout << char(217) << char(192);
+		for (int i = 0; i < HelpSize; i++)
+			cout << char(196);
+		cout << char(217) << endl;
+
+
+		// ┌─File Info────────────────────────────────────────────┐
+		cout << char(218) << char(196);
+		tc.SetColor(tc.Default);
+		cout << FileExpLayout[2];
+		tc.SetColor(tc.Blue);
+		for (int i = 0; i < FileNameSize + HelpSize + 1 - FileExpLayout[2].size(); i++)
+			cout << char(196);
+		cout << char(191) << endl;
+
+
+		// │Name: A                                               │
+		for (int i = 0; i < FileExpInfo.size(); i++)
+		{
+			if (i == 0)
+				InfoPos = { (short)(ConsoleSizeX + 1), ConsoleSizeY };
+			cout << char(179);
+			tc.SetColor(tc.Default);
+			cout << FileExpInfo[i];
+			tc.SetColor(tc.Blue);
+			for (int j = 0; j < FileNameSize + HelpSize + 2 - FileExpInfo[i].size(); j++)
+				cout << " ";
+			cout << char(179) << endl;
+		}
+
+
+		// └──────────────────────────────────────────────────────┘
+		cout << char(192);
+		for (int i = 0; i < FileNameSize + HelpSize + 2; i++)
+			cout << char(196);
+		cout << char(217) << endl;
+
+		FinalPos = cu.GetConsoleSize();
+		tc.SetColor(tc.Default);
+
+		return true;
+	}
+
+	void FilesParse(json j)
+	{
+		Files.clear();
+
+		for (int i = 0; i < j["Files"].size(); i++)
+		{
+			FileExplorerStruct tmp = FileExplorerStruct();
+
+			tmp.Type = j["Files"][i]["Type"];
+			tmp.Name = j["Files"][i]["Name"];
+			tmp.Path = j["Files"][i]["Path"];
+			tmp.FileSize = j["Files"][i]["Size"];
+			tmp.LastEdit = j["Files"][i]["LastEdit"];
+
+			Files.push_back(tmp);
+		}
 	}
 };

