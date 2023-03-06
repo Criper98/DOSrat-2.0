@@ -4,7 +4,8 @@ Icon & Logo art by <a href="https://www.instagram.com/drunkeran.e.co/">Drunkeran
 
 # DOSrat 2.0
 
-[![Version](https://img.shields.io/github/v/tag/Criper98/DOSrat-2.0?color=brightgreen&label=Version&style=flat-square)]()
+[![Version](https://img.shields.io/github/v/tag/Criper98/DOSrat-2.0?color=darkgreen&label=Version&style=flat-square)]()
+[![Download](https://img.shields.io/github/downloads/criper98/dosrat-2.0/total?color=purple&style=flat-square)]()
 [![OS](https://img.shields.io/badge/OS-Windows-blue?style=flat-square)]()
 
 The purpose of this project is to test my knowledge, and share it with you, it won't be much but it's my milestone, i hope to improve myself and maybe provide an alternative to remote control software.
