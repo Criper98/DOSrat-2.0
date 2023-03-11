@@ -13,7 +13,7 @@ class CLIENT
 			string UserName;
 			string IP;
 			IPinfo Location;
-			int Compatibilita = 0;
+			int CompatibleVer = 0;
 		};
 
 	public:

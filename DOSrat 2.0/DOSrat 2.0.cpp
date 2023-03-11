@@ -10,10 +10,9 @@ using namespace std;
 
 #include "Client.h"
 
-string Version = "2.0.0-b.2";
+string Version = "2.0.0-b.3";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
-int VersioneCompatibile = 0;
 
 #include "Classi.h"
 
@@ -163,6 +162,7 @@ int main()
         {
             // Esci
             case 0:
+            {
                 ServerLoopController = false;
 
                 for (int i = 0; i < MAX_CLIENTS; i++)
@@ -175,19 +175,21 @@ int main()
                 Server.Stop();
                 CicloMenu = false;
                 break;
+            }
 
             // Connetti Sessione
             case 1:
+            {
                 if (!ServerOn)
                 {
                     tc.SetColor(tc.Red);
                     cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
                     tc.SetColor(tc.Default);
-					
+
                     Sleep(3000);
                     break;
                 }
-				
+
                 system("cls");
                 StampaTitolo(1);
                 cli.SubTitle("Lista Clients", 60, tc.Green);
@@ -229,7 +231,7 @@ int main()
                     else
                         Controllo = true;
 
-                    if(Controllo)
+                    if (Controllo)
                     {
                         cout << "ID non valido.";
                         Sleep(2000);
@@ -242,9 +244,11 @@ int main()
                 }
 
                 break;
+            }
 
             // Crea Client
             case 2:
+            {
                 while (CicloMenu)
                 {
                     system("cls");
@@ -260,14 +264,14 @@ int main()
                             CicloMenu = false;
                             break;
 
-                        // Host
+                            // Host
                         case 1:
                             cout << "\nInserisci l'host." << endl;
                             StampaPrefix();
                             getline(cin, SettaggiC.Host);
                             break;
 
-                        // Porta
+                            // Porta
                         case 2:
                             cout << "\nInserisci la porta." << endl;
                             StampaPrefix();
@@ -275,20 +279,20 @@ int main()
                             cin.ignore();
                             break;
 
-                        // Percorso d'Installazione
+                            // Percorso d'Installazione
                         case 3:
                             cout << "\nScegli il percorso d'installazione." << endl;
 
                             SettaggiC.InstallPath = Percorsi[cli.MenuSingleSelScorrimento(Percorsi, tc.Purple)];
                             break;
 
-                        // Nome Exe
+                            // Nome Exe
                         case 4:
                             cout << "\nInserisci il nome del file .exe" << endl;
                             StampaPrefix();
                             getline(cin, SettaggiC.ExeName);
 
-                            if (SettaggiC.ExeName.size() > 4)
+                            if (SettaggiC.ExeName.size() >= 4)
                             {
                                 if (ToLowerCase(SettaggiC.ExeName) == "drunkard")
                                     DrunkeranEgg();
@@ -299,29 +303,29 @@ int main()
                             else
                             {
                                 tc.SetColor(tc.Red);
-                                cout << "Nome non valido." << endl;
+                                cout << "Nome non valido, minimo 4 caratteri." << endl;
                                 tc.SetColor(tc.Default);
                                 SettaggiC.ExeName = "Client.exe";
                                 Sleep(1500);
                             }
                             break;
 
-                        // Auto Run
+                            // Auto Run
                         case 5:
                             SettaggiC.RegStartup = !SettaggiC.RegStartup;
                             break;
 
-                        // File Nascosto
+                            // File Nascosto
                         case 6:
                             SettaggiC.HideExe = !SettaggiC.HideExe;
                             break;
 
-                        // File di Sistema
+                            // File di Sistema
                         case 7:
                             SettaggiC.SystemFile = !SettaggiC.SystemFile;
                             break;
 
-                        // Crea Client
+                            // Crea Client
                         case 8:
                             cout << endl;
 
@@ -372,7 +376,7 @@ int main()
 
                             cli.LoadingPercentage = 100;
                             cli.StopBar();
-                            
+
                             tc.SetColor(tc.Lime);
                             cout << "Creazione client completata!" << endl;
                             tc.SetColor(tc.Default);
@@ -387,24 +391,28 @@ int main()
 
                 CicloMenu = true;
                 break;
+            }
 
             // Comandi Comuni
             case 3:
+            {
                 if (!ServerOn)
                 {
                     tc.SetColor(tc.Red);
                     cout << "Funzionalita' non accessibile: sei offline.\nProva a cambiare la porta nelle impostazioni." << endl;
                     tc.SetColor(tc.Default);
-					
+
                     Sleep(3000);
                     break;
                 }
-			
+
                 // TODO
                 break;
+            }
 
             // Impostazioni
             case 4:
+            {
                 while (CicloMenu)
                 {
                     system("cls");
@@ -420,7 +428,7 @@ int main()
                             CicloMenu = false;
                             break;
 
-                        // Porta
+                            // Porta
                         case 1:
                             OldPort = SettaggiS.Porta;
 
@@ -436,7 +444,7 @@ int main()
 
                                 ServerOn = RestartServer(Server, SettaggiS.Porta);
                                 cli.StopBar(); cout << endl;
-								
+
                                 if (ServerOn)
                                 {
                                     Clu->AggiornaTitolo(Clu->Menu);
@@ -459,7 +467,7 @@ int main()
 
                             break;
 
-                        // Aggiornamenti
+                            // Aggiornamenti
                         case 2:
                             SettaggiS.VerificaAggiornamenti = !SettaggiS.VerificaAggiornamenti;
                             if (!SettaggiS.VerificaAggiornamenti)
@@ -471,12 +479,12 @@ int main()
                             SettaggiS.AutoAggiornamento = !SettaggiS.AutoAggiornamento;
                             break;
 
-                        // Colori
+                            // Colori
                         case 4:
                             //TODO implementare l'impostazione dei colori
                             break;
 
-                        // Dimensione della finestra
+                            // Dimensione della finestra
                         case 5:
                             cout << "\nRidimensiona la finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
@@ -488,9 +496,10 @@ int main()
 
                     SettaggiS.SetSettings();
                 }
-                
+
                 CicloMenu = true;
                 break;
+            }
         }
     }
 
