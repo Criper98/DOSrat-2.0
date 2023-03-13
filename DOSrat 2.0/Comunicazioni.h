@@ -236,7 +236,7 @@ public:
 				FileContent += Buff;
 				Buff.clear();
 
-				cli.LoadingPercentage = (float)((i + 1) / ChunkNumber) * 100;
+				cli.LoadingPercentage = (int)((float)((i + 1) / (float)ChunkNumber) * 100);
 			}
 
 			cli.StopBar();

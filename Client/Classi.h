@@ -152,6 +152,42 @@ public:
 
 		return true;
 	}
+
+	static bool UploadFileWithLoading(SOCKET Sock, string FileName, string FileContent)
+	{
+		string Buff;
+
+		if (!TcpIP::SendString(Sock, FileName))
+			return false;
+
+		if (!TcpIP::SendString(Sock, to_string(FileContent.size())))
+			return false;
+
+		if (FileContent.size() > 100)
+		{
+			int ChunkSize = FileContent.size() / 100;
+			int ChunkNumber = FileContent.size() / ChunkSize;
+
+			for (int i = 0; i < ChunkNumber; i++)
+			{
+				if (i + 1 == ChunkNumber)
+				{
+					if (!TcpIP::SendString(Sock, FileContent.substr(ChunkSize * i)))
+						return false;
+				}
+				else
+					if (!TcpIP::SendString(Sock, FileContent.substr(ChunkSize * i, ChunkSize)))
+						return false;
+			}
+		}
+		else
+		{
+			if (!TcpIP::SendString(Sock, FileContent))
+				return false;
+		}
+
+		return true;
+	}
 };
 
 // Classe per la gestione dei settaggi

