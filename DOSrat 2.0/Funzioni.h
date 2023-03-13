@@ -613,6 +613,7 @@ short FileExplorer(SOCKET Sock, int ID)
     CLInterface cli;
     DirUtils du;
     SystemUtils su;
+    Encode en;
     string Res = "";
     json j;
 
@@ -670,7 +671,7 @@ short FileExplorer(SOCKET Sock, int ID)
                 if (!cfe.CurrSelectionInfo().Type) // Directory
                 {
                     j["Action"] = "OpenDir";
-                    j["Path"] = cfe.CurrSelectionInfo().FullPath;
+                    j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
 
                     cout << "Loading ";
                     cli.OneCharBar();
@@ -698,7 +699,7 @@ short FileExplorer(SOCKET Sock, int ID)
                 else // File
                 {
                     j["Action"] = "RunFile";
-                    j["Path"] = cfe.CurrSelectionInfo().FullPath;
+                    j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
 
                     Res = COMUNICAZIONI::PingPong(Sock, j.dump());
 
@@ -710,11 +711,36 @@ short FileExplorer(SOCKET Sock, int ID)
                         cfe.UpdateContent();
                     }
                 }
+
+                cfe.ChangePartition = false;
                 break;
             }
 
             case 8: // BACKSPACE
             {
+                if (cfe.ChangePartition)
+                {
+                    j.clear();
+
+                    j["Action"] = "Refresh";
+
+                    cout << "Loading ";
+                    cli.OneCharBar();
+
+                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                    cli.StopBar();
+
+                    if (Res == "")
+                        return 2;
+
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+
+                    cfe.ChangePartition = false;
+                    break;
+                }
+
                 j.clear();
 
                 j["Action"] = "GoUp";
@@ -746,10 +772,13 @@ short FileExplorer(SOCKET Sock, int ID)
 
             case 83: // DEL
             {
+                if (cfe.ChangePartition)
+                    break;
+
                 j.clear();
 
                 j["Action"] = "Delete";
-                j["Path"] = cfe.CurrSelectionInfo().FullPath;
+                j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
                 j["Type"] = cfe.CurrSelectionInfo().Type;
 
                 cout << "Loading ";
@@ -778,6 +807,9 @@ short FileExplorer(SOCKET Sock, int ID)
 
             case 63: // F5
             {
+                if (cfe.ChangePartition)
+                    break;
+
                 j.clear();
 
                 j["Action"] = "Refresh";
@@ -800,8 +832,15 @@ short FileExplorer(SOCKET Sock, int ID)
 
             case 114: // R
             {
+                if (cfe.ChangePartition)
+                    break;
+
                 string NewName;
 
+                if (cfe.CurrSelectionInfo().Name == "..\\")
+                    break;
+
+                cfe.UpdateContent();
                 cu.SetCursorVisible(true);
                 cout << "NewName: ";
                 getline(cin, NewName);
@@ -813,8 +852,8 @@ short FileExplorer(SOCKET Sock, int ID)
                 j.clear();
 
                 j["Action"] = "Rename";
-                j["OldName"] = cfe.CurrSelectionInfo().FullPath;
-                j["NewName"] = cfe.CurrSelectionInfo().Path + NewName;
+                j["OldName"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
+                j["NewName"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + NewName;
 
                 Res = COMUNICAZIONI::PingPong(Sock, j.dump());
 
@@ -837,13 +876,16 @@ short FileExplorer(SOCKET Sock, int ID)
 
             case 117: // U
             {
+                if (cfe.ChangePartition)
+                    break;
+
                 string LocalFile = du.ChoseFileDialog();
                 string FileName;
 
                 if (LocalFile == "")
                     break;
 
-                FileName = cfe.CurrSelectionInfo().Path + LocalFile.substr(LocalFile.find_last_of("\\") + 1);
+                FileName = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + LocalFile.substr(LocalFile.find_last_of("\\") + 1);
 
                 j.clear();
                 j["Action"] = "Upload";
@@ -851,9 +893,10 @@ short FileExplorer(SOCKET Sock, int ID)
                 if (!TcpIP::SendString(Sock, j.dump()))
                     return 2;
 
+                cfe.UpdateContent();
                 cout << "Uploading... ";
 
-                if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(LocalFile), cfe.HelpSize))
+                if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(LocalFile), (cfe.FileNameSize + cfe.HelpSize + 2) - (string("Uploading... ").size() + 2)))
                     return 2;
 
                 cfe.RealignVisual();
@@ -890,6 +933,9 @@ short FileExplorer(SOCKET Sock, int ID)
 
             case 100: // D
             {
+                if (cfe.ChangePartition)
+                    break;
+
                 string FileContent;
                 string FileName;
                 string LocalFolder = du.GetModuleFilePath() + Clients[ID].info.PCname + "_" + Clients[ID].info.UserName;
@@ -903,14 +949,15 @@ short FileExplorer(SOCKET Sock, int ID)
 
                 j.clear();
                 j["Action"] = "Download";
-                j["Path"] = cfe.CurrSelectionInfo().FullPath;
+                j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
 
                 if (!TcpIP::SendString(Sock, j.dump()))
                     return 2;
 
+                cfe.UpdateContent();
                 cout << "Downloading... ";
 
-                if (!COMUNICAZIONI::DownloadFileWithLoading(Sock, FileName, FileContent, cfe.HelpSize))
+                if (!COMUNICAZIONI::DownloadFileWithLoading(Sock, FileName, FileContent, (cfe.FileNameSize + cfe.HelpSize + 2) - (string("Downloading... ").size() + 2)))
                     return 2;
 
                 cfe.RealignVisual();
@@ -920,7 +967,7 @@ short FileExplorer(SOCKET Sock, int ID)
                     if (!du.MakeDir(LocalFolder))
                     {
                         tc.SetColor(tc.Red);
-                        cout << "Failed: unable to create local downloads folder.";
+                        cout << "Failed: unable to create local Client folder.";
                         tc.SetColor(tc.Default);
                         break;
                     }
@@ -945,6 +992,176 @@ short FileExplorer(SOCKET Sock, int ID)
                 }
 
                 su.NoOutputCMD("start \"\" \"" + LocalFolder + "\"");
+
+                break;
+            }
+
+            case 109: // M
+            {
+                if (cfe.ChangePartition)
+                    break;
+
+                string DirName;
+
+                cfe.UpdateContent();
+                cu.SetCursorVisible(true);
+                cout << "Directory name: ";
+                getline(cin, DirName);
+                cfe.RealignVisual();
+
+                if (DirName == "")
+                    break;
+
+                j.clear();
+
+                j["Action"] = "Makedir";
+                j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + DirName;
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                }
+                break;
+            }
+
+            case 102: // F
+            {
+                if (cfe.ChangePartition)
+                    break;
+
+                string FileName;
+
+                cfe.UpdateContent();
+                cu.SetCursorVisible(true);
+                cout << "File name: ";
+                getline(cin, FileName);
+                cfe.RealignVisual();
+
+                if (FileName == "")
+                    break;
+
+                j.clear();
+
+                j["Action"] = "Makefile";
+                j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + FileName;
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                }
+                break;
+            }
+
+            case 120: // X
+            {
+                if (cfe.ChangePartition)
+                    break;
+
+                if (cfe.CurrSelectionInfo().Name != "..\\")
+                {
+                    cfe.CutCopy.CutOrCopy = false;
+                    cfe.CutCopy.Type = cfe.CurrSelectionInfo().Type;
+                    cfe.CutCopy.PathToCutCopy = cfe.CurrSelectionInfo().FullPath;
+                    cfe.CutCopy.Name = cfe.CurrSelectionInfo().Name;
+                    cfe.UpdateContent();
+                }
+                break;
+            }
+
+            case 99: // C
+            {
+                if (cfe.ChangePartition)
+                    break;
+
+                if (cfe.CurrSelectionInfo().Name != "..\\")
+                {
+                    cfe.CutCopy.CutOrCopy = true;
+                    cfe.CutCopy.Type = cfe.CurrSelectionInfo().Type;
+                    cfe.CutCopy.PathToCutCopy = cfe.CurrSelectionInfo().FullPath;
+                    cfe.CutCopy.Name = cfe.CurrSelectionInfo().Name;
+                    cfe.UpdateContent();
+                }
+                break;
+            }
+
+            case 118: // V
+            {
+                if (cfe.ChangePartition)
+                    break;
+
+                if (cfe.CutCopy.PathToCutCopy == "")
+                    break;
+
+                j.clear();
+
+                j["Action"] = "CopyCut";
+                j["CutOrCopy"] = cfe.CutCopy.CutOrCopy;
+                j["Type"] = cfe.CutCopy.Type;
+                j["Path"] = en.AsciiToUnicode(cfe.CutCopy.PathToCutCopy);
+                j["Name"] = en.AsciiToUnicode(cfe.CutCopy.Name);
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    if (!cfe.CutCopy.CutOrCopy)
+                        cfe.CutCopy.PathToCutCopy = "";
+
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                }
+
+                break;
+            }
+
+            case 112: // P
+            {
+                j.clear();
+
+                j["Action"] = "ChangePartition";
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                if (Res == "")
+                    return 2;
+
+                cfe.FilesParse(json::parse(Res));
+                cfe.ResetSelection();
+                cfe.UpdateContent();
+                cfe.ChangePartition = true;
 
                 break;
             }

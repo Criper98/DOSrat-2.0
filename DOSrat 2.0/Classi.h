@@ -360,17 +360,14 @@ private:
 	VectString FileExpHelp;
 	VectString FileExpInfo;
 	int MinXsize = 0;
-	int FileNameSize = 0;
 	int FileNameRows = 0;
 	int FilesOffset = 0;
 	int Sel = 0;
 	short ConsoleSizeX = cu.GetConsoleSize().X;
 	short ConsoleSizeY = cu.GetConsoleSize().Y - 1;
-	string PathToCutCopy;
 	string FileSpaces = "";
 	string InfoSpaces = "";
 	string MessageSpaces = string(ConsoleSizeX, ' ');
-	bool CutOrCopy = true; // true Copy; false Cut;
 	COORD FilePos;
 	COORD InfoPos;
 	COORD FinalPos;
@@ -385,6 +382,14 @@ private:
 		double FileSizeDouble = 0;
 		string Unit;
 		string LastEdit;
+	};
+
+	struct CutCopyStruct
+	{
+		bool CutOrCopy = true; // true Copy; false Cut;
+		bool Type; // true file; false dir;
+		string PathToCutCopy;
+		string Name;
 	};
 
 	vector<FileExplorerStruct> Files;
@@ -418,7 +423,10 @@ private:
 	}
 
 public:
+	bool ChangePartition = false;
 	int HelpSize = 0;
+	int FileNameSize = 0;
+	CutCopyStruct CutCopy;
 
 	CliFileExplorer()
 	{
@@ -560,6 +568,7 @@ public:
 
 	void FilesParse(json j)
 	{
+		Encode en;
 		Files.clear();
 
 		for (int i = 0; i < j["Files"].size(); i++)
@@ -567,9 +576,9 @@ public:
 			FileExplorerStruct tmp = FileExplorerStruct();
 
 			tmp.Type = j["Files"][i]["Type"];
-			tmp.Name = j["Files"][i]["Name"];
-			tmp.Path = j["Files"][i]["Path"];
-			tmp.FullPath = j["Files"][i]["FullPath"];
+			tmp.Name = en.UnicodeToAscii(j["Files"][i]["Name"]);
+			tmp.Path = en.UnicodeToAscii(j["Files"][i]["Path"]);
+			tmp.FullPath = en.UnicodeToAscii(j["Files"][i]["FullPath"]);
 			tmp.FileSize = j["Files"][i]["Size"];
 			tmp.Unit = "Byte";
 			tmp.LastEdit = (j["Files"][i]["LastEdit"] != 0) ? DateTime::GetDateTime(j["Files"][i]["LastEdit"], ' ', '/') : "--";
@@ -603,6 +612,9 @@ public:
 
 	void UpdateContent()
 	{
+		string FinalCpyCutStr;
+		cu.ExtendAsciiOutput();
+
 		ClearFiles();
 
 		for (int i = 0; i < FileNameRows; i++)
@@ -655,6 +667,7 @@ public:
 
 		ClearInfo();
 
+
 		cu.SetCursorPos(InfoPos);
 		if (Files[Sel].Name.size() + FileExpInfo[0].size() > FileNameSize + HelpSize + 2)
 		{
@@ -664,6 +677,7 @@ public:
 		}
 		else
 			cout << FileExpInfo[0] << Files[Sel].Name;
+
 
 		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 1) });
 		if (Files[Sel].FullPath.size() + FileExpInfo[1].size() > FileNameSize + HelpSize + 2)
@@ -675,43 +689,43 @@ public:
 		else
 			cout << FileExpInfo[1] << Files[Sel].FullPath;
 
+
 		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 2) });
 		if(Files[Sel].Unit == "Byte")
 			cout << PlaceHolder(PlaceHolder(FileExpInfo[2], "<size>", to_string(Files[Sel].FileSize)), "<unit>", Files[Sel].Unit);
 		else
 			cout << PlaceHolder(PlaceHolder(FileExpInfo[2], "<size>", to_string_with_precision(Files[Sel].FileSizeDouble)), "<unit>", Files[Sel].Unit);
 
+
 		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 3) });
 		cout << FileExpInfo[3] << Files[Sel].LastEdit;
+
 
 		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 4) });
 		cout << FileExpInfo[4];
 
+
 		cu.SetCursorPos({ InfoPos.X, (short)(InfoPos.Y + 5) });
-		if (CutOrCopy)
-			cout << PlaceHolder(FileExpInfo[5], "<CpyCut>", "Copy");
+		if (CutCopy.CutOrCopy)
+			FinalCpyCutStr = PlaceHolder(FileExpInfo[5], "<CpyCut>", "Copy");
 		else
-			cout << PlaceHolder(FileExpInfo[5], "<CpyCut>", "Cut");
-		cout << PathToCutCopy;
+			FinalCpyCutStr = PlaceHolder(FileExpInfo[5], "<CpyCut>", "Cut");
+
+		if (CutCopy.PathToCutCopy.size() + FinalCpyCutStr.size() > FileNameSize + HelpSize + 2)
+		{
+			string tmp = CutCopy.PathToCutCopy;
+			tmp.replace(3, (tmp.size() + FinalCpyCutStr.size() + 3) - (FileNameSize + HelpSize + 2), "...");
+			cout << FinalCpyCutStr << tmp;
+		}
+		else
+			cout << FinalCpyCutStr << CutCopy.PathToCutCopy;
+
+		cu.UTF8asciiOutput();
 
 		cu.SetCursorPos(FinalPos);
 		cout << MessageSpaces;
 		cu.SetCursorPos(FinalPos);
 		cout << "> ";
-	}
-
-	// true Copy; false Cut;
-	void CopyCut(bool CopyOrCut)
-	{
-		CutOrCopy = CopyOrCut;
-		PathToCutCopy = Files[Sel].FullPath;
-	}
-
-	string Paste()
-	{
-		string tmp = PathToCutCopy;
-		PathToCutCopy = "";
-		return tmp;
 	}
 
 	// true DOWN; false UP;

@@ -57,8 +57,10 @@ short InstallClient()
 	return 0;
 }
 
+
 json DirFileTOjson(VectDirFile DirFiles)
 {
+	Encode en;
 	DirUtils du;
 	json j;
 
@@ -67,12 +69,14 @@ json DirFileTOjson(VectDirFile DirFiles)
 		if (DirFiles[i].Name == ".")
 			DirFiles.erase(DirFiles.begin() + i);
 
+		DirFiles[i].Name = en.AsciiToUnicode(DirFiles[i].Name);
+
 		j["Files"][i]["Type"] = (DirFiles[i].Type == 1);
 		j["Files"][i]["Name"] = (j["Files"][i]["Type"]) ? DirFiles[i].Name : DirFiles[i].Name + "\\";
-		j["Files"][i]["Path"] = (du.GetCurrDir().size() == 3) ? du.GetCurrDir() : du.GetCurrDir() + "\\";
-		j["Files"][i]["FullPath"] = (du.GetCurrDir().size() == 3) ? du.GetCurrDir() + DirFiles[i].Name : du.GetCurrDir() + "\\" + DirFiles[i].Name;
-		j["Files"][i]["Size"] = (j["Files"][i]["Type"]) ? du.GetSizeOfFile(j["Files"][i]["FullPath"]) : 0;
-		j["Files"][i]["LastEdit"] = du.GetTimeOfFile(j["Files"][i]["FullPath"]).LastWriteTime;
+		j["Files"][i]["Path"] = (du.GetCurrDir().size() == 3) ? en.AsciiToUnicode(du.GetCurrDir()) : en.AsciiToUnicode(du.GetCurrDir()) + "\\";
+		j["Files"][i]["FullPath"] = (du.GetCurrDir().size() == 3) ? en.AsciiToUnicode(du.GetCurrDir()) + DirFiles[i].Name : en.AsciiToUnicode(du.GetCurrDir()) + "\\" + DirFiles[i].Name;
+		j["Files"][i]["Size"] = (j["Files"][i]["Type"]) ? du.GetSizeOfFile(en.UnicodeToAscii(j["Files"][i]["FullPath"])) : 0;
+		j["Files"][i]["LastEdit"] = du.GetTimeOfFile(en.UnicodeToAscii(j["Files"][i]["FullPath"])).LastWriteTime;
 	}
 
 	return j;
@@ -305,6 +309,7 @@ void FileExplorer(SOCKET Sock)
 {
 	SystemUtils su;
 	DirUtils du;
+	Encode en;
 	string Buff = "";
 	string Res = "";
 	json j;
@@ -313,7 +318,7 @@ void FileExplorer(SOCKET Sock)
 
 	du.SetCurrDir(du.GetModuleFilePath());
 	du.GetDir(du.GetCurrDir(), DirFiles);
-
+	
 	j = DirFileTOjson(DirFiles);
 
 	if (DEBUG)
@@ -335,7 +340,7 @@ void FileExplorer(SOCKET Sock)
 		{
 			DirFiles.clear();
 
-			if (du.SetCurrDir(j["Path"]))
+			if (du.SetCurrDir(en.UnicodeToAscii(j["Path"])))
 			{
 				du.GetDir(du.GetCurrDir(), DirFiles);
 
@@ -351,7 +356,7 @@ void FileExplorer(SOCKET Sock)
 		{
 			DirFiles.clear();
 
-			du.RunFile(j["Path"]);
+			du.RunFile(en.UnicodeToAscii(j["Path"]));
 			du.GetDir(du.GetCurrDir(), DirFiles);
 
 			j.clear();
@@ -382,9 +387,9 @@ void FileExplorer(SOCKET Sock)
 			DirFiles.clear();
 
 			if (j["Type"])
-				Success = du.DelFile(j["Path"]);
+				Success = du.DelFile(en.UnicodeToAscii(j["Path"]));
 			else
-				Success = du.DelDir(j["Path"]);
+				Success = du.DelDir(en.UnicodeToAscii(j["Path"]));
 
 			if (Success)
 			{
@@ -420,7 +425,7 @@ void FileExplorer(SOCKET Sock)
 		{
 			DirFiles.clear();
 
-			if (du.RenameFileOrDir(j["OldName"], j["NewName"]))
+			if (du.RenameFileOrDir(en.UnicodeToAscii(j["OldName"]), en.UnicodeToAscii(j["NewName"])))
 			{
 				du.GetDir(du.GetCurrDir(), DirFiles);
 
@@ -467,7 +472,7 @@ void FileExplorer(SOCKET Sock)
 		}
 		else if (j["Action"] == "Download")
 		{
-			string FilePath = j["Path"];
+			string FilePath = en.UnicodeToAscii(j["Path"]);
 			string FileName = FilePath.substr(FilePath.find_last_of("\\") + 1);
 
 			if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(FilePath)))
@@ -475,6 +480,117 @@ void FileExplorer(SOCKET Sock)
 
 			if (!TcpIP::RecvString(Sock, Buff))
 				break;
+		}
+		else if (j["Action"] == "Makedir")
+		{
+			DirFiles.clear();
+
+			if (du.MakeDir(en.UnicodeToAscii(j["Path"])))
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else if (j["Action"] == "Makefile")
+		{
+			DirFiles.clear();
+
+			if (du.WriteFile(en.UnicodeToAscii(j["Path"])))
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else if (j["Action"] == "CopyCut")
+		{
+			bool Success = false;
+
+			DirFiles.clear();
+
+			if (j["CutOrCopy"])
+			{
+				if (j["Type"])
+					Success = du.CopyPasteFile(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
+				else
+				{
+					du.CopyPasteDir(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
+					Success = true; // Grazie C++17, bella cagata...
+				}
+			}
+			else
+				if (j["Type"])
+					Success = du.CutFile(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
+				else
+					Success = du.CutDir(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
+
+			if (Success)
+			{
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else if (j["Action"] == "ChangePartition")
+		{
+			DirFiles.clear();
+			du.GetDir(du.GetCurrDir(), DirFiles);
+
+			VectString Drives = du.GetDriveLetters();
+
+			j.clear();
+
+			for (int i = 0; i < Drives.size(); i++)
+			{
+				j["Files"][i]["Type"] = false;
+				j["Files"][i]["Name"] = Drives[i];
+				j["Files"][i]["Path"] = Drives[i];
+				j["Files"][i]["FullPath"] = Drives[i];
+				j["Files"][i]["Size"] = 0;
+				j["Files"][i]["LastEdit"] = 0;
+			}
+
+			Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
 		}
 		else
 			break;
