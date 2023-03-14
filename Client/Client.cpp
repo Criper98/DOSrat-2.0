@@ -30,7 +30,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     AllocConsole();
     if (!DEBUG)
-        ShowWindow(GetConsoleWindow(), SW_HIDE);
+        cu.HideConsole();
     else
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 

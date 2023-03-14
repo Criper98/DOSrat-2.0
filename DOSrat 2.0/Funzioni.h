@@ -617,9 +617,6 @@ short FileExplorer(SOCKET Sock, int ID)
     string Res = "";
     json j;
 
-    /*while (true)
-        cout << _getch() << endl;*/
-
     if (!cfe.PrintLayout())
     {
         cout << "Dimensioni della finestra insufficienti, ingrandisci la finestra e riprova." << endl;
@@ -1163,6 +1160,41 @@ short FileExplorer(SOCKET Sock, int ID)
                 cfe.UpdateContent();
                 cfe.ChangePartition = true;
 
+                break;
+            }
+
+            case 122: // Z
+            {
+                if (cfe.ChangePartition || cfe.CurrSelectionInfo().Name == "..\\")
+                    break;
+
+                j.clear();
+
+                j["Action"] = (ToLowerCase(cfe.CurrSelectionInfo().Name.substr(cfe.CurrSelectionInfo().Name.size() - 4)) == ".zip") ? "Unzip" : "Zip";
+                j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
+                j["Name"] = (cfe.CurrSelectionInfo().Type) ? en.AsciiToUnicode(cfe.CurrSelectionInfo().Name) : en.AsciiToUnicode(cfe.CurrSelectionInfo().Name.substr(0, cfe.CurrSelectionInfo().Name.size() - 1));
+
+                cout << "Loading ";
+                cli.OneCharBar();
+
+                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+
+                cli.StopBar();
+
+                if (Res == "")
+                    return 2;
+                else if (Res != "denied")
+                {
+                    cfe.FilesParse(json::parse(Res));
+                    cfe.UpdateContent();
+                }
+                else
+                {
+                    cfe.UpdateContent();
+                    tc.SetColor(tc.Red);
+                    cout << "Permission denied.";
+                    tc.SetColor(tc.Default);
+                }
                 break;
             }
 
