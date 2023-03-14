@@ -25,7 +25,7 @@ Among the priorities of the project is backwards compatibility, the goal is to m
 
 The priorities to get to the first 2.0.0 Release are:
 * Provide the ability to choose between English and Italian, and create a system to allow anyone to add a translation.
-* Implement key features like ability to see remote desktop, remote file explorer, remote control from Telegram bot, and much more…
+* Implement key features like ability to see remote desktop, ~~remote file explorer~~(2.0.0-b.3), remote control from Telegram bot, and much more…
 * Provide a backward compatibility basis for future updates.
 * ✅ Implement a stable TCP/IP connection system.
 
