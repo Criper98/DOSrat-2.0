@@ -6,8 +6,8 @@
 
 using json = nlohmann::json;
 
-string Version = "2.0.0-b.3";
-int VersioneCompatibile = 1;
+string Version = "2.0.0-b.4";
+int VersioneCompatibile = 2;
 bool DEBUG = false;
 
 #include "Classi.h"
@@ -59,6 +59,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         sett.Host = "127.0.0.1";
         sett.Porta = 6969;
     }
+	
+	if (su.CheckUAC())
+		du.WriteFile(du.GetModuleFilePath() + "Elevated");
 
     su.GetCPUload(); // Altrimenti con il GetInfo la prima volta da sempre il 6%
 

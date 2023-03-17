@@ -10,7 +10,7 @@ using namespace std;
 
 #include "Client.h"
 
-string Version = "2.0.0-b.3";
+string Version = "2.0.0-b.4";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
 

