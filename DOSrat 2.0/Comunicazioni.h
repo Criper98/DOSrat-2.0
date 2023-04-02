@@ -71,17 +71,6 @@ public:
 		return j;
 	}
 
-	static string InvertMouse(SOCKET Sock)
-	{
-		string Buff;
-
-		TcpIP::SendString(Sock, "invertmouse");
-
-		TcpIP::RecvString(Sock, Buff);
-
-		return Buff;
-	}
-
 	static bool Reconnect(SOCKET Sock)
 	{
 		return TcpIP::SendString(Sock, "reconnect");

