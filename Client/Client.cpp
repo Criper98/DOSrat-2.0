@@ -6,8 +6,8 @@
 
 using json = nlohmann::json;
 
-string Version = "2.0.0-b.5";
-int VersioneCompatibile = 3;
+string Version = "2.0.0-b.6";
+int VersioneCompatibile = 4;
 bool DEBUG = false;
 
 #include "Classi.h"

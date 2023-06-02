@@ -95,6 +95,7 @@
       <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -113,6 +114,7 @@
       <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -131,6 +133,7 @@
       <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -149,6 +152,7 @@
       <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <AdditionalOptions>/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

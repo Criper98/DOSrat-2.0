@@ -10,7 +10,7 @@ using namespace std;
 
 #include "Client.h"
 
-string Version = "2.0.0-b.5";
+string Version = "2.0.0-b.6";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
 
@@ -43,7 +43,7 @@ int main()
     bool CicloMenu = true;
     bool ServerOn = false;
     int OldPort = 0;
-	
+
     Clu->AggiornaTitolo(Clu->Loading);
 	
     cli.LoadingPercentage = 0;
@@ -331,7 +331,7 @@ int main()
 
                             cli.LoadingPercentage = 0;
                             cli.LoadingText = "Preparazione Client";
-                            cli.FullBarWithText(20);
+                            cli.FullBarWithText(30);
 
                             du.SetCurrDir(du.GetModuleFilePath());
 

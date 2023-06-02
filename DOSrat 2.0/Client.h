@@ -12,7 +12,7 @@ class CLIENT
 			string PCname;
 			string UserName;
 			string IP;
-			IPinfo Location;
+			IPlocation::IPinfo Location;
 			int CompatibleVer = 0;
 		};
 

