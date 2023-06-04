@@ -3,6 +3,7 @@
 #include <EssNet.h>
 #include <Essentials.h>
 #include <EssCurl.h>
+#include <zlib.h>
 
 using namespace std;
 

