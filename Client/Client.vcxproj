@@ -100,7 +100,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ade.lib;IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libprotobuf.lib;libtiff.lib;libwebp.lib;opencv_calib3d460.lib;opencv_core460.lib;opencv_dnn460.lib;opencv_features2d460.lib;opencv_flann460.lib;opencv_gapi460.lib;opencv_highgui460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;opencv_ml460.lib;opencv_objdetect460.lib;opencv_photo460.lib;opencv_stitching460.lib;opencv_ts460.lib;opencv_video460.lib;opencv_videoio460.lib;quirc.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -122,7 +122,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ade.lib;IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libprotobuf.lib;libtiff.lib;libwebp.lib;opencv_calib3d460.lib;opencv_core460.lib;opencv_dnn460.lib;opencv_features2d460.lib;opencv_flann460.lib;opencv_gapi460.lib;opencv_highgui460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;opencv_ml460.lib;opencv_objdetect460.lib;opencv_photo460.lib;opencv_stitching460.lib;opencv_ts460.lib;opencv_video460.lib;opencv_videoio460.lib;quirc.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -140,7 +140,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ade.lib;IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libprotobuf.lib;libtiff.lib;libwebp.lib;opencv_calib3d460.lib;opencv_core460.lib;opencv_dnn460.lib;opencv_features2d460.lib;opencv_flann460.lib;opencv_gapi460.lib;opencv_highgui460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;opencv_ml460.lib;opencv_objdetect460.lib;opencv_photo460.lib;opencv_stitching460.lib;opencv_ts460.lib;opencv_video460.lib;opencv_videoio460.lib;quirc.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -162,7 +162,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ade.lib;IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libprotobuf.lib;libtiff.lib;libwebp.lib;opencv_calib3d460.lib;opencv_core460.lib;opencv_dnn460.lib;opencv_features2d460.lib;opencv_flann460.lib;opencv_gapi460.lib;opencv_highgui460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;opencv_ml460.lib;opencv_objdetect460.lib;opencv_photo460.lib;opencv_stitching460.lib;opencv_ts460.lib;opencv_video460.lib;opencv_videoio460.lib;quirc.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
