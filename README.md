@@ -10,7 +10,7 @@ Icon & Logo art by <a href="https://www.instagram.com/drunkeran.e.co/">Drunkeran
 
 The purpose of this project is to test my knowledge, and share it with you, it won't be much but it's my milestone, i hope to improve myself and maybe provide an alternative to remote control software.
 
-In practice DOSrat 2.0 is a remote administration tool (RAT), successor of the first [DOSrat](https://github.com/Criper98/DOSrat) project, it has several improvements in TCP/IP communication, a better command line interface, a totally different client build system which makes it more light and fast, and many more features beyond those already existing in its predecessor.
+In practice DOSrat 2.0 is a remote administration tool (RAT), successor of the first [DOSrat](https://github.com/Criper98/DOSrat) project, it has several improvements in TCP/IP communication, a better command line interface, a totally different client build system which makes it more fast, and many more features beyond those already existing in its predecessor.
 
 <p align="center"><img src="https://raw.githubusercontent.com/Criper98/DOSrat-2.0/main/Immagini/GIF.gif" width="750"></p>
 
