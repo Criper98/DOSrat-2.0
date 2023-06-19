@@ -29,8 +29,11 @@ The priorities to get to the first 2.0.0 Release are:
 * ✅ Provide a backward compatibility basis for future updates.
 * ✅ Implement a stable TCP/IP connection system.
 
-# [Wiki](https://github.com/Criper98/DOSrat-2.0/wiki)
+## [Wiki](https://github.com/Criper98/DOSrat-2.0/wiki)
 
 Don't remember a command? Need help with setup? Do you want more details about the project? The [wiki](https://github.com/Criper98/DOSrat-2.0/wiki) is your best friend!
 
 DOSrat 2.0 has its own dedicated [wiki](https://github.com/Criper98/DOSrat-2.0/wiki) for (almost) any question you have. It will be updated as the project grows, and will be available in the two main languages, English and Italian.
+
+## DISCLAIMER
+##### I, the creator, am not responsible for any actions and or damages caused by this software. You bear the full responsibility of your actions and acknowledge that this software was created for educational purposes only. This software's intended purpose is NOT to be used maliciously, or on any system that you do not have own or have explicit permission to operate and use this program on. By using this software, you automatically agree to the above.
