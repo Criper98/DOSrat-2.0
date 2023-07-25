@@ -15,12 +15,16 @@ string Version = "2.0.0-b.6";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
 
-#include "Classi.h"
+#include "SettaggiServer.h"
+#include "SettaggiClient.h"
+#include "ClientUtils.h"
+#include "CliFileExplorer.h"
 
 ClientUtils* Clu;
 
 #include "Comunicazioni.h"
 #include "Funzioni.h"
+#include "Sessione.h"
 
 int main()
 {
@@ -35,6 +39,7 @@ int main()
     Encode en;
     SystemUtils su;
     Clu = new ClientUtils(SettaggiS);
+    Sessione Sess;
 
     VectString MenuPrincipale;
     VectString HeaderTabella;
@@ -225,7 +230,12 @@ int main()
                     if (IDclient < MAX_CLIENTS && IDclient >= 0)
                     {
                         if (Clients[IDclient].IsConnected)
-                            Sessione(IDclient, Clients[IDclient].sock);
+                        {
+                            Sess.ID = IDclient;
+                            Sess.Sock = Clients[IDclient].sock;
+                            
+                            Sess.AvviaSessione();
+                        }
                         else
                             Controllo = true;
                     }
@@ -295,10 +305,10 @@ int main()
 
                             if (SettaggiC.ExeName.size() >= 4)
                             {
-                                if (ToLowerCase(SettaggiC.ExeName) == "drunkard")
+                                if (StringUtils::ToLowerCase(SettaggiC.ExeName) == "drunkard")
                                     DrunkeranEgg();
 
-                                if (ToLowerCase(SettaggiC.ExeName.substr(SettaggiC.ExeName.size() - 4, 4)) != ".exe")
+                                if (StringUtils::ToLowerCase(SettaggiC.ExeName.substr(SettaggiC.ExeName.size() - 4, 4)) != ".exe")
                                     SettaggiC.ExeName += ".exe";
                             }
                             else

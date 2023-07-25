@@ -1,0 +1,75 @@
+﻿cl : command line  warning D9002: ignoring unknown option '/s'
+  Client.cpp
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\EssNet.h(80,14): warning C4101: 'ainfo': unreferenced local variable
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(88,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(96,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(244,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(719,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(722,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(793,44): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(861,44): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(923,1): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(925,1): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(939,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(940,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(942,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(954,1): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(955,1): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1005,31): warning C4267: '=': conversion from 'size_t' to 'short', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1036,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1040,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1041,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1066,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1089,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1136,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1161,24): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1175,25): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1206,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1247,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1583,13): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(1878,57): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2493,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2529,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2550,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2565,12): warning C4244: 'initializing': conversion from 'unsigned long' to 'char', possible loss of data
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2645,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2651,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2666,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2684,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2687,26): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2691,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2695,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2717,22): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\DOSrat 2.0\Client\Funzioni.h(68,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\cripe\Desktop\Altre cose\C++\DOSrat 2.0\Client\Funzioni.h(602,22): warning C4018: '<': signed/unsigned mismatch
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\include\xstring(2765,53): warning C4244: 'argument': conversion from 'wchar_t' to 'const _Elem', possible loss of data
+          with
+          [
+              _Elem=char
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.36.32532\include\xstring(2621,17): message : see reference to function template instantiation 'void std::basic_string<char,std::char_traits<char>,std::allocator<char>>::_Construct_from_iter<wchar_t*,wchar_t*,_Size_type>(_Iter,const _Sent,_Size)' being compiled
+          with
+          [
+              _Size_type=unsigned int,
+              _Iter=wchar_t *,
+              _Sent=wchar_t *,
+              _Size=unsigned int
+          ]
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2065,17): message : see reference to function template instantiation 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string<std::_String_iterator<std::_String_val<std::_Simple_types<_Elem>>>,0>(_Iter,_Iter,const _Alloc &)' being compiled
+          with
+          [
+              _Elem=wchar_t,
+              _Iter=std::_String_iterator<std::_String_val<std::_Simple_types<wchar_t>>>,
+              _Alloc=std::allocator<char>
+          ]
+C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio\Essentials.h(2065,4): message : see the first reference to 'std::basic_string<char,std::char_traits<char>,std::allocator<char>>::basic_string' in 'DirUtils::GetCurrentUserPath'
+Client.obj : error LNK2001: unresolved external symbol _deflateInit_
+Client.obj : error LNK2001: unresolved external symbol _deflateEnd
+Client.obj : error LNK2001: unresolved external symbol _deflate
+Client.obj : error LNK2001: unresolved external symbol "public: void __thiscall cv::Mat::create(int,int,int)" (?create@Mat@cv@@QAEXHHH@Z)
+Client.obj : error LNK2001: unresolved external symbol "public: class cv::Mat & __thiscall cv::Mat::operator=(class cv::Mat &&)" (??4Mat@cv@@QAEAAV01@$$QAV01@@Z)
+Client.obj : error LNK2001: unresolved external symbol "public: __thiscall cv::Mat::~Mat(void)" (??1Mat@cv@@QAE@XZ)
+Client.obj : error LNK2001: unresolved external symbol "public: __thiscall cv::Mat::Mat(void)" (??0Mat@cv@@QAE@XZ)
+Client.obj : error LNK2001: unresolved external symbol "public: __thiscall cv::Mat::Mat(class cv::Mat &&)" (??0Mat@cv@@QAE@$$QAV01@@Z)
+Client.obj : error LNK2001: unresolved external symbol "bool __cdecl cv::imencode(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class cv::_InputArray const &,class std::vector<unsigned char,class std::allocator<unsigned char> > &,class std::vector<int,class std::allocator<int> > const &)" (?imencode@cv@@YA_NABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@ABV_InputArray@1@AAV?$vector@EV?$allocator@E@std@@@3@ABV?$vector@HV?$allocator@H@std@@@3@@Z)
+C:\Users\cripe\Desktop\Altre cose\C++\DOSrat 2.0\Release\Client.exe : fatal error LNK1120: 9 unresolved externals

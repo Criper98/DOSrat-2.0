@@ -57,40 +57,6 @@ public:
 		Clu->AggiornaTitolo();
 	}
 
-	static json GetInfo(SOCKET Sock)
-	{
-		string Buff = "";
-		json j;
-
-		if (!TcpIP::SendString(Sock, "getinfo"))
-			return j;
-
-		if(TcpIP::RecvString(Sock, Buff))
-			j = json::parse(Buff);
-
-		return j;
-	}
-
-	static bool Reconnect(SOCKET Sock)
-	{
-		return TcpIP::SendString(Sock, "reconnect");
-	}
-
-	static bool KillClient(SOCKET Sock)
-	{
-		return TcpIP::SendString(Sock, "kill");
-	}
-
-	static bool Shutdown(SOCKET Sock)
-	{
-		return TcpIP::SendString(Sock, "shutdown");
-	}
-
-	static bool Reboot(SOCKET Sock)
-	{
-		return TcpIP::SendString(Sock, "reboot");
-	}
-
 	static bool UpdateClient(SOCKET Sock, string FileContent, bool Hidden, bool System)
 	{
 		string Buff;
@@ -111,16 +77,6 @@ public:
 		TcpIP::RecvString(Sock, Buff);
 
 		return (Buff == "OK");
-	}
-
-	static bool Uninstall(SOCKET Sock)
-	{
-		return TcpIP::SendString(Sock, "uninstall");
-	}
-
-	static bool RestartClient(SOCKET Sock)
-	{
-		return TcpIP::SendString(Sock, "restart");
 	}
 	
 	static string PingPong(SOCKET Sock, string Send)

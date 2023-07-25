@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Classi">
+      <UniqueIdentifier>{4e3d8b32-c5fb-4a23-9734-e3f724b08d28}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DOSrat 2.0.cpp">
@@ -23,17 +26,29 @@
     <ClInclude Include="Funzioni.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Classi.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Comunicazioni.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Client.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SettaggiServer.h">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="SettaggiClient.h">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="ClientUtils.h">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="CliFileExplorer.h">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Comunicazioni.h">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Sessione.h">
+      <Filter>Source Files\Classi</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

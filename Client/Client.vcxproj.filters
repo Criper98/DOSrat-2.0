@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Classi">
+      <UniqueIdentifier>{ccafa533-e26f-4b22-9a49-bf6cf47d6c74}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Client.cpp">
@@ -20,11 +23,26 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Classi.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Debugger.hpp">
+      <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="Funzioni.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="Settaggi.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Sessione.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Installer.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Comunicazioni.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Monitor.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Services.hpp">
+      <Filter>Source Files\Classi</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
