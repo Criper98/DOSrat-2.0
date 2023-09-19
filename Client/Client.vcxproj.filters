@@ -38,9 +38,6 @@
     <ClInclude Include="Comunicazioni.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="Monitor.hpp">
-      <Filter>Source Files\Classi</Filter>
-    </ClInclude>
     <ClInclude Include="Services.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>

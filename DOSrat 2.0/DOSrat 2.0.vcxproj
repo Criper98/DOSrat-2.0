@@ -166,15 +166,15 @@
     <ClCompile Include="DOSrat 2.0.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Client.h" />
-    <ClInclude Include="ClientUtils.h" />
-    <ClInclude Include="CliFileExplorer.h" />
-    <ClInclude Include="Comunicazioni.h" />
-    <ClInclude Include="Funzioni.h" />
+    <ClInclude Include="Client.hpp" />
+    <ClInclude Include="ClientUtils.hpp" />
+    <ClInclude Include="CliFileExplorer.hpp" />
+    <ClInclude Include="Comunicazioni.hpp" />
+    <ClInclude Include="Funzioni.hpp" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Sessione.h" />
-    <ClInclude Include="SettaggiClient.h" />
-    <ClInclude Include="SettaggiServer.h" />
+    <ClInclude Include="Sessione.hpp" />
+    <ClInclude Include="SettaggiClient.hpp" />
+    <ClInclude Include="SettaggiServer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DOSrat 2.0.rc" />

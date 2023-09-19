@@ -31,6 +31,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -44,6 +45,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -92,7 +94,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\build\include;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/Zc:__cplusplus /Os /s %(AdditionalOptions)</AdditionalOptions>
@@ -100,8 +102,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <UACUIAccess>false</UACUIAccess>
@@ -116,18 +118,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\build\include;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:__cplusplus /Os /s %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MinSpace</Optimization>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <UACUIAccess>false</UACUIAccess>
@@ -140,7 +144,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\build\include;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <AdditionalOptions>/Zc:__cplusplus /Os /s %(AdditionalOptions)</AdditionalOptions>
@@ -148,8 +152,8 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <UACUIAccess>false</UACUIAccess>
@@ -164,18 +168,20 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\build\include;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\Obfuscate;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalOptions>/Zc:__cplusplus /Os /s %(AdditionalOptions)</AdditionalOptions>
+      <Optimization>MinSpace</Optimization>
+      <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>IlmImf.lib;ippicvmt.lib;ippiw.lib;ittnotify.lib;libjpeg-turbo.lib;libopenjp2.lib;libpng.lib;libtiff.lib;libwebp.lib;opencv_core460.lib;opencv_imgcodecs460.lib;opencv_imgproc460.lib;zlib-static.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\OpenCV\opencv-4.6.0\static\lib\Release;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\Users\cripe\Desktop\Altre cose\C++\Librerie\VStudio;C:\Users\cripe\Desktop\Altre cose\C++\Librerie\zlib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <UACUIAccess>false</UACUIAccess>
@@ -187,7 +193,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Installer.hpp" />
-    <ClInclude Include="Monitor.hpp" />
     <ClInclude Include="Services.hpp" />
     <ClInclude Include="Settaggi.hpp" />
     <ClInclude Include="Comunicazioni.hpp" />

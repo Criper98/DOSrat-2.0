@@ -23,31 +23,31 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Funzioni.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Client.h">
+    <ClInclude Include="Funzioni.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SettaggiServer.h">
+    <ClInclude Include="SettaggiServer.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="SettaggiClient.h">
+    <ClInclude Include="SettaggiClient.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="ClientUtils.h">
+    <ClInclude Include="ClientUtils.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="CliFileExplorer.h">
+    <ClInclude Include="CliFileExplorer.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="Comunicazioni.h">
+    <ClInclude Include="Comunicazioni.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
-    <ClInclude Include="Sessione.h">
+    <ClInclude Include="Sessione.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="Client.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
   </ItemGroup>
