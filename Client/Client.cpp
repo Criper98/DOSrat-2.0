@@ -39,6 +39,7 @@ int main()
     short clientErrorCode = 0;
 
     AllocConsole();
+
     if (!debug.Active)
         cu.HideConsole();
     else

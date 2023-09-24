@@ -22,6 +22,7 @@ private:
 
 public:
 
+	ClientUtils() {}
 	ClientUtils(SettaggiServer& settaggi)
 	{
 		settings = &settaggi;

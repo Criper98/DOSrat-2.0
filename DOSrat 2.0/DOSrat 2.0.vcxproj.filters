@@ -23,9 +23,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Funzioni.hpp">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -48,6 +45,12 @@
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
     <ClInclude Include="Client.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="UIutils.hpp">
+      <Filter>Source Files\Classi</Filter>
+    </ClInclude>
+    <ClInclude Include="UpdateService.hpp">
       <Filter>Source Files\Classi</Filter>
     </ClInclude>
   </ItemGroup>

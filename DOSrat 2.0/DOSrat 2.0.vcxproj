@@ -170,11 +170,12 @@
     <ClInclude Include="ClientUtils.hpp" />
     <ClInclude Include="CliFileExplorer.hpp" />
     <ClInclude Include="Comunicazioni.hpp" />
-    <ClInclude Include="Funzioni.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Sessione.hpp" />
     <ClInclude Include="SettaggiClient.hpp" />
     <ClInclude Include="SettaggiServer.hpp" />
+    <ClInclude Include="UIutils.hpp" />
+    <ClInclude Include="UpdateService.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="DOSrat 2.0.rc" />

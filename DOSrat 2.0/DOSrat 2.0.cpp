@@ -20,10 +20,12 @@ atomic<bool> ServerLoopController = true;
 #include "ClientUtils.hpp"
 #include "CliFileExplorer.hpp"
 
-ClientUtils* Clu;
+ClientUtils Clu;
 
+
+#include "UIutils.hpp"
+#include "UpdateService.hpp"
 #include "Comunicazioni.hpp"
-#include "Funzioni.hpp"
 #include "Sessione.hpp"
 
 int main()
@@ -38,7 +40,7 @@ int main()
     TcpIP Server;
     Encode en;
     SystemUtils su;
-    Clu = new ClientUtils(SettaggiS);
+    Clu = ClientUtils(SettaggiS);
     Sessione Sess;
 
     VectString MenuPrincipale;
@@ -50,7 +52,7 @@ int main()
     bool ServerOn = false;
     int OldPort = 0;
 
-    Clu->AggiornaTitolo(Clu->Loading);
+    Clu.AggiornaTitolo(Clu.Loading);
 	
     cli.LoadingPercentage = 0;
     cli.LoadingText = "Caricamento Menu Principale...";
@@ -113,7 +115,7 @@ int main()
     cli.LoadingText = "Controllo Aggiornamenti...";
 
     if (SettaggiS.VerificaAggiornamenti)
-        VerificaAggiornamenti(SettaggiS.AutoAggiornamento);
+        UpdateService::VerificaAggiornamenti(SettaggiS.AutoAggiornamento);
 
     cli.LoadingPercentage = 50;
     cli.LoadingText = "Impostazione Finestra...";
@@ -143,8 +145,8 @@ int main()
         cli.LoadingPercentage = 90;
         cli.LoadingText = "Avvio Servizi...";
 
-        thread Aconn(AccettaConnessioni, std::ref(Server), std::ref(SettaggiS.MostraNotifiche));
-        thread Vconn(VerificaConnessioni);
+        thread Aconn(Comunicazioni::AccettaConnessioni, std::ref(Server), std::ref(SettaggiS.MostraNotifiche));
+        thread Vconn(Comunicazioni::VerificaConnessioni);
         Aconn.detach();
         Vconn.detach();
 
@@ -156,12 +158,12 @@ int main()
     while (CicloMenu)
     {
         if (ServerOn)
-            Clu->AggiornaTitolo(Clu->Menu);
+            Clu.AggiornaTitolo(Clu.Menu);
         else
-            Clu->AggiornaTitolo(Clu->Off);
+            Clu.AggiornaTitolo(Clu.Off);
 		
         system("cls");
-        StampaTitolo(1);
+        UIutils::StampaTitolo(1);
         cli.SubTitle("Menu Principale", 60, tc.Green);
 
         switch (cli.MenuSingleSelQuadre(MenuPrincipale))
@@ -194,7 +196,7 @@ int main()
                 }
 
                 system("cls");
-                StampaTitolo(1);
+                UIutils::StampaTitolo(1);
                 cli.SubTitle("Lista Clients", 60, tc.Green);
 
                 BodyTabella.clear();
@@ -221,7 +223,7 @@ int main()
 
                     cli.Table(HeaderTabella, BodyTabella);
                     cout << "\nScegli l'ID del Client." << endl;
-                    StampaPrefix();
+                    UIutils::StampaPrefix();
                     getline(cin, strIdClient);
 
                     try { IdClient = stoi(strIdClient); }
@@ -263,7 +265,7 @@ int main()
                 while (CicloMenu)
                 {
                     system("cls");
-                    StampaTitolo(1);
+                    UIutils::StampaTitolo(1);
                     cli.SubTitle("Crea Client", 60, tc.Green);
 
                     SettaggiC.GetSettings();
@@ -279,7 +281,7 @@ int main()
                         case 1:
                         {
                             cout << "\nInserisci l'host." << endl;
-                            StampaPrefix();
+                            UIutils::StampaPrefix();
                             getline(cin, SettaggiC.Host);
                             break;
                         }
@@ -290,7 +292,7 @@ int main()
                             string strPorta;
 
                             cout << "\nInserisci la porta." << endl;
-                            StampaPrefix();
+                            UIutils::StampaPrefix();
                             getline(cin, strPorta);
 
                             try { SettaggiC.Porta = stoi(strPorta); }
@@ -312,13 +314,13 @@ int main()
                         case 4:
                         {
                             cout << "\nInserisci il nome del file .exe" << endl;
-                            StampaPrefix();
+                            UIutils::StampaPrefix();
                             getline(cin, SettaggiC.ExeName);
 
                             if (SettaggiC.ExeName.size() >= 4)
                             {
                                 if (StringUtils::ToLowerCase(SettaggiC.ExeName) == "drunkard")
-                                    DrunkeranEgg();
+                                    UIutils::DrunkeranEgg();
 
                                 if (StringUtils::ToLowerCase(SettaggiC.ExeName.substr(SettaggiC.ExeName.size() - 4, 4)) != ".exe")
                                     SettaggiC.ExeName += ".exe";
@@ -459,7 +461,7 @@ int main()
                 while (CicloMenu)
                 {
                     system("cls");
-                    StampaTitolo(1);
+                    UIutils::StampaTitolo(1);
                     cli.SubTitle("Impostazioni", 60, tc.Green);
 
                     SettaggiS.GetSettings();
@@ -480,7 +482,7 @@ int main()
                             OldPort = SettaggiS.Porta;
 
                             cout << "\nInserisci la porta." << endl;
-                            StampaPrefix();
+                            UIutils::StampaPrefix();
                             getline(cin, strPorta);
 
                             try { SettaggiS.Porta = stoi(strPorta); }
@@ -491,12 +493,12 @@ int main()
                                 cout << "Riavvio del Server in corso";
                                 cli.DotsBar();
 
-                                ServerOn = RestartServer(Server, SettaggiS.Porta, SettaggiS.MostraNotifiche);
+                                ServerOn = Comunicazioni::RestartServer(Server, SettaggiS.Porta, SettaggiS.MostraNotifiche);
                                 cli.StopBar(); cout << endl;
 
                                 if (ServerOn)
                                 {
-                                    Clu->AggiornaTitolo(Clu->Menu);
+                                    Clu.AggiornaTitolo(Clu.Menu);
 
                                     tc.SetColor(tc.Lime);
                                     cout << "Riavvio completato." << endl;
@@ -505,7 +507,7 @@ int main()
                                 }
                                 else
                                 {
-                                    Clu->AggiornaTitolo(Clu->Off);
+                                    Clu.AggiornaTitolo(Clu.Off);
 
                                     tc.SetColor(tc.Red);
                                     cout << "Riavvio del server fallito..." << endl;
