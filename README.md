@@ -6,7 +6,7 @@ Icon & Logo art by <a href="https://www.instagram.com/drunkeran.e.co/">Drunkeran
 
 [![Version](https://img.shields.io/github/v/tag/Criper98/DOSrat-2.0?color=darkgreen&label=Version&style=flat-square)](https://github.com/Criper98/DOSrat-2.0/releases/latest)
 [![Download](https://img.shields.io/github/downloads/criper98/dosrat-2.0/total?color=purple&style=flat-square)](https://github.com/Criper98/DOSrat-2.0/releases/latest)
-[![OS](https://img.shields.io/badge/OS-Windows-blue?style=flat-square)](https://upload.wikimedia.org/wikipedia/en/7/7c/Microsoft_Bear_3.1_easter_egg.png)
+[![OS](https://img.shields.io/badge/OS-Windows_8/10/11_x64-blue?style=flat-square)](https://github.com/Criper98/DOSrat-2.0/releases/latest)
 
 **DOSrat 2.0** is a remote administration tool (RAT) that builds upon its predecessor, [DOSrat](https://github.com/Criper98/DOSrat). This new version comes with improvements in TCP/IP communication, a more user-friendly command line interface, a faster client build system, and a host of additional features.
 
